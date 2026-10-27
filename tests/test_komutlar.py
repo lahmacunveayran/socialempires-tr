@@ -732,6 +732,16 @@ class CeviriKapsamTestleri(unittest.TestCase):
         eksik = [k for k, _b, m, _y in _bolum_anahtarlari(get_game_config()) if m.strip() and k not in ceviri]
         self.assertEqual(eksik, [])
 
+
+    def test_istemci_ascii_modunda_turkce_harf_yok(self):
+        from get_game_config import get_client_game_config
+        c = get_client_game_config("tr", ascii_mode=True)
+        metinler = [i["name"] for i in c["items"]]
+        metinler += [m["title"] for m in c["missions"]]
+        metinler += [e["text"] for e in c["localization_strings"] if isinstance(e, dict)]
+        kotu = [m for m in metinler if any(h in m for h in "şğİıçöüŞĞÇÖÜ")]
+        self.assertEqual(kotu, [])
+
     def test_esya_ve_gorev_turkce(self):
         from get_game_config import get_client_game_config
         c = get_client_game_config("tr")

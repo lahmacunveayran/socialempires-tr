@@ -4,7 +4,7 @@ import os
 import jsonpatch
 from bundle import MODS_DIR, CONFIG_DIR, CONFIG_PATCH_DIR
 from time_scale import zaman_olcegi
-from turkce import turkce_uygula
+from turkce import turkce_uygula, ascii_uygula
 
 __game_config = json.load(open(os.path.join(CONFIG_DIR, "game_config_20120826.json"), 'r', encoding='utf-8'))
 
@@ -83,7 +83,7 @@ __istemci_config_onbellegi = {}
 SURE_ALANLARI = ("activation", "expiration", "training_time", "sm_training_time")
 
 
-def get_client_game_config(dil: str = "en") -> dict:
+def get_client_game_config(dil: str = "en", ascii_mode: bool = False) -> dict:
     """İstemciye gönderilecek config'i döndürür.
 
     - `dil` "tr" ise metinler Türkçeleştirilir (ceviri/tr.json).
@@ -92,12 +92,14 @@ def get_client_game_config(dil: str = "en") -> dict:
     """
     olcek = zaman_olcegi()
     dil = (dil or "en").lower()[:2]
-    anahtar = (dil, olcek)
+    anahtar = (dil, olcek, bool(ascii_mode))
     if anahtar in __istemci_config_onbellegi:
         return __istemci_config_onbellegi[anahtar]
 
     if dil == "tr":
         kopya = turkce_uygula(__game_config)
+        if ascii_mode:
+            kopya = ascii_uygula(kopya)
     elif olcek == 1.0:
         return __game_config
     else:

@@ -304,7 +304,7 @@ def get_game_config_response():
     print(f"get_game_config: USERID: {USERID} istemci dili: {language} -> {OYUN_DILI}. --", request.values)
     # İstemci yerel ayarı 'en' kalır (bilinen çalışan yol); metinler OYUN_DILI'ne göre gelir.
     try:
-        return get_client_game_config(OYUN_DILI)
+        return get_client_game_config(OYUN_DILI, ascii_mode=True)
     except Exception:
         traceback.print_exc()
         print(" ! Ceviri config'i uretilemedi; Ingilizceye donuluyor")

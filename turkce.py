@@ -146,6 +146,21 @@ def _yola_yaz(veri, yol, deger):
     hedef[yol[-1]] = deger
 
 
+TR_ASCII = str.maketrans({
+    "ş": "s", "Ş": "S", "ğ": "g", "Ğ": "G", "İ": "I", "ı": "i",
+    "ç": "c", "Ç": "C", "ö": "o", "Ö": "O", "ü": "u", "Ü": "U",
+})
+
+
+def ascii_uygula(config):
+    """Flash istemcisinin fontunda Türkçe harfler yoksa okunabilir ASCII üretir."""
+    yeni = copy.deepcopy(config)
+    for _anahtar, _bolum, metin, yol in _bolum_anahtarlari(yeni):
+        if isinstance(metin, str):
+            _yola_yaz(yeni, yol, metin.translate(TR_ASCII))
+    return yeni
+
+
 def dogrula(kaynak, ceviri):
     """Çeviride yer tutucu / HTML etiketi kaybı var mı diye bakar."""
     sorunlar = []

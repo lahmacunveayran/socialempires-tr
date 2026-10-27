@@ -154,6 +154,24 @@ sunucu şimdilik yalnızca uyarı basıyor, engellemiyor.
 > Bir komşuya saldırıp `saves/komut_gunlugu.jsonl` dosyasına bakmak yeterli;
 > alan adları farklıysa handler'ı ona göre daraltırız.
 
+## Bot köyleri (PvP için rakip üretme)
+
+PvP listesi boşsa yapay komşular üretilebilir:
+
+```bat
+python tools\bot_koy_uret.py 10
+```
+
+- Her bot `saves/<uuid>.save.json` olarak yazılır; sunucu açılışında normal
+  oyuncu kaydı gibi yüklenir.
+- 10 bot: Kara Han, Bozkurt Bey, Demir Yay, Gökbörü, Alp Er Tunga,
+  Kül Tigin, Bilge Kağan, Tomris Hatun, Modu Han, Attila.
+- Seviyeler 5–45 arasında; sur, kule, kışla ve savunma birlikleri var.
+- Komşu listesinde ve kıta sıralamasında görünürler, saldırılabilirler.
+- Silmek için `saves` klasöründeki bot `.save.json` dosyalarını silin.
+- Yeniden üretmeden önce eski bot dosyalarını silin (aynı isimler yeni
+  UUID ile gelir).
+
 ## Bilinen belirsizlikler
 
 - `collect_new` aslında toplama komutu (`CMD_COLLECT`), `next_step` ise

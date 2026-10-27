@@ -377,6 +377,14 @@ class KayitTestleri(unittest.TestCase):
         self.assertTrue(sessions._seviyeyi_duzelt(kayit))
         self.assertEqual(kayit["maps"][0]["level"], 99)
 
+    def test_turkce_isim_yuklenirken_bozulmaz(self):
+        userid = sessions.new_village()
+        kayit = sessions.session(userid)
+        kayit["playerInfo"]["name"] = "Gökbörü"
+        sessions.save_session(userid)
+        sessions.load_saved_villages()
+        self.assertEqual(sessions.session(userid)["playerInfo"]["name"], "Gökbörü")
+
     def test_atomik_kayit_ve_yedek(self):
         userid = sessions.new_village()
         yol = os.path.join(self.gecici, f"{userid}.save.json")

@@ -38,7 +38,7 @@ __saves = {}  # ALL saved villages
     "USERID_2": {...}
 }'''
 
-__initial_village = json.load(open(os.path.join(VILLAGES_DIR, "initial.json")))
+__initial_village = json.load(open(os.path.join(VILLAGES_DIR, "initial.json"), encoding="utf-8"))
 
 # Load saved villages
 
@@ -70,7 +70,7 @@ def _load_saved_villages():
         if file == "initial.json" or not file.endswith(".json"):
             continue
         print(f" * Loading static neighbour {file}... ", end='')
-        village = json.load(open(os.path.join(VILLAGES_DIR, file)))
+        village = json.load(open(os.path.join(VILLAGES_DIR, file), encoding="utf-8"))
         if not is_valid_village(village):
             print("Invalid neighbour")
             continue
@@ -86,7 +86,7 @@ def _load_saved_villages():
             continue
         print(f" * Loading save at {file}... ", end='')
         try:
-            save = json.load(open(os.path.join(SAVES_DIR, file)))
+            save = json.load(open(os.path.join(SAVES_DIR, file), encoding="utf-8"))
         except json.decoder.JSONDecodeError as e:
             print("Corrupted JSON.")
             continue

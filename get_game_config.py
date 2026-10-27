@@ -34,7 +34,7 @@ def remove_duplicate_items():
         break
 
 def apply_config_patch(filename):
-    patch = json.load(open(filename, 'r'))
+    patch = json.load(open(filename, 'r', encoding='utf-8'))
     jsonpatch.apply_patch(__game_config, patch, in_place=True)
 
 def patch_game_config():

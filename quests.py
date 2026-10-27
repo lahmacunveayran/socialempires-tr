@@ -7,5 +7,5 @@ def get_quest_map(questid):
     file = os.path.join(QUESTS_DIR, str(questid) + ".json")
     if not os.path.exists(file):
         return("", 404)
-    d = json.load(open(file, 'r'))
+    d = json.load(open(file, 'r', encoding='utf-8'))
     return(d, 200)

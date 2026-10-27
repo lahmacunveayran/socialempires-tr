@@ -123,12 +123,17 @@ def get_xp_from_level(level: int) -> int:
     return __game_config["levels"][int(level)]["exp_required"]
 
 def get_level_from_xp(xp: int) -> int:
+    seviyeler = __game_config["levels"]
+    if not seviyeler:
+        return 0
     i = 0
-    for lvl in __game_config["levels"]:
+    for lvl in seviyeler:
         if lvl["exp_required"] > int(xp):
             return i
         i += 1
-    return 0
+    # XP tüm eşikleri aştıysa son seviye döner (eskiden 0 dönüyordu ve
+    # bozuk bir XP değeri oyuncuyu 0. seviyeye düşürüyordu).
+    return len(seviyeler) - 1
 
 #########
 # ITEMS #

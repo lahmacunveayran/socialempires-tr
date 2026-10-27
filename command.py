@@ -695,20 +695,33 @@ def do_command(USERID, cmd, args):
             map["items"] += [[unit_id, unit_x, unit_y, orientation, collected_at_timestamp, level]]
     
     elif cmd == Constant.CMD_RT_LEVEL_UP:
-        new_level = args[0]
-        print("Level Up!:", new_level)
-        map = save["maps"][0] # TODO : xp must be general, since theres no given town_id
-        map["level"] = args[0]
-        current_xp = map["xp"]
-        min_expected_xp = get_xp_from_level(max(0, new_level - 1))
-        map["xp"] = max(min_expected_xp, current_xp) # try to fix problems with not counting XP... by keeping up with client-side level counting
+        yeni_seviye = _tam(args[0]) if args else None
+        seviyeler = get_game_config()["levels"]
+        if yeni_seviye is None:
+            print(" ! Level up: gecersiz arguman", args)
+            return
+        yeni_seviye = max(0, min(yeni_seviye, len(seviyeler) - 1))
+        print("Level Up!:", yeni_seviye)
+        harita = save["maps"][0]
+        harita["level"] = yeni_seviye
+        mevcut_xp = int(harita.get("xp", 0))
+        asgari_xp = int(seviyeler[yeni_seviye]["exp_required"])
+        ust_xp = int(seviyeler[-1]["exp_required"])
+        harita["xp"] = max(asgari_xp, min(mevcut_xp, ust_xp))
 
     elif cmd == Constant.CMD_RT_PUBLISH_SCORE:
-        new_xp = args[0]
-        print("xp set to", new_xp)
-        map = save["maps"][0] # TODO : xp must be general, since theres no given town_id
-        map["xp"] = new_xp
-        map["level"] = get_level_from_xp(new_xp)
+        yeni_xp = _tam(args[0]) if args else None
+        seviyeler = get_game_config()["levels"]
+        ust_xp = int(seviyeler[-1]["exp_required"])
+        # İstemci bazen anlamsız büyük bir değer gönderiyor (oyunu kilitleyen
+        # 2 milyarlık XP hatası). Makul aralık dışındaysa yok say.
+        if yeni_xp is None or yeni_xp < 0 or yeni_xp > ust_xp:
+            print(f" ! publish_score: mantiksiz XP ({yeni_xp}), yok sayildi")
+            return
+        print("xp set to", yeni_xp)
+        harita = save["maps"][0]
+        harita["xp"] = yeni_xp
+        harita["level"] = get_level_from_xp(yeni_xp)
 
     elif cmd == Constant.CMD_EXPAND:
         land_id = args[0]

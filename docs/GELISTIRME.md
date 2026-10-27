@@ -31,6 +31,14 @@ projesinin (GPLv3) yerel bir çalışma kopyasıdır. Buradaki değişiklikler
   argümanlı komut gönderiyor; bu artık hata üretmeden atlanıyor.
 - **Komut günlüğü**: her komut için dosya açmak yerine paket başına tek
   yazma yapılıyor (yüzlerce komutluk eğitimde hız kazancı).
+- **Maksimum seviye hatası (oyun kilidi)**: `get_level_from_xp`, XP son
+  seviyenin eşiğine eşit/aşkın olduğunda 0 dönüyordu. "Maksimum seviye"
+  sonrası oyuncu 0. seviyeye düşüp istemci kilitleniyordu. Fonksiyon son
+  seviyeyi döndürecek şekilde düzeltildi; ayrıca kayıt yüklenirken
+  seviye ile XP uyuşmuyorsa seviye otomatik normalize ediliyor.
+- **Beklenmeyen hatalar**: sunucu hataları artık
+  `saves/sunucu_hatalari.log` dosyasına yazılıyor; açılış hataları da
+  aynı dosyaya düşüyor.
 
 ### Yeni komutlar
 | Komut | Davranış |

@@ -211,6 +211,23 @@ class KomutTestleri(unittest.TestCase):
         command.do_command("test", Constant.CMD_SET_RESOURCES_TRADED, [json.dumps({"w": 7, "s": 3})])
         self.assertEqual(self.kayit["maps"][0]["resourcesTraded"], {"w": 7, "s": 3})
 
+    def test_publish_score_maksimum_xp_dogru_seviyeye_cevrilir(self):
+        # 2016089205 = 99. seviyenin XP eşiği; eskiden 0. seviyeye düşürüyordu.
+        command.do_command("test", Constant.CMD_RT_PUBLISH_SCORE, [2016089205])
+        self.assertEqual(self.kayit["maps"][0]["xp"], 2016089205)
+        self.assertEqual(self.kayit["maps"][0]["level"], 99)
+
+    def test_publish_score_absurt_xp_yok_sayilir(self):
+        self.kayit["maps"][0]["xp"] = 140
+        self.kayit["maps"][0]["level"] = 4
+        command.do_command("test", Constant.CMD_RT_PUBLISH_SCORE, [10 ** 12])
+        self.assertEqual(self.kayit["maps"][0]["xp"], 140)
+        self.assertEqual(self.kayit["maps"][0]["level"], 4)
+
+    def test_seviye_siniri_asilirsa_son_seviye(self):
+        from get_game_config import get_game_config, get_level_from_xp
+        self.assertEqual(get_level_from_xp(10 ** 12), len(get_game_config()["levels"]) - 1)
+
     # -- PvP ---------------------------------------------------------------
     def test_saldiri_sonucu_iki_tarafa_uygulanir(self):
         kurban = bos_kayit()
@@ -352,6 +369,13 @@ class KayitTestleri(unittest.TestCase):
         self.assertEqual(kayit["version"], "0.05a")
         self.assertEqual(kayit["privateState"]["marketTimestamp"], 0)
         self.assertEqual(kayit["maps"][0]["resourcesTraded"], {})
+
+    def test_seviye_xp_ile_duzeltilir(self):
+        kayit = bos_kayit()
+        kayit["maps"][0]["xp"] = 2016089205
+        kayit["maps"][0]["level"] = 0
+        self.assertTrue(sessions._seviyeyi_duzelt(kayit))
+        self.assertEqual(kayit["maps"][0]["level"], 99)
 
     def test_atomik_kayit_ve_yedek(self):
         userid = sessions.new_village()

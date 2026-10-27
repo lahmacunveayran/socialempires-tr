@@ -39,6 +39,26 @@ app = Flask(__name__, template_folder=TEMPLATES_DIR)
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 86400
 app.config["JSON_SORT_KEYS"] = False
 
+HATA_LOG = os.path.join(BASE_DIR, "saves", "sunucu_hatalari.log")
+
+
+@app.errorhandler(Exception)
+def _hatayi_kaydet(hata):
+    """Beklenmeyen hataları dosyaya yazar; sunucu ayakta kalır."""
+    from werkzeug.exceptions import HTTPException
+    if isinstance(hata, HTTPException):
+        return hata
+    import traceback
+    try:
+        os.makedirs(os.path.join(BASE_DIR, "saves"), exist_ok=True)
+        with open(HATA_LOG, "a", encoding="utf-8") as f:
+            f.write(f"\n=== {timestamp_now()} ===\n")
+            traceback.print_exc(file=f)
+    except OSError:
+        pass
+    print(" ! Sunucu hatasi (ayrinti saves/sunucu_hatalari.log):", hata)
+    return ({"result": "error"}, 500)
+
 print (" [+] Configuring server routes...")
 
 ##########
@@ -464,9 +484,20 @@ def cheat_uygula():
 print (" [+] Running server...")
 
 if __name__ == '__main__':
-    from backups_daily import baslat as yedekleri_baslat
-    yedekleri_baslat()
-    app.secret_key = 'SECRET_KEY'
-    # threaded=True: Flash aynı anda onlarca varlık istiyor; tek iş
-    # parçacığı bunları sırayla sunup yükleme süresini uzatıyordu.
-    app.run(host=host, port=port, debug=False, threaded=True, use_reloader=False)
+    try:
+        from backups_daily import baslat as yedekleri_baslat
+        yedekleri_baslat()
+        app.secret_key = 'SECRET_KEY'
+        # threaded=True: Flash aynı anda onlarca varlık istiyor; tek iş
+        # parçacığı bunları sırayla sunup yükleme süresini uzatıyordu.
+        app.run(host=host, port=port, debug=False, threaded=True, use_reloader=False)
+    except Exception:
+        import traceback
+        try:
+            with open(HATA_LOG, "a", encoding="utf-8") as f:
+                f.write(f"\n=== ACILIS HATASI {timestamp_now()} ===\n")
+                traceback.print_exc(file=f)
+        except OSError:
+            pass
+        traceback.print_exc()
+        input("Sunucu baslatilamadi. Kapatmak icin Enter'a basin...")

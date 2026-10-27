@@ -101,8 +101,33 @@ def _load_saved_villages():
         print(f"({map_name}) Ok.")
         __saves[str(USERID)] = save
         modified = migrate_loaded_save(save) # check save version for migration
+        if _seviyeyi_duzelt(save):
+            modified = True
         if modified:
             save_session(USERID)
+
+
+def _seviyeyi_duzelt(save: dict) -> bool:
+    """Kayıttaki seviye, XP eşiğiyle uyuşmuyorsa düzeltir.
+
+    Bozuk bir XP (ör. aşırı büyük değer) yüzünden seviye 0'da kalmış
+    kayıtların oyunu kilitlemesini önler.
+    """
+    try:
+        from get_game_config import get_level_from_xp
+    except Exception:
+        return False
+    duzeltildi = False
+    for harita in save.get("maps", []):
+        try:
+            beklenen = get_level_from_xp(int(harita.get("xp", 0)))
+        except (TypeError, ValueError):
+            continue
+        if harita.get("level") != beklenen:
+            print(f"   > seviye duzeltildi: {harita.get('level')} -> {beklenen}")
+            harita["level"] = beklenen
+            duzeltildi = True
+    return duzeltildi
     
 
 # New village

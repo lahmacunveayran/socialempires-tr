@@ -1,5 +1,6 @@
 print (" [+] Loading basics...")
 import os
+import time
 import json
 import hashlib
 import urllib.request
@@ -19,7 +20,7 @@ from get_game_config import get_game_config, get_client_game_config, patch_game_
 print (" [+] Loading players...")
 from get_player_info import get_player_info, get_neighbor_info
 from sessions import (load_saved_villages, all_saves_userid, all_saves_info,
-                      save_info, new_village, fb_friends_str, save_lock,
+                      save_info, new_village, fb_friends_str, save_lock, gecerli_uid,
                       backup_session, save_session, neighbors, session as kayit_oturumu)
 load_saved_villages()
 
@@ -28,7 +29,7 @@ from flask import Flask, render_template, send_from_directory, request, redirect
 from flask.debughelpers import attach_enctype_error_multidict
 from command import command
 from engine import timestamp_now
-from version import version_name
+from version import version_name, version_code
 from constants import Constant
 from quests import get_quest_map
 from bundle import ASSETS_DIR, STUB_DIR, TEMPLATES_DIR, BASE_DIR
@@ -52,6 +53,7 @@ port = 5050
 
 app = Flask(__name__, template_folder=TEMPLATES_DIR)
 app.secret_key = app_secret
+BASLANGIC = time.time()
 # Statik varlıklar (SWF/JPG) tarayıcıda/Flash'ta önbelleklensin: her açılışta
 # yüzlerce dosya yeniden indirilmesin. Geliştirme sırasında değiştirdiğiniz
 # dosyalar için Ctrl+F5 ile önbelleği temizleyin.
@@ -121,6 +123,23 @@ print (" [+] Configuring server routes...")
 
 ## PAGES AND RESOURCES
 
+@app.route("/saglik")
+def saglik():
+    return {
+        "durum": "ok",
+        "surum": version_code,
+        "oyuncu": len(all_saves_userid()),
+        "calisma_suresi": int(time.time() - BASLANGIC),
+        "dunya_tick": getattr(dunya, "tick", None),
+        "saat": int(time.time()),
+    }
+
+
+@app.route("/saglik/hazir")
+def saglik_hazir():
+    return ("hazir", 200)
+
+
 @app.route("/", methods=['GET', 'POST'])
 def login():
     # Log out previous session
@@ -130,6 +149,8 @@ def login():
     load_saved_villages()
     # If logging in, set session USERID, and go to play
     if request.method == 'POST':
+        if not gecerli_uid(request.form.get('USERID', '')):
+            return ("Gecersiz oyuncu kimligi", 400)
         session['USERID'] = request.form.get('USERID', '')
         session['GAMEVERSION'] = request.form.get('GAMEVERSION', 'SocialEmpires0926bsec.swf')
         # Bir bot kaydıyla giriş yapıldıysa onu oyuncuya devret; aksi halde

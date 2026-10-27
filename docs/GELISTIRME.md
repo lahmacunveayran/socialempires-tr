@@ -394,6 +394,16 @@ dosyasına `anahtar: "Türkçe metin"` satırı eklemek yeterli; anahtarlar
   elle çeviri önceliklidir. `turkce.dogrula` yer tutucu/HTML/newline
   bozulursa çeviriyi uygulamaz.
 
+## Sağlamlaştırma (yeni)
+
+- `/saglik` ve `/saglik/hazir` uçları: sürüm, oyuncu sayısı, çalışma süresi,
+  dünya tick'i. `baslat.bat` artık tarayıcıyı açmadan önce `/saglik/hazir`
+  yanıtını bekler.
+- `USERID` doğrulaması: yalnız harf/rakam/`-`/`_`, en fazla 64 karakter;
+  `../` gibi yol kaçışları kayıt yazımında reddedilir.
+- `tests/test_http.py`: Flask test istemcisiyle 7 uçtan uca test
+  (sağlık, giriş, oyun sayfası, Türkçe/ASCII config, ada, turnuva, sosyal).
+
 ## Bilinen belirsizlikler
 
 - `collect_new` aslında toplama komutu (`CMD_COLLECT`), `next_step` ise

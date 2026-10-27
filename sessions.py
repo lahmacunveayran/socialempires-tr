@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import copy
 import threading
 import uuid
@@ -315,12 +316,25 @@ def _eski_yedekleri_temizle(USERID: str):
             pass
 
 
+def gecerli_uid(USERID: str) -> bool:
+    """Dosya yoluna yazılabilecek güvenli kimlik mi? (path traversal engeli)"""
+    uid = str(USERID or "")
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", uid):
+        return False
+    if re.fullmatch(r"(?i)(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])", uid):
+        return False
+    return True
+
+
 def save_session(USERID: str):
     """Kaydı atomik olarak yazar: önce .tmp, sonra yerine taşır.
 
     Yazma sırasında oyun çökerse eski kayıt bozulmadan kalır; başarılı her
     yazımdan önce bir önceki sürüm .bak olarak saklanır.
     """
+    if not gecerli_uid(USERID):
+        print(f" ! Gecersiz USERID, kayit yazilmadi: {USERID!r}")
+        return
     file = f"{USERID}.save.json"
     yol = os.path.join(SAVES_DIR, file)
     gecici = yol + ".tmp"

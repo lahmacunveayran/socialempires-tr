@@ -2,8 +2,8 @@ import random
 
 from engine import timestamp_now
 
-version_name = "alpha 0.04"
-version_code = "0.04a"
+version_name = "alpha 0.05"
+version_code = "0.05a"
 
 def migrate_loaded_save(save: dict) -> bool:
 
@@ -64,8 +64,15 @@ def migrate_loaded_save(save: dict) -> bool:
         print("   > migrated to 0.04a")
 
     # 0.04a -> 0.05a
-    #if save["version"] == "0.04a":
-    #    save["version"] = "0.05a"
-    #    print("   > migrated to 0.05a")
+    if save["version"] == "0.04a":
+        if "lastUpgrades" not in save["privateState"]:
+            save["privateState"]["lastUpgrades"] = []
+        if "marketTimestamp" not in save["privateState"]:
+            save["privateState"]["marketTimestamp"] = 0
+        for m in save["maps"]:
+            if "resourcesTraded" not in m or m["resourcesTraded"] is None:
+                m["resourcesTraded"] = {}
+        save["version"] = "0.05a"
+        print("   > migrated to 0.05a")
 
     return True

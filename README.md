@@ -41,6 +41,11 @@ This project is dedicated to preserving this Flash game so that it's not lost to
 
 :flashlight: [Flash Continuation](FLASH.md) documentation
 
+## Geliştirme (bu çalışma kopyası)
+
+- [Geliştirme notları ve komut protokolü](docs/GELISTIRME.md)
+- Birim testleri: `python tests\test_komutlar.py`
+
 ## On archives and accessibility to digital heritage
 
 - [Exemption to PCCPSACT](https://www.federalregister.gov/documents/2018/10/26/2018-23241/exemption-to-prohibition-on-circumvention-of-copyright-protection-systems-for-access-control), exemptions to the provision of the Digital Millennium Copyright Act (“DMCA”). 

@@ -11,4 +11,5 @@ download_assets/
 Include/
 Lib/
 Scripts/
-pyvenv.cfg
+pyvenv.cfgtests/_gecici/
+tests/sonuc.txt

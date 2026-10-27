@@ -1,9 +1,327 @@
 import json
+import math
+import os
+import traceback
 
 from sessions import session, save_session
-from get_game_config import get_game_config, get_level_from_xp, get_name_from_item_id, get_attribute_from_mission_id, get_xp_from_level, get_attribute_from_item_id, get_item_from_subcat_functional
+from get_game_config import get_game_config, get_level_from_xp, get_name_from_item_id, get_attribute_from_mission_id, get_xp_from_level, get_attribute_from_item_id, get_item_from_subcat_functional, get_item_from_id
 from constants import Constant
 from engine import apply_cost, apply_collect, apply_collect_xp, timestamp_now
+from bundle import SAVES_DIR
+
+# ---------------------------------------------------------------------------
+# Komut argümanlarını çözümleme yardımcıları
+#
+# İstemci (SWF) komut argümanlarını sayı/string karışık gönderiyor. Sıra
+# sürümden sürüme değişebildiği için argümanları "değer rolüne" göre
+# eşleştiriyoruz: eşya kimliği + x/y koordinatı kayıttaki eşyalarla
+# karşılaştırılarak bulunur. Böylece argüman sırası değişse bile doğru
+# eşya yakalanır.
+# ---------------------------------------------------------------------------
+
+KAYNAK_ADLARI = {
+    "w": "w", "wood": "w", "madera": "w", "odun": "w",
+    "s": "s", "stone": "s", "piedra": "s", "tas": "s",
+    "f": "f", "food": "f", "comida": "f", "yemek": "f",
+}
+
+
+def _tam(deger):
+    """Değeri int'e çevirir; olmuyorsa None döner."""
+    if isinstance(deger, bool):
+        return int(deger)
+    if isinstance(deger, int):
+        return deger
+    if isinstance(deger, float):
+        return int(deger)
+    try:
+        metin = str(deger).strip()
+        if metin.lstrip("-").isdigit():
+            return int(metin)
+        return int(float(metin))
+    except (TypeError, ValueError):
+        return None
+
+
+def _tamsayilar(args):
+    return [n for n in (_tam(a) for a in args) if n is not None]
+
+
+def _json_veri(args):
+    """Argümanların içinde JSON nesnesi/dizisi varsa çözer."""
+    for a in args:
+        if isinstance(a, (dict, list)):
+            return a
+        if isinstance(a, str) and a.strip()[:1] in ("{", "["):
+            try:
+                return json.loads(a)
+            except json.JSONDecodeError:
+                continue
+    return None
+
+
+def _esya_bul(save, args):
+    """args içindeki (id, x, y) üçlüsüne uyan eşyayı (harita, eşya) olarak döndürür."""
+    sayilar = set(_tamsayilar(args))
+    for town_id, harita in enumerate(save.get("maps", [])):
+        for esya in harita.get("items", []):
+            if len(esya) < 3:
+                continue
+            esya_id, x, y = _tam(esya[0]), _tam(esya[1]), _tam(esya[2])
+            if esya_id is None:
+                continue
+            if esya_id in sayilar and x in sayilar and y in sayilar:
+                return town_id, harita, esya
+    return None, None, None
+
+
+def _esya_konumdan_bul(save, args):
+    """Yalnızca x/y koordinatlarına bakarak eşya bulur (id gönderilmediyse)."""
+    sayilar = set(_tamsayilar(args))
+    for town_id, harita in enumerate(save.get("maps", [])):
+        adaylar = [
+            e for e in harita.get("items", [])
+            if len(e) >= 3 and _tam(e[1]) in sayilar and _tam(e[2]) in sayilar
+        ]
+        if len(adaylar) == 1:
+            return town_id, harita, adaylar[0]
+    return None, None, None
+
+
+def _harita_sec(save, args):
+    """Argümanlardaki geçerli harita numarasını bulur (yoksa 0)."""
+    for n in _tamsayilar(args):
+        if 0 <= n < len(save.get("maps", [])):
+            return n
+    return 0
+
+
+def _gift_ekle(save, esya_id, adet=1):
+    """Depodaki (gifts) eşya sayısını artırır."""
+    esya_id = int(esya_id)
+    adet = max(1, int(adet))
+    gifts = save["privateState"].setdefault("gifts", [])
+    if len(gifts) <= esya_id:
+        gifts.extend([0] * (esya_id - len(gifts) + 1))
+    gifts[esya_id] += adet
+
+
+def _gift_cikar(save, esya_id, adet=1):
+    """Depodan eşya düşer; yeterli yoksa False döner."""
+    esya_id = int(esya_id)
+    adet = max(1, int(adet))
+    gifts = save["privateState"].setdefault("gifts", [])
+    if esya_id >= len(gifts) or gifts[esya_id] < adet:
+        return False
+    gifts[esya_id] -= adet
+    while gifts and gifts[-1] == 0:
+        gifts.pop()
+    return True
+
+
+def _komut_gunlugune_yaz(USERID, cmd, args):
+    """Protokol keşfi için komutları saves/komut_gunlugu.jsonl dosyasına yazar."""
+    try:
+        os.makedirs(SAVES_DIR, exist_ok=True)
+        satir = json.dumps(
+            {"ts": timestamp_now(), "user": str(USERID), "cmd": cmd, "args": args},
+            ensure_ascii=False,
+        )
+        with open(os.path.join(SAVES_DIR, "komut_gunlugu.jsonl"), "a", encoding="utf-8") as f:
+            f.write(satir + "\n")
+    except OSError:
+        pass  # günlük yazılamazsa oyun akışı bozulmasın
+
+
+# ---------------------------------------------------------------------------
+# Yükseltme
+# ---------------------------------------------------------------------------
+
+def _yukselt(save, args):
+    """Bir binayı config'teki upgrades_to zincirine göre yükseltir."""
+    town_id, harita, esya = _esya_bul(save, args)
+    if esya is None:
+        # İstemci mevcut yerine hedef binanın kimliğini göndermiş olabilir;
+        # bu durumda yalnızca koordinatlardan bulmayı dene.
+        town_id, harita, esya = _esya_konumdan_bul(save, args)
+    if esya is None:
+        print(" ! Yukseltme: esya bulunamadi, args =", args)
+        return False
+
+    eski_id = _tam(esya[0])
+    eski = get_item_from_id(eski_id)
+    if not eski:
+        print(" ! Yukseltme: tanimsiz esya", eski_id)
+        return False
+
+    hedef_id = _tam(eski.get("upgrades_to"))
+    if not hedef_id:
+        print(f" ! Yukseltme: '{eski.get('name')}' yukseltilemiyor")
+        return False
+
+    hedef = get_item_from_id(hedef_id)
+    if not hedef:
+        print(" ! Yukseltme: hedef esya tanimsiz", hedef_id)
+        return False
+
+    # İstemci bazen fiyat çarpanı gönderiyor (BUY komutundaki gibi).
+    carpan = 1.0
+    for a in args:
+        if isinstance(a, str):
+            try:
+                f = float(a)
+            except ValueError:
+                continue
+            if 0 < f <= 10:
+                carpan = f
+                break
+
+    # Yükseltme bedeli: hedef binanın maliyeti (çarpanla). Önce bakiye kontrolü.
+    maliyet = int(carpan * int(hedef.get("cost") or 0))
+    tur = hedef.get("cost_type")
+    if tur == "c":
+        bakiye = int(save["playerInfo"].get("cash", 0))
+        kaynak_adi = "cash"
+    else:
+        kaynak_adi = {"w": "wood", "s": "stone", "f": "food", "g": "coins"}.get(tur, tur)
+        bakiye = int(harita.get(kaynak_adi, 0))
+    if bakiye < maliyet:
+        print(f" ! Yukseltme: yetersiz {kaynak_adi} ({bakiye} < {maliyet})")
+        return False
+
+    apply_cost(save["playerInfo"], harita, hedef_id, carpan)
+    harita["xp"] = int(harita.get("xp", 0)) + int(hedef.get("xp", 0) or 0)
+
+    esya[0] = hedef_id
+    if len(esya) > 4:
+        esya[4] = timestamp_now()  # üretim sayacı sıfırlanır
+    if len(esya) > 5:
+        esya[5] = 0
+
+    print(f"Yukseltildi: {eski.get('name')} -> {hedef.get('name')}")
+    return True
+
+
+# ---------------------------------------------------------------------------
+# Pazar / kaynak takası
+# ---------------------------------------------------------------------------
+
+def _pazar(save, args):
+    """Kaynak alım-satımı.
+
+    Fiyat sunucuda hesaplanır: resourcesTraded sayacı arttıkça alım fiyatı
+    yükselir, satım fiyatı düşer. Sayaç MARKET_PERIOD_HOURS saatte sıfırlanır.
+    """
+    globals_ = get_game_config().get("globals", {})
+    temel = globals_.get("MARKET_BASE_COSTS", {})
+    artis = float(globals_.get("MARKET_INCREMENT", 0.02))
+    satis_orani = float(globals_.get("MARKET_SELL_PERCENTAGE", 0.75))
+    max_artis = int(globals_.get("MARKET_MAX_INCREMENTS", 200))
+    max_azalis = int(globals_.get("MARKET_MAX_DECREMENTS", 25))
+    periyot = int(globals_.get("MARKET_PERIOD_HOURS", 20)) * 3600
+
+    veri = _json_veri(args)
+    kaynak = yon = None
+    adet = None
+    town_id = 0
+
+    if isinstance(veri, dict):
+        kaynak = str(veri.get("resource") or veri.get("res") or veri.get("type") or "").lower()
+        yon = str(veri.get("action") or veri.get("direction") or veri.get("mode") or "").lower()
+        adet = _tam(veri.get("amount") or veri.get("quantity") or veri.get("qty"))
+        town_id = _tam(veri.get("map") or veri.get("town") or veri.get("town_id")) or 0
+    else:
+        for a in args:
+            anahtar = KAYNAK_ADLARI.get(str(a).strip().lower())
+            if anahtar is not None:
+                kaynak = anahtar
+        for a in args:
+            metin = str(a).strip().lower()
+            if metin in ("buy", "comprar", "satin_al"):
+                yon = "buy"
+            elif metin in ("sell", "vender", "sat"):
+                yon = "sell"
+        sayilar = [n for n in _tamsayilar(args) if n > 0]
+        adet = sayilar[0] if sayilar else None
+        if len(args) > 2:
+            town_id = _tam(args[2]) or 0
+
+    kaynak = KAYNAK_ADLARI.get(kaynak, kaynak)
+    if kaynak not in ("w", "s", "f"):
+        print(" ! Pazar: gecersiz kaynak", args)
+        return False
+    if yon is None:
+        yon = "buy"  # yön belirtilmediyse alım varsay (log'da görünür)
+        print(" ! Pazar: yon belirtilmedi, alim varsayildi")
+    if not adet or adet <= 0:
+        print(" ! Pazar: gecersiz miktar", args)
+        return False
+
+    harita = save["maps"][town_id] if 0 <= town_id < len(save["maps"]) else save["maps"][0]
+    ps = save["privateState"]
+    simdi = timestamp_now()
+
+    # Config'teki kısa kaynak anahtarı (w/s/f) ile kayıttaki alan adı farklı.
+    alan = {"w": "wood", "s": "stone", "f": "food"}[kaynak]
+
+    # Dönem dolduysa sayaçları sıfırla
+    if simdi - int(ps.get("marketTimestamp", 0)) > periyot:
+        harita["resourcesTraded"] = {}
+        ps["marketTimestamp"] = simdi
+    traded = harita.setdefault("resourcesTraded", {}) or {}
+    harita["resourcesTraded"] = traded
+    onceki = int(traded.get(kaynak, 0))
+
+    if yon == "buy":
+        birim = temel[kaynak] * (1 + artis * max(0, min(onceki, max_artis)))
+        toplam = int(math.ceil(birim * adet))
+        if harita["coins"] < toplam:
+            print(f" ! Pazar: yetersiz altin ({harita['coins']} < {toplam})")
+            return False
+        harita["coins"] -= toplam
+        harita[alan] += adet
+        traded[kaynak] = max(-max_azalis, min(max_artis, onceki + adet))
+        print(f"Pazar: {adet} {kaynak} alindi, {toplam} altin odendi")
+    else:
+        birim = temel[kaynak] * satis_orani * (1 - artis * max(0, min(-onceki, max_azalis)))
+        toplam = int(math.floor(birim * adet))
+        if harita[alan] < adet:
+            print(f" ! Pazar: yetersiz kaynak ({harita[alan]} < {adet})")
+            return False
+        harita[alan] -= adet
+        harita["coins"] += toplam
+        traded[kaynak] = max(-max_azalis, min(max_artis, onceki - adet))
+        print(f"Pazar: {adet} {kaynak} satildi, {toplam} altin alindi")
+    return True
+
+
+def _depoya_ekle(save, veri):
+    """Depoya (gifts) eşya ekler; JSON sözlüğü/listesi veya çift listesi kabul eder."""
+    if isinstance(veri, dict):
+        if "id" in veri or "item" in veri:  # tek eşya kaydı
+            esya_id = _tam(veri.get("id") or veri.get("item"))
+            if esya_id is not None:
+                _gift_ekle(save, esya_id, _tam(veri.get("count") or veri.get("amount")) or 1)
+            return
+        for esya_id, adet in veri.items():  # {esya_id: adet}
+            n = _tam(esya_id)
+            if n is not None:
+                _gift_ekle(save, n, _tam(adet) or 1)
+    elif isinstance(veri, list):
+        for oge in veri:
+            if isinstance(oge, dict):
+                esya_id = _tam(oge.get("id") or oge.get("item"))
+                if esya_id is not None:
+                    _gift_ekle(save, esya_id, _tam(oge.get("count") or oge.get("amount")) or 1)
+            elif isinstance(oge, (list, tuple)) and len(oge) >= 2:
+                curuk = _tam(oge[0])
+                if curuk is not None:
+                    _gift_ekle(save, curuk, _tam(oge[1]) or 1)
+            else:
+                n = _tam(oge)
+                if n is not None:
+                    _gift_ekle(save, n, 1)
+
 
 def get_strategy_type(id):
     if id == 8:
@@ -23,11 +341,19 @@ def command(USERID, data):
     tries = data["tries"]
     publishActions = data["publishActions"]
     commands = data["commands"]
-    
+
     for i, comm in enumerate(commands):
-        cmd = comm["cmd"]
-        args = comm["args"]
-        do_command(USERID, cmd, args)
+        cmd = comm.get("cmd")
+        args = comm.get("args", [])
+        _komut_gunlugune_yaz(USERID, cmd, args)
+        try:
+            do_command(USERID, cmd, args)
+        except Exception:
+            # Bozuk tek bir komut, aynı paketteki diğer komutları ve kaydı
+            # düşürmesin. Hata ayrıntısı konsola yazılır.
+            print(f" ! KOMUT HATASI: {cmd} args={args}")
+            traceback.print_exc()
+
     save_session(USERID) # Save session
 
 def do_command(USERID, cmd, args):
@@ -130,21 +456,33 @@ def do_command(USERID, cmd, args):
                 break
     
     elif cmd == Constant.CMD_COMPLETE_MISSION:
-        mission_id = args[0]
-        skipped_with_cash = bool(args[1])
+        mission_id = _tam(args[0]) if args else None
+        skipped_with_cash = bool(args[1]) if len(args) > 1 else False
+        if mission_id is None:
+            print(" ! Gecersiz gorev kimligi:", args)
+            return
         print("Complete mission", mission_id, ":", str(get_attribute_from_mission_id(mission_id, "title")))
         if skipped_with_cash:
-            cash_to_substract = 0 # TODO 
+            cash_to_substract = 0 # TODO
             save["playerInfo"]["cash"] = max(save["playerInfo"]["cash"] - cash_to_substract, 0)
-        save["privateState"]["completedMissions"] += [mission_id]
-    
+        tamamlanan = save["privateState"].setdefault("completedMissions", [])
+        if mission_id not in tamamlanan:  # aynı görev iki kez yazılmasın
+            tamamlanan.append(mission_id)
+
     elif cmd == Constant.CMD_REWARD_MISSION:
-        town_id = args[0]
-        mission_id = args[1]
+        town_id = _tam(args[0]) if args else 0
+        mission_id = _tam(args[1]) if len(args) > 1 else None
+        if mission_id is None:
+            print(" ! Gecersiz gorev kimligi:", args)
+            return
         print("Reward mission", mission_id, ":", str(get_attribute_from_mission_id(mission_id, "title")))
+        odul_verilen = save["privateState"].setdefault("rewardedMissions", [])
+        if mission_id in odul_verilen:
+            print(" ! Gorev odulu zaten alinmis:", mission_id)
+            return
         reward = int(get_attribute_from_mission_id(mission_id, "reward")) # gold
-        save["maps"][town_id]["coins"] += reward   
-        save["privateState"]["rewardedMissions"] += [mission_id]
+        save["maps"][town_id]["coins"] += reward
+        odul_verilen.append(mission_id)
     
     elif cmd == Constant.CMD_PUSH_UNIT:
         unit_x = args[0]
@@ -456,23 +794,21 @@ def do_command(USERID, cmd, args):
         save["privateState"]["potion"] += amount
 
     elif cmd == Constant.CMD_RESURRECT_HERO:
-        unit_id = args[0]
-        x = args[1]
-        y = args[2]
-        town_id = args[3]
-        bool_used_potion = len(args) > 4 and args[4] == '1'
+        unit_id = _tam(args[0]) if args else None
+        x = _tam(args[1]) if len(args) > 1 else 0
+        y = _tam(args[2]) if len(args) > 2 else 0
+        town_id = _tam(args[3]) if len(args) > 3 else 0
+        if unit_id is None or town_id is None or town_id >= len(save["maps"]):
+            print(" ! Gecersiz diriltme komutu:", args)
+            return
+        bool_used_potion = len(args) > 4 and str(args[4]) == '1'
         print("Resurrect", str(get_name_from_item_id(unit_id)), "from graveyard")
-        # pay
+        # Ödeme
         if bool_used_potion:
-            quantity = 1
-            save["privateState"]["potion"] = max(int(save["privateState"]["potion"] - quantity), 0)
-        else:
-            pass # TODO 
-        # Place unit
-        collected_at_timestamp = timestamp_now()
-        level = 0 # TODO 
-        orientation = 0
-        map["items"] += [[id, x, y, orientation, collected_at_timestamp, level]]
+            save["privateState"]["potion"] = max(int(save["privateState"]["potion"]) - 1, 0)
+        # Birimi haritaya koy (önceki sürümde 'map' ve 'id' tanımsızdı)
+        harita = save["maps"][town_id]
+        harita["items"].append([unit_id, x, y, 0, timestamp_now(), 0])
 
     elif cmd == Constant.CMD_BUY_SUPER_OFFER_PACK:
         town_id = args[0]
@@ -530,6 +866,91 @@ def do_command(USERID, cmd, args):
         # save["maps"]["lastQuestTimes"] [quest_id] = TODO min (... , duration_sec)
 
         print(f"Ended quest {quest_id}.")
+
+    elif cmd == Constant.CMD_UPGRADE:
+        _yukselt(save, args)
+
+    elif cmd == Constant.CMD_TRADE_RESOURCE:
+        _pazar(save, args)
+
+    elif cmd == Constant.CMD_SET_RESOURCES_TRADED:
+        veri = _json_veri(args)
+        if veri is None and len(args) >= 2:
+            veri = {args[0]: _tam(args[1])}
+        if isinstance(veri, dict):
+            harita = save["maps"][_harita_sec(save, args)]
+            harita["resourcesTraded"] = {
+                str(k): int(v) for k, v in veri.items() if _tam(v) is not None
+            }
+            print("Pazar sayaclari guncellendi:", harita["resourcesTraded"])
+        else:
+            print(" ! SET_RESOURCES_TRADED: veri cozulemedi", args)
+
+    elif cmd in (Constant.CMD_ADD_ITEMS_TO_STORE, Constant.CMD_STORE_ADD_ITEMS):
+        veri = _json_veri(args)
+        if veri is not None:
+            _depoya_ekle(save, veri)
+        else:
+            sayilar = _tamsayilar(args)
+            if len(sayilar) >= 2:
+                _gift_ekle(save, sayilar[0], sayilar[1])
+            elif sayilar:
+                _gift_ekle(save, sayilar[0], 1)
+            else:
+                print(" ! Depo: gecersiz args", args)
+                return
+        print("Depoya esya eklendi.")
+
+    elif cmd == Constant.CMD_PLACE_STORED_ITEM:
+        veri = _json_veri(args)
+        if isinstance(veri, dict):
+            esya_id = _tam(veri.get("id") or veri.get("item"))
+            x = _tam(veri.get("x")) or 0
+            y = _tam(veri.get("y")) or 0
+            town_id = _tam(veri.get("map") or veri.get("town")) or 0
+        else:
+            sayilar = _tamsayilar(args)
+            esya_id = sayilar[0] if sayilar else None
+            x = sayilar[1] if len(sayilar) > 1 else 0
+            y = sayilar[2] if len(sayilar) > 2 else 0
+            town_id = sayilar[3] if len(sayilar) > 3 else 0
+        if esya_id is None or not _gift_cikar(save, esya_id):
+            print(" ! Depoda esya yok:", args)
+            return
+        save["maps"][town_id]["items"].append([esya_id, x, y, 0, timestamp_now(), 0])
+        print("Depodan yerlestirildi:", esya_id, (x, y))
+
+    elif cmd == Constant.CMD_SELL_STORED:
+        sayilar = _tamsayilar(args)
+        esya_id = sayilar[0] if sayilar else None
+        town_id = sayilar[1] if len(sayilar) > 1 else 0
+        if esya_id is None or not _gift_cikar(save, esya_id):
+            print(" ! Depoda esya yok:", args)
+            return
+        if get_attribute_from_item_id(esya_id, "cost_type") != "c":
+            apply_cost(save["playerInfo"], save["maps"][town_id], esya_id, -0.05)
+        print("Depodaki esya satildi:", esya_id)
+
+    elif cmd == Constant.CMD_BUY_STORED_ITEM_CASH:
+        sayilar = _tamsayilar(args)
+        esya_id = sayilar[0] if sayilar else None
+        if esya_id is None:
+            print(" ! BUY_STORED_ITEM_CASH: gecersiz args", args)
+            return
+        fiyat = int(get_attribute_from_item_id(esya_id, "cost") or 0)
+        if get_attribute_from_item_id(esya_id, "cost_type") != "c":
+            fiyat = 0  # yalnızca cash ile satılan depo eşyaları
+        save["playerInfo"]["cash"] = max(int(save["playerInfo"]["cash"]) - fiyat, 0)
+        _gift_ekle(save, esya_id, 1)
+        print(f"Depoya esya satin alindi: {esya_id} ({fiyat} cash)")
+
+    elif cmd == Constant.CMD_HIRE_WORKER:
+        # İşçi sistemi: kayıtta hangi alanın güncellendiği henüz doğrulanmadı.
+        # Yanlış alanı bozmamak için şimdilik yalnızca günlüğe yazıyoruz.
+        print(" ! HIRE_WORKER: protokol henuz cozulmedi, args =", args)
+
+    elif cmd == Constant.CMD_INCREASE_POPULATION:
+        print(" ! INCREASE_POPULATION: protokol henuz cozulmedi, args =", args)
 
     elif cmd == Constant.CMD_ADD_COLLECTABLE:
         collection_id = args[0]

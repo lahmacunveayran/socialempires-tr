@@ -131,33 +131,38 @@ def similar_05122012_dynamic():
 
 @app.route("/default01.static.socialpointgames.com/static/socialempires/<path:path>")
 def static_assets_loader(path):
-    # return send_from_directory(ASSETS_DIR, path)
-    if not os.path.exists(ASSETS_DIR + "/"+ path):
-        # File does not exists in provided assets
-        if not os.path.exists(f"{BASE_DIR}/download_assets/assets/{path}"):
-            # Download file from SP's CDN if it doesn't exist
+    # İstenen yolun varlık klasörünün dışına çıkmadığından emin ol.
+    def _kok_icinde(kok, istenen):
+        kok = os.path.abspath(kok)
+        hedef = os.path.abspath(os.path.join(kok, istenen))
+        return hedef == kok or hedef.startswith(kok + os.sep)
 
-            # Make directory
-            directory = os.path.dirname(f"{BASE_DIR}/download_assets/assets/{path}")
-            if not os.path.exists(directory):
-                os.makedirs(directory)
+    if not _kok_icinde(ASSETS_DIR, path):
+        return ("", 404)
 
-            # Download File
-            URL = f"https://static.socialpointgames.com/static/socialempires/assets/{path}"
-            try:
-                response = urllib.request.urlretrieve(URL, f"{BASE_DIR}/download_assets/assets/{path}")
-            except urllib.error.HTTPError:
-                return ("", 404)
+    # Önce paketle gelen varlıklara bak, yoksa CDN'den indirileni kullan.
+    yerel = os.path.join(ASSETS_DIR, path)
+    indirilen_klasor = os.path.join(BASE_DIR, "download_assets", "assets")
+    indirilen = os.path.join(indirilen_klasor, path)
 
-            print(f"====== DOWNLOADED ASSET: {URL}")
-            return send_from_directory("{BASE_DIR}/download_assets/assets", path)
-        else:
-            # Use downloaded CDN asset
-            print(f"====== USING EXTERNAL: download_assets/assets/{path}")
-            return send_from_directory("{BASE_DIR}/download_assets/assets", path)
-    else:
-        # Use provided asset
+    if os.path.exists(yerel):
         return send_from_directory(ASSETS_DIR, path)
+
+    if os.path.exists(indirilen):
+        print(f"====== USING EXTERNAL: download_assets/assets/{path}")
+        return send_from_directory(indirilen_klasor, path)
+
+    # Dosya hiçbir yerde yok: Social Point CDN'inden indirmeyi dene.
+    os.makedirs(os.path.dirname(indirilen), exist_ok=True)
+    URL = f"https://static.socialpointgames.com/static/socialempires/assets/{path}"
+    try:
+        urllib.request.urlretrieve(URL, indirilen)
+    except (urllib.error.HTTPError, urllib.error.URLError, OSError) as hata:
+        print(f" ! Asset indirilemedi: {URL} ({hata})")
+        return ("", 404)
+
+    print(f"====== DOWNLOADED ASSET: {URL}")
+    return send_from_directory(indirilen_klasor, path)
 
 ## GAME DYNAMIC
 
@@ -178,7 +183,7 @@ def get_game_config_response():
     user_key = request.values['user_key']
     if 'spdebug' in request.values:
         spdebug = request.values['spdebug']
-    language = request.values['language']
+    language = request.values.get('language', 'en')
 
     print(f"get_game_config: USERID: {USERID}. --", request.values)
     return get_game_config()
@@ -189,7 +194,7 @@ def get_player_info_response():
     USERID = request.values['USERID']
     user_key = request.values['user_key']
     spdebug = request.values['spdebug'] if 'spdebug' in request.values else None
-    language = request.values['language']
+    language = request.values.get('language', 'en')
     neighbors = request.values['neighbors'] if 'neighbors' in request.values else None
     client_id = request.values['client_id']
     user = request.values['user'] if 'user' in request.values else None
@@ -220,7 +225,7 @@ def sync_error_track_response():
     user_key = request.values['user_key']
     if 'spdebug' in request.values:
         spdebug = request.values['spdebug']
-    language = request.values['language']
+    language = request.values.get('language', 'en')
     error = request.values['error']
     current_failed = request.values['current_failed']
     tries = request.values['tries'] if 'tries' in request.values else None
@@ -254,19 +259,30 @@ def command_response():
     user_key = request.values['user_key']
     if 'spdebug' in request.values:
         spdebug = request.values['spdebug']
-    language = request.values['language']
+    language = request.values.get('language', 'en')
     client_id = request.values['client_id']
 
     print(f"command: USERID: {USERID}. --", request.values)
 
-    data_str = request.values['data']
-    data_hash = data_str[:64]
-    assert data_str[64] == ';'
-    data_payload = data_str[65:]
-    data = json.loads(data_payload)
+    data_str = request.values.get('data', '')
+    if len(data_str) < 65 or data_str[64] != ';':
+        print(" ! Gecersiz komut paketi (hash;veri formati bozuk)")
+        return ({"result": "error"}, 400)
 
-    command(USERID, data)
-    
+    data_payload = data_str[65:]
+    try:
+        data = json.loads(data_payload)
+    except json.JSONDecodeError as hata:
+        print(f" ! Komut JSON'u cozulemedi: {hata}")
+        return ({"result": "error"}, 400)
+
+    try:
+        command(USERID, data)
+    except Exception:
+        # Tek bir komut hatasi tum oturumu dusurmesin; kayit yine yazilsin.
+        import traceback
+        traceback.print_exc()
+
     return ({"result": "success"}, 200)
 
 @app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_continent_ranking.php")

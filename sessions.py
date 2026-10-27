@@ -234,15 +234,78 @@ def is_valid_village(save: dict):
 
 # Persistency
 
+BACKUP_DIR = os.path.join(SAVES_DIR, "backups")
+MAX_BACKUPS = 10
+
+
 def backup_session(USERID: str):
-    # TODO 
-    return
+    """Kayıt dosyasının zaman damgalı bir kopyasını backups/ altına alır."""
+    kaynak = os.path.join(SAVES_DIR, f"{USERID}.save.json")
+    if not os.path.exists(kaynak):
+        return None
+    os.makedirs(BACKUP_DIR, exist_ok=True)
+    hedef = os.path.join(BACKUP_DIR, f"{USERID}-{timestamp_now()}.save.json")
+    try:
+        with open(kaynak, "rb") as f:
+            veri = f.read()
+        with open(hedef, "wb") as f:
+            f.write(veri)
+        _eski_yedekleri_temizle(USERID)
+    except OSError as hata:
+        print(f" ! Yedek alinamadi ({hedef}): {hata}")
+        return None
+    return hedef
+
+
+def _eski_yedekleri_temizle(USERID: str):
+    """Aynı oyuncuya ait en fazla MAX_BACKUPS yedeği tutar."""
+    try:
+        dosyalar = [
+            os.path.join(BACKUP_DIR, d)
+            for d in os.listdir(BACKUP_DIR)
+            if d.startswith(f"{USERID}-") and d.endswith(".save.json")
+        ]
+    except OSError:
+        return
+    dosyalar.sort(key=os.path.getmtime, reverse=True)
+    for eski in dosyalar[MAX_BACKUPS:]:
+        try:
+            os.remove(eski)
+        except OSError:
+            pass
+
 
 def save_session(USERID: str):
-    # TODO 
+    """Kaydı atomik olarak yazar: önce .tmp, sonra yerine taşır.
+
+    Yazma sırasında oyun çökerse eski kayıt bozulmadan kalır; başarılı her
+    yazımdan önce bir önceki sürüm .bak olarak saklanır.
+    """
     file = f"{USERID}.save.json"
-    print(f" * Saving village at {file}... ", end='')
+    yol = os.path.join(SAVES_DIR, file)
+    gecici = yol + ".tmp"
     village = session(USERID)
-    with open(os.path.join(SAVES_DIR, file), 'w') as f:
-        json.dump(village, f, indent=4)
+    print(f" * Saving village at {file}... ", end='')
+
+    try:
+        with open(gecici, "w", encoding="utf-8") as f:
+            json.dump(village, f, indent=4, ensure_ascii=False)
+            f.flush()
+            os.fsync(f.fileno())
+
+        if os.path.exists(yol):
+            try:
+                os.replace(yol, yol + ".bak")
+            except OSError:
+                pass  # yedek alınamasa da asıl kayıt yazılsın
+
+        os.replace(gecici, yol)
+    except OSError as hata:
+        print(f"HATA: {hata}")
+        try:
+            if os.path.exists(gecici):
+                os.remove(gecici)
+        except OSError:
+            pass
+        raise
     print("Done.")

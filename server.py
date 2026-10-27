@@ -10,11 +10,11 @@ else:
     sys.stdout.write("\x1b]2;Social Empires Server\x07")
 
 print (" [+] Loading game config...")
-from get_game_config import get_game_config, patch_game_config
+from get_game_config import get_game_config, get_client_game_config, patch_game_config
 
 print (" [+] Loading players...")
 from get_player_info import get_player_info, get_neighbor_info
-from sessions import load_saved_villages, all_saves_userid, all_saves_info, save_info, new_village, fb_friends_str
+from sessions import load_saved_villages, all_saves_userid, all_saves_info, save_info, new_village, fb_friends_str, save_lock
 load_saved_villages()
 
 print (" [+] Loading server...")
@@ -31,6 +31,11 @@ host = '127.0.0.1'
 port = 5050
 
 app = Flask(__name__, template_folder=TEMPLATES_DIR)
+# Statik varlıklar (SWF/JPG) tarayıcıda/Flash'ta önbelleklensin: her açılışta
+# yüzlerce dosya yeniden indirilmesin. Geliştirme sırasında değiştirdiğiniz
+# dosyalar için Ctrl+F5 ile önbelleği temizleyin.
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 86400
+app.config["JSON_SORT_KEYS"] = False
 
 print (" [+] Configuring server routes...")
 
@@ -186,7 +191,8 @@ def get_game_config_response():
     language = request.values.get('language', 'en')
 
     print(f"get_game_config: USERID: {USERID}. --", request.values)
-    return get_game_config()
+    # Zaman ölçeği uygulanmış config istemciye gider (sunucu aslını kullanır).
+    return get_client_game_config()
 
 @app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_player_info.php", methods=['POST'])
 def get_player_info_response():
@@ -277,7 +283,8 @@ def command_response():
         return ({"result": "error"}, 400)
 
     try:
-        command(USERID, data)
+        with save_lock:  # aynı anda gelen komutlar kaydı ezmesin
+            command(USERID, data)
     except Exception:
         # Tek bir komut hatasi tum oturumu dusurmesin; kayit yine yazilsin.
         import traceback
@@ -320,4 +327,6 @@ print (" [+] Running server...")
 
 if __name__ == '__main__':
     app.secret_key = 'SECRET_KEY'
-    app.run(host=host, port=port, debug=False)
+    # threaded=True: Flash aynı anda onlarca varlık istiyor; tek iş
+    # parçacığı bunları sırayla sunup yükleme süresini uzatıyordu.
+    app.run(host=host, port=port, debug=False, threaded=True, use_reloader=False)

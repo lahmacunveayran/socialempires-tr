@@ -66,11 +66,43 @@ Bu yüzden sunucu argümanları **değer rolüne göre** eşliyor:
 `saves/komut_gunlugu.jsonl` dosyasına yazar. Oynarken bu dosyaya bakarak
 protokolü doğrulayabilirsiniz.
 
+## Oyun hızı (zaman ölçeği)
+
+Oyunun yavaş hissettiren kısmı üretim/inşaat süreleri. Bunlar istemciye
+gönderilen `game_config` içindeki `activation` / `expiration` alanlarından
+geliyor; sunucu bu süreleri yönetmiyor.
+
+`zaman_olcegi.json`:
+
+```json
+{ "time_scale": 3.0 }
+```
+
+- `3.0` → süreler 3 kat kısalır (6 saatlik üretim 2 saat olur)
+- `1.0` → normal hız
+- `TIME_SCALE` ortam değişkeni dosyadaki değeri ezer.
+
+Değiştirdikten sonra sunucuyu kapatıp `baslat.bat` ile yeniden açın;
+config oyun açılışında istemciye gönderiliyor. Sunucudaki ve kayıttaki
+değerler değişmez, sadece istemcinin gördüğü süreler bölünür.
+
+### Ek performans iyileştirmeleri
+
+- Flask `threaded=True` ile çalışıyor: Flash'ın aynı anda istediği
+  yüzlerce SWF/JPG paralel sunuluyor (tek iş parçacığında sırayla
+  sunuluyordu).
+- Statik dosyalar 1 gün önbellekleniyor (`SEND_FILE_MAX_AGE_DEFAULT`);
+  ikinci açılışta varlıklar yeniden indirilmiyor.
+- Kayıt yazımı `save_lock` ile kilitlendi; eşzamanlı komutlar birbirini
+  ezmiyor.
+
 ## Bilinen belirsizlikler
 
 - `hire_worker` ve `increase_population`: kayıtta hangi alanın
   güncellendiği doğrulanmadığı için şimdilik yalnızca günlüğe yazılıyor.
   Yanlış alanı bozmamak için bilinçli olarak değişiklik yapılmıyor.
+- `collect_new`, `next_step`, `activate`: istemcinin gönderdiği gerçek
+  komutlar (log'da görüldü) ama sunucuda karşılıkları henüz yok.
 - Yükseltme bedeli **hedef binanın maliyeti** varsayımına dayanıyor.
   İstemci farklı bir çarpan gönderirse o kullanılır.
 - PvP saldırıları, turnuvalar, kıta sıralaması ve survival hâlâ eksik

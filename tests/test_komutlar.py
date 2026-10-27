@@ -300,5 +300,20 @@ class KayitTestleri(unittest.TestCase):
             self.assertEqual(json.load(f)["version"], "0.05a")
 
 
+class ZamanOlcegiTestleri(unittest.TestCase):
+    def test_istemci_config_sureleri_bolunur(self):
+        from get_game_config import get_game_config, get_client_game_config
+        os.environ["TIME_SCALE"] = "2"
+        try:
+            ham = get_game_config()
+            istemci = get_client_game_config()
+            mill_ham = next(i for i in ham["items"] if i["id"] == "5")
+            mill_istemci = next(i for i in istemci["items"] if i["id"] == "5")
+            self.assertAlmostEqual(float(mill_ham["activation"]), 21600)
+            self.assertAlmostEqual(float(mill_istemci["activation"]), 10800)
+        finally:
+            os.environ.pop("TIME_SCALE", None)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

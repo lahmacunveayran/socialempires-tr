@@ -1,7 +1,9 @@
+import copy
 import json
 import os
 import jsonpatch
 from bundle import MODS_DIR, CONFIG_DIR, CONFIG_PATCH_DIR
+from time_scale import zaman_olcegi
 
 __game_config = json.load(open(os.path.join(CONFIG_DIR, "game_config_20120826.json"), 'r', encoding='utf-8'))
 
@@ -71,6 +73,44 @@ patch_game_config()
 
 def get_game_config() -> dict:
     return __game_config
+
+
+# İstemciye gönderilen, zaman ölçeği uygulanmış config önbelleği.
+__istemci_config_onbellegi = {}
+
+# İstemcinin süre olarak okuduğu alanlar.
+SURE_ALANLARI = ("activation", "expiration", "training_time", "sm_training_time")
+
+
+def get_client_game_config() -> dict:
+    """İstemciye gönderilecek config'i döndürür.
+
+    Zaman ölçeği 1.0 değilse eşyaların süre alanları ölçeğe bölünür.
+    Sunucunun kullandığı asıl config ve kayıtlar değiştirilmez; ölçek
+    değiştirildiğinde oyun yeniden başlatılmadan etkili olur.
+    """
+    olcek = zaman_olcegi()
+    if olcek == 1.0:
+        return __game_config
+
+    if olcek not in __istemci_config_onbellegi:
+        kopya = copy.deepcopy(__game_config)
+        for esya in kopya.get("items", []):
+            for alan in SURE_ALANLARI:
+                deger = esya.get(alan)
+                if deger is None:
+                    continue
+                try:
+                    sayi = float(deger)
+                except (TypeError, ValueError):
+                    continue
+                if sayi > 0:
+                    esya[alan] = f"{sayi / olcek:.6g}"
+        __istemci_config_onbellegi.clear()
+        __istemci_config_onbellegi[olcek] = kopya
+        print(f" [+] Zaman olcegi {olcek}: uretim/insaat sureleri {olcek} kat kisaltildi")
+    return __istemci_config_onbellegi[olcek]
+
 
 def game_config() -> dict:
     return get_game_config()

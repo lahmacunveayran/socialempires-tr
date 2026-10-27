@@ -1,6 +1,7 @@
 import json
 import os
 import copy
+import threading
 import uuid
 import random
 from flask import session
@@ -12,6 +13,10 @@ from version import migrate_loaded_save
 from constants import Constant
 
 from bundle import VILLAGES_DIR, SAVES_DIR
+
+# Sunucu çok iş parçacıklı çalıştığı için kayıt değiştiren işlemler bu
+# kilit altında yapılır (aynı anda gelen komutlar birbirini ezmesin).
+save_lock = threading.RLock()
 
 __villages = {}  # ALL static neighbors
 '''__villages = {
@@ -38,6 +43,12 @@ __initial_village = json.load(open(os.path.join(VILLAGES_DIR, "initial.json")))
 # Load saved villages
 
 def load_saved_villages():
+    """Kayıtları diskten yeniden yükler (kilit altında)."""
+    with save_lock:
+        _load_saved_villages()
+
+
+def _load_saved_villages():
     global __villages
     global __saves
     # Empty in memory
@@ -284,28 +295,29 @@ def save_session(USERID: str):
     file = f"{USERID}.save.json"
     yol = os.path.join(SAVES_DIR, file)
     gecici = yol + ".tmp"
-    village = session(USERID)
     print(f" * Saving village at {file}... ", end='')
 
-    try:
-        with open(gecici, "w", encoding="utf-8") as f:
-            json.dump(village, f, indent=4, ensure_ascii=False)
-            f.flush()
-            os.fsync(f.fileno())
-
-        if os.path.exists(yol):
-            try:
-                os.replace(yol, yol + ".bak")
-            except OSError:
-                pass  # yedek alınamasa da asıl kayıt yazılsın
-
-        os.replace(gecici, yol)
-    except OSError as hata:
-        print(f"HATA: {hata}")
+    with save_lock:
+        village = session(USERID)
         try:
-            if os.path.exists(gecici):
-                os.remove(gecici)
-        except OSError:
-            pass
-        raise
+            with open(gecici, "w", encoding="utf-8") as f:
+                json.dump(village, f, indent=4, ensure_ascii=False)
+                f.flush()
+                os.fsync(f.fileno())
+
+            if os.path.exists(yol):
+                try:
+                    os.replace(yol, yol + ".bak")
+                except OSError:
+                    pass  # yedek alınamasa da asıl kayıt yazılsın
+
+            os.replace(gecici, yol)
+        except OSError as hata:
+            print(f"HATA: {hata}")
+            try:
+                if os.path.exists(gecici):
+                    os.remove(gecici)
+            except OSError:
+                pass
+            raise
     print("Done.")

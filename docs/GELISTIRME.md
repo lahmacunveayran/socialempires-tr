@@ -185,6 +185,12 @@ Eksik olan uçlar eklendi:
 Böylece World Explorer ekranındaki boş harita yerine bölgeler ve
 üzerlerinde oyuncular görünmeli.
 
+> Önemli: Flash istemcisi bu dinamik uçları **POST** ile çağırıyor. İlk
+> sürümde uçlar yalnızca GET kabul ettiği için 405 dönüyor ve harita boş
+> kalıyordu. Artık `get_continent.php`, `get_user_world.php` ve
+> `get_continent_ranking.php` hem GET hem POST kabul ediyor.
+> Gelen istek ve dönen gövde `saves/http_gunlugu.jsonl` dosyasına yazılır.
+
 ## Bot köyleri (PvP için rakip üretme)
 
 PvP listesi boşsa yapay komşular üretilebilir:

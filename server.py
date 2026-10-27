@@ -43,6 +43,29 @@ app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 86400
 app.config["JSON_SORT_KEYS"] = False
 
 HATA_LOG = os.path.join(BASE_DIR, "saves", "sunucu_hatalari.log")
+ISTEK_LOG = os.path.join(BASE_DIR, "saves", "http_gunlugu.jsonl")
+
+
+@app.after_request
+def _ada_isteklerini_kaydet(cevap):
+    """Ada/turnuva isteklerini ve dönen veriyi dosyaya yazar (teşhis için)."""
+    yol = request.path
+    if not any(parca in yol for parca in ("get_continent", "get_user_world", "tournament")):
+        return cevap
+    try:
+        os.makedirs(os.path.join(BASE_DIR, "saves"), exist_ok=True)
+        govde = cevap.get_data(as_text=True)
+        with open(ISTEK_LOG, "a", encoding="utf-8") as f:
+            f.write(json.dumps({
+                "yol": yol,
+                "args": request.values.to_dict(),
+                "durum": cevap.status_code,
+                "uzunluk": len(govde),
+                "govde": govde[:1500],
+            }, ensure_ascii=False) + "\n")
+    except (OSError, RuntimeError):
+        pass
+    return cevap
 
 
 @app.errorhandler(Exception)
@@ -325,7 +348,7 @@ def command_response():
 
     return ({"result": "success"}, 200)
 
-@app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_continent_ranking.php")
+@app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_continent_ranking.php", methods=["GET", "POST"])
 def get_continent_ranking_response():
 
     USERID = request.values.get('USERID', '')
@@ -384,35 +407,53 @@ def _ada_slotlari():
     for i in range(7):
         if i < len(oyuncular):
             slot = dict(oyuncular[i])
-            slot["posicion"] = i
+            slot.update({
+                "posicion": i, "pos": i, "position": i,
+                "id": slot["user_id"], "userId": slot["user_id"], "saveId": slot["user_id"],
+                "level": slot["nivel"], "state": 0, "isConquered": 0,
+            })
         else:
-            slot = {"posicion": i, "nivel": 0}
+            slot = {"posicion": i, "pos": i, "position": i, "nivel": 0, "level": 0}
         slotlar.append(slot)
     return slotlar
 
 
-@app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_continent.php")
+@app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_continent.php", methods=["GET", "POST"])
 def get_continent_response():
     slotlar = _ada_slotlari()
     print(f"[ADA] get_continent: {dict(request.values)} -> {len(slotlar)} bolge")
-    ada = {"id": 99, "number": 99, "users": slotlar, "territories": slotlar}
+    ada = {
+        "id": 99, "number": 99, "continentId": 99, "continentNumber": 99,
+        "saveId": 99, "continentSaveId": 99, "world_id": 0,
+        "users": slotlar, "territories": slotlar, "players": slotlar,
+        "islands": [{"id": 99, "number": 99, "users": slotlar}],
+    }
     return {
         "result": "ok",
+        "success": True,
         "world_id": 0,
         "continent": slotlar,
         "continentNumber": 99,
         "continentId": 99,
+        "continentSaveId": 99,
         "myContinentId": 99,
         "continentData": ada,
         "users": slotlar,
         "territories": slotlar,
+        "players": slotlar,
+        "islands": [{"id": 99, "number": 99, "users": slotlar}],
     }
 
 
-@app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_user_world.php")
+@app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_user_world.php", methods=["GET", "POST"])
 def get_user_world_response():
     print(f"[ADA] get_user_world: {dict(request.values)}")
-    return {"result": "ok", "world_id": 0, "continentNumber": 99, "island": 99}
+    return {
+        "result": "ok", "success": True, "world_id": 0,
+        "continentId": 99, "continentNumber": 99, "myContinentId": 99,
+        "island": 99, "islandId": 99,
+        "islands": [{"id": 99, "number": 99}],
+    }
 
 
 ########

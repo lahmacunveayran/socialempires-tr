@@ -90,10 +90,16 @@ görev idempotency, atomik kayıt + yedek, 0.04a → 0.05a migration.
 
 ## Oyunu çalıştırma
 
+En kolay yol: depodaki **`baslat.bat`** dosyasına çift tıklayın. Betik
+eksik Python paketlerini kurar, sunucuyu başlatır ve tarayıcıyı açar.
+
+Elle:
+
 ```bat
 python -m pip install -r requirements.txt
 python server.py
 ```
 
 Sonra Flash destekli bir tarayıcı (FlashBrowser) veya Ruffle ile
-`http://127.0.0.1:5050/` adresini açın.
+`http://127.0.0.1:5050/` adresini açın. Flash içerik için normal Chrome
+yetmez; FlashBrowser ya da eski bir Flash Player gerekir.

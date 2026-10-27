@@ -1,5 +1,20 @@
 ![Social Empires](templates/img/logo.png "Social Empires logo")
 
+> ## Social Empires Türkçe — topluluk sürümü
+>
+> Bu depo, Social Empires'ı Türkçe oynamak ve yerel olarak geliştirmek için
+> hazırlanmış bir çataldır. Oyunun tüm metinleri Türkçe; PvP, turnuva, ada
+> fetih, görev/mağaza/koleksiyon/etkinlik, sosyal döngü ve 49 bot köyü dahil
+> edilmiştir.
+>
+> **Başlatmak için:** `baslat.bat` (Windows). Sunucu hazır olduğunda tarayıcı
+> otomatik açılır: <http://127.0.0.1:5050/>
+>
+> Ayrıntılı geliştirme notları: [`docs/GELISTIRME.md`](docs/GELISTIRME.md)
+>
+> Orijinal proje: [AcidCaos/socialemperors](https://github.com/AcidCaos/socialemperors).
+> Bu çatal GPLv3 ile aynı lisans altındadır; Social Point ile bağlantılı değildir.
+
 The Social Empires preservation project by the Social Emperors team.
 This project is dedicated to preserving this Flash game so that it's not lost to time.
 

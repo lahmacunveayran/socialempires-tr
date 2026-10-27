@@ -170,6 +170,7 @@ class Dunya:
         self._son_oyuncu_saldiri = 0  # oyuncuya son akın zamanı
         self._veri_onbellek = None
         self._veri_zamani = 0
+        self.gecmis = []
 
     # -- erişim -----------------------------------------------------------
     def oyuncular(self):
@@ -238,6 +239,17 @@ class Dunya:
                     print(f" ! Dunya kaydi yazilamadi ({uid}): {hata}")
             self._son_guncelleme = int(time.time())
             self._veri_onbellek = None
+
+            # Paneldeki eğriler için dünya toplamları
+            kaynak = 0
+            birim = 0
+            for _, kayit in self.oyuncular():
+                harita = kayit["maps"][0]
+                kaynak += sum(int(harita.get(k, 0)) for k in ("coins", "wood", "stone", "food"))
+                birim += sum(birim_sayilari(kayit).values())
+            self.gecmis.append({"tick": self.tick, "kaynak": kaynak, "birim": birim})
+            if len(self.gecmis) > 80:
+                del self.gecmis[:-80]
 
     # -- kardeşlik loncası -------------------------------------------------
     def _lonca(self, simdi):
@@ -542,8 +554,12 @@ class Dunya:
         for i, (uid, kayit) in enumerate(self.oyuncular()):
             harita = kayit["maps"][0]
             birimler = birim_sayilari(kayit)
-            aci = i * 2.399963229728653
-            yaricap = 35 + math.sqrt(i) * 42
+            # 9 sütunlu ızgara + kişiye özgü küçük sapma: 50+ köy üst üste binmez
+            kolon = 9
+            sapma_x = (abs(hash(str(uid))) % 15) - 7
+            sapma_y = (abs(hash(str(uid))) % 13) - 6
+            x = 90 + (i % kolon) * 76 + sapma_x
+            y = 78 + (i // kolon) * 72 + sapma_y
             pi = kayit.get("playerInfo", {})
             hafiza = kayit.get("privateState", {}).get("bot_hafiza", {})
             ofke = hafiza.get("ofke", {}) if isinstance(hafiza, dict) else {}
@@ -558,14 +574,25 @@ class Dunya:
                 "birim": sum(birimler.values()),
                 "ofke": len(ofke),
                 "kalkan": max(0, int(kayit.get("privateState", {}).get("shield_until", 0) or 0) - int(time.time())),
-                "konum": {
-                    "x": round(400 + yaricap * math.cos(aci), 1),
-                    "y": round(260 + yaricap * math.sin(aci) * 0.62, 1),
-                },
+                "konum": {"x": round(x, 1), "y": round(y, 1)},
             })
+        toplam = {"coins": 0, "wood": 0, "stone": 0, "food": 0, "birim": 0}
+        kisi_sayilari = {}
+        for o in oyuncular:
+            for k in ("coins", "wood", "stone", "food"):
+                toplam[k] += o["kaynaklar"][k]
+            toplam["birim"] += o["birim"]
+            if o["bot"]:
+                kisi_sayilari[o["kisi"] or "dengeli"] = kisi_sayilari.get(o["kisi"] or "dengeli", 0) + 1
+
         veri = {
             "tick": self.tick,
+            "toplam": toplam,
+            "kisi_sayilari": kisi_sayilari,
+            "gecmis": list(self.gecmis),
             "guncelleme": self._son_guncelleme,
+            "tick_saniye": int(self.ayar.get("tick_saniye", 60)),
+            "sonraki_tick": self._son_guncelleme + int(self.ayar.get("tick_saniye", 60)),
             "aktif": bool(self.ayar.get("aktif", True)),
             "oyuncular": oyuncular,
             "olaylar": list(reversed(self.olaylar[-40:])),

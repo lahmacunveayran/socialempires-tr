@@ -1,6 +1,7 @@
 print (" [+] Loading basics...")
 import os
 import json
+import hashlib
 import urllib
 if os.name == 'nt':
     os.system("color")
@@ -43,6 +44,18 @@ app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 86400
 app.config["JSON_SORT_KEYS"] = False
 
 HATA_LOG = os.path.join(BASE_DIR, "saves", "sunucu_hatalari.log")
+
+
+def _sayisal_kimlik(uid):
+    """Ada haritası sayısal user_id beklediği için UUID'den sabit sayı üretir."""
+    return str(int(hashlib.md5(str(uid).encode("utf-8")).hexdigest()[:8], 16))
+
+
+def _kimlikten_uid(kimlik):
+    for uid in all_saves_userid():
+        if _sayisal_kimlik(uid) == str(kimlik):
+            return uid
+    return None
 ISTEK_LOG = os.path.join(BASE_DIR, "saves", "http_gunlugu.jsonl")
 
 
@@ -50,7 +63,7 @@ ISTEK_LOG = os.path.join(BASE_DIR, "saves", "http_gunlugu.jsonl")
 def _ada_isteklerini_kaydet(cevap):
     """Ada/turnuva isteklerini ve dönen veriyi dosyaya yazar (teşhis için)."""
     yol = request.path
-    if not any(parca in yol for parca in ("get_continent", "get_user_world", "tournament")):
+    if not any(parca in yol for parca in ("get_continent", "get_user_world", "get_public_player_info", "tournament")):
         return cevap
     try:
         os.makedirs(os.path.join(BASE_DIR, "saves"), exist_ok=True)
@@ -260,6 +273,10 @@ def get_player_info_response():
     neighbors = request.values['neighbors'] if 'neighbors' in request.values else None
     client_id = request.values['client_id']
     user = request.values['user'] if 'user' in request.values else None
+    if user and str(user).isdigit():
+        cozulen = _kimlikten_uid(user)
+        if cozulen:
+            user = cozulen
     map = int(request.values['map']) if 'map' in request.values else None
 
     print(f"get_player_info: USERID: {USERID}. user: {user} --", request.values)
@@ -366,15 +383,20 @@ def get_continent_ranking_response():
             continue
         harita = kayit["maps"][0]
         oyuncular.append({
-            "user_id": str(uid),
+            "user_id": _sayisal_kimlik(uid),
+            "uid": str(uid),
             "name": kayit["playerInfo"].get("name", ""),
+            "pic": kayit["playerInfo"].get("pic", ""),
             "nivel": harita.get("level", 1),
+            "level": harita.get("level", 1),
             "xp": harita.get("xp", 0),
         })
     oyuncular.sort(key=lambda o: o["xp"], reverse=True)
 
     continent = [
-        {"posicion": i, "nivel": o["nivel"], "user_id": o["user_id"]}
+        {"posicion": i, "nivel": o["nivel"], "level": o["level"],
+         "user_id": o["user_id"], "uid": o["uid"],
+         "name": o["name"], "pic": o["pic"]}
         for i, o in enumerate(oyuncular[:8])
     ]
     for i in range(len(continent), 8):
@@ -442,6 +464,35 @@ def get_continent_response():
         "territories": slotlar,
         "players": slotlar,
         "islands": [{"id": 99, "number": 99, "users": slotlar}],
+    }
+
+
+@app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_public_player_info.php", methods=["GET", "POST"])
+def get_public_player_info_response():
+    kimlik = (request.values.get("user_id") or request.values.get("user")
+              or request.values.get("USERID") or "")
+    uid = _kimlikten_uid(kimlik)
+    if uid is None and str(kimlik) in all_saves_userid():
+        uid = str(kimlik)
+    kayit = kayit_oturumu(uid) if uid else None
+    if not kayit:
+        return ({"result": "error"}, 404)
+    harita = kayit["maps"][0]
+    pi = kayit.get("playerInfo", {})
+    return {
+        "result": "ok",
+        "user_id": _sayisal_kimlik(uid),
+        "uid": str(uid),
+        "playerInfo": {
+            "pid": str(uid),
+            "user_id": _sayisal_kimlik(uid),
+            "name": pi.get("name", ""),
+            "pic": pi.get("pic", ""),
+            "level": int(harita.get("level", 1)),
+            "nivel": int(harita.get("level", 1)),
+            "xp": int(harita.get("xp", 0)),
+            "world_id": pi.get("world_id", 0),
+        },
     }
 
 

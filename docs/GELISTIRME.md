@@ -154,6 +154,32 @@ sunucu şimdilik yalnızca uyarı basıyor, engellemiyor.
 > Bir komşuya saldırıp `saves/komut_gunlugu.jsonl` dosyasına bakmak yeterli;
 > alan adları farklıysa handler'ı ona göre daraltırız.
 
+## Dünya paneli (tasarım notları)
+
+`/dunya` paneli ikinci sürümde baştan tasarlandı. Amaç “oyun içi gazete /
+harp dairesi” hissi: kâğıt zemin, serif başlıklar, monospace veriler,
+ince kurallar; gradyan, cam efekti, emoji ve parlayan kart yok.
+
+Tasarım kararlarının dayandığı ilkeler:
+
+- **Veri mürekkebi (data-ink)**: süs değil bilgi. Harita ızgarası ve
+  ölçek çubuğu işlevsel; süsleyici gölge/parlama kaldırıldı.
+  (Tufte’nin *The Visual Display of Quantitative Information* ilkeleri.)
+- **Renk + biçim birlikte**: mizaçlar yalnızca renkle değil, üçgen /
+  kare / eşkenar dörtgen / daire ile de kodlanıyor. Renk körlüğü olan
+  okuyucu da ayırt edebilir; palet Okabe–Ito renk evrensel tasarım
+  paletinden seçildi: <https://jfly.uni-koeln.de/color/>
+- **Hiyerarşi**: solda dünya toplamları, ortada harita, sağda sefer
+  kayıtları ve sıralama. Bir bakışta “ne kadar”, “nerede”, “ne oldu”.
+- **Performans**: 50+ düğüm için SVG yeterli; ağır filtre/gölge yok,
+  panel 8 saniyede bir yenileniyor, sekme gizliyken istek atılmıyor.
+- **Erişilebilirlik**: düğümler klavyeyle odaklanabilir (Tab + Enter),
+  `aria-label` var, kontrast kâğıt/inek üzerinde yüksek.
+
+Bu sürümde ayrıca harita düğümlerinin iki kez ötelenmesine yol açan SVG
+koordinat hatası düzeltildi (daire/kare mutlak koordinatla çizilip grup
+translate’i ile bir kez daha kaydırılıyordu).
+
 ## Kardeşlik Loncası (arkadaş işçi çözümü)
 
 Orijinal oyunda bazı binalar (Zeppelin Tower, değirmenler, kiliseler…)

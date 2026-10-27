@@ -1,0 +1,37 @@
+name: Hata bildirimi
+description: Oyun veya sunucu hatası bildir
+title: "[Hata] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Lütfen `saves/` klasörünü veya kişisel verileri paylaşmayın.
+        Güvenlik açıkları için [SECURITY.md](../SECURITY.md) izleyin.
+  - type: textarea
+    id: ne-oldu
+    attributes:
+      label: Ne oldu?
+      description: Beklenen ve gerçekleşen davranış.
+    validations:
+      required: true
+  - type: textarea
+    id: adimlar
+    attributes:
+      label: Yeniden üretim adımları
+      placeholder: |
+        1. baslat.bat
+        2. ...
+    validations:
+      required: true
+  - type: input
+    id: surum
+    attributes:
+      label: Sürüm / commit
+      placeholder: "0.05a / 01d5879"
+  - type: textarea
+    id: log
+    attributes:
+      label: İlgili log
+      description: "saves/sunucu_hatalari.log son satırları (kişisel veri ayıklayın)"
+      render: text

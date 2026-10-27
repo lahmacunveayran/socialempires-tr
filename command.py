@@ -9,6 +9,11 @@ from constants import Constant
 from engine import apply_cost, apply_collect, apply_collect_xp, timestamp_now
 from bundle import SAVES_DIR
 from ada import fetih_kaydet
+import gorev
+import magaza
+import koleksiyon
+import etkinlik
+import basari
 
 # ---------------------------------------------------------------------------
 # Komut argümanlarını çözümleme yardımcıları
@@ -590,24 +595,20 @@ def do_command(USERID, cmd, args):
         print(" ".join(args))
 
     elif cmd == Constant.CMD_BUY:
-        id = args[0]
-        x = args[1]
-        y = args[2]
-        frame = args[3] # TODO ??
-        town_id = args[4]
-        bool_dont_modify_resources = bool(args[5]) # 1 if the game "buys" for you, so does not substract whatever the item cost is.
-        price_multiplier = args[6]
-        type = args[7]
-        print("Add", str(get_name_from_item_id(id)), "at", f"({x},{y})")
-        collected_at_timestamp = timestamp_now()
-        level = 0 # TODO 
-        orientation = 0
-        map = save["maps"][town_id]
-        if not bool_dont_modify_resources:
-            apply_cost(save["playerInfo"], map, id, price_multiplier)
-            xp = int(get_attribute_from_item_id(id, "xp"))
-            map["xp"] = map["xp"] + xp
-        map["items"] += [[id, x, y, orientation, collected_at_timestamp, level]]
+        esya_id = _tam(args[0]) if args else None
+        x = _tam(args[1]) if len(args) > 1 else 0
+        y = _tam(args[2]) if len(args) > 2 else 0
+        town_id = _tam(args[4]) if len(args) > 4 else 0
+        kaynaktan = len(args) > 5 and str(args[5]).strip().lower() in ("1", "true", "yes")
+        carpan = _tam(args[6]) if len(args) > 6 else 1
+        if esya_id is None:
+            print(" ! BUY: gecersiz esya", args)
+            return
+        print("Add", esya_id, "at", f"({x},{y})")
+        if magaza.satin_al(save, town_id, esya_id, x, y, not kaynaktan, carpan or 1):
+            basari.kontrol(save)
+        else:
+            print(" ! BUY: yetersiz kaynak veya gecersiz esya")
     
     elif cmd == Constant.CMD_COMPLETE_TUTORIAL:
         tutorial_step = args[0]
@@ -696,17 +697,15 @@ def do_command(USERID, cmd, args):
     
     elif cmd == Constant.CMD_COMPLETE_MISSION:
         mission_id = _tam(args[0]) if args else None
-        skipped_with_cash = bool(args[1]) if len(args) > 1 else False
+        atla = len(args) > 1 and str(args[1]).strip().lower() in ("1", "true", "yes")
         if mission_id is None:
             print(" ! Gecersiz gorev kimligi:", args)
             return
-        print("Complete mission", mission_id, ":", str(get_attribute_from_mission_id(mission_id, "title")))
-        if skipped_with_cash:
-            cash_to_substract = 0 # TODO
-            save["playerInfo"]["cash"] = max(save["playerInfo"]["cash"] - cash_to_substract, 0)
-        tamamlanan = save["privateState"].setdefault("completedMissions", [])
-        if mission_id not in tamamlanan:  # aynı görev iki kez yazılmasın
-            tamamlanan.append(mission_id)
+        print("Complete mission", mission_id)
+        if gorev.tamamla(save, mission_id, atla):
+            basari.kontrol(save)
+        else:
+            print(" ! Gorev tamamlanamadi:", mission_id)
 
     elif cmd == Constant.CMD_REWARD_MISSION:
         town_id = _tam(args[0]) if args else 0
@@ -714,14 +713,9 @@ def do_command(USERID, cmd, args):
         if mission_id is None:
             print(" ! Gecersiz gorev kimligi:", args)
             return
-        print("Reward mission", mission_id, ":", str(get_attribute_from_mission_id(mission_id, "title")))
-        odul_verilen = save["privateState"].setdefault("rewardedMissions", [])
-        if mission_id in odul_verilen:
-            print(" ! Gorev odulu zaten alinmis:", mission_id)
-            return
-        reward = int(get_attribute_from_mission_id(mission_id, "reward")) # gold
-        save["maps"][town_id]["coins"] += reward
-        odul_verilen.append(mission_id)
+        print("Reward mission", mission_id)
+        if not gorev.odul(save, town_id, mission_id):
+            print(" ! Gorev odulu alinamadi (yok veya zaten alinmis):", mission_id)
     
     elif cmd == Constant.CMD_PUSH_UNIT:
         unit_x = args[0]
@@ -827,10 +821,10 @@ def do_command(USERID, cmd, args):
         save["playerInfo"]["map_names"][town_id] = new_name
 
     elif cmd == Constant.CMD_EXCHANGE_CASH:
-        town_id = args[0]
+        town_id = _tam(args[0]) if args else 0
         print("Exchange cash -> coins.")
-        save["playerInfo"]["cash"] = max(save["playerInfo"]["cash"] - 5, 0)#maybe make function for editing resources
-        save["maps"][town_id]["coins"] += 2500
+        if not magaza.cash_borsasi(save, town_id):
+            print(" ! EXCHANGE_CASH: yetersiz cash")
 
     elif cmd == Constant.CMD_STORE_ITEM:
         x = args[0]
@@ -995,34 +989,13 @@ def do_command(USERID, cmd, args):
         pState["timeStampTakeCareMonster"] = -1 # remove timer
 
     elif cmd == Constant.CMD_WIN_BONUS:
-        coins = args[0]
-        town_id = args[1]
-        hero = args[2]
-        claimId = args[3]
-        cash = args[4]
-
-        print("Claiming Win Bonus")
-        map = save["maps"][town_id]
-
-        if cash != 0:
-            save["playerInfo"]["cash"] = save["playerInfo"]["cash"] + cash
-            print("Added " + str(cash) + " Cash to players balance")
-
-        if coins != 0:
-            map["coins"] = map["coins"] + coins
-            print("Added " + str(coins) + " Gold to players balance")
-
-        if hero != 0:
-            length = len(save["privateState"]["gifts"])
-            if length <= hero:
-                for i in range(hero - length + 1):
-                    save["privateState"]["gifts"].append(0)
-            save["privateState"]["gifts"][hero] += 1
-            print("Added Hero ID=" + str(hero))
-
-        pState = save["privateState"]
-        pState["bonusNextId"] = claimId + 1
-        pState["timestampLastBonus"] = timestamp_now()
+        town_id = _tam(args[1]) if len(args) > 1 else 0
+        print("Claiming Win Bonus (sunucu hesapli)")
+        if etkinlik.gunluk_bonus(save, town_id):
+            save.setdefault("privateState", {})["timestampLastBonus"] = timestamp_now()
+            print("Gunluk bonus verildi")
+        else:
+            print(" ! Gunluk bonus bugun zaten alinmis")
 
     elif cmd == Constant.CMD_ADMIN_ADD_ANIMAL:
         subcatFunc = str(args[0])
@@ -1063,24 +1036,17 @@ def do_command(USERID, cmd, args):
         harita["items"].append([unit_id, x, y, 0, timestamp_now(), 0])
 
     elif cmd == Constant.CMD_BUY_SUPER_OFFER_PACK:
-        town_id = args[0]
-        unknown2 = args[1] # this is probably the super offer pack ID?
-        items = args[2]
-        cash_used = args[3]
-        
-        map = save["maps"][town_id]
-
-        item_array = items.split(',')
-        for item in item_array:
-            item_id = int(item)
-            length = len(save["privateState"]["gifts"])
-            if length <= item_id:
-                for i in range(item_id - length + 1):
-                    save["privateState"]["gifts"].append(0)
-            save["privateState"]["gifts"][item_id] += 1
-
-        save["playerInfo"]["cash"] = max(save["playerInfo"]["cash"] - cash_used, 0)#maybe make function for editing resources
-        print(f"Used {cash_used} cash to buy super offer pack!")
+        town_id = _tam(args[0]) if args else 0
+        items = args[2] if len(args) > 2 else ""
+        cash_used = _tam(args[3]) if len(args) > 3 else 0
+        if cash_used and not magaza.cash_harca(save, cash_used):
+            print(" ! SUPER_OFFER: yetersiz cash")
+            return
+        for parca in str(items).split(","):
+            parca = parca.strip()
+            if parca.isdigit():
+                magaza.depo(save, int(parca), 1)
+        print(f"Super offer alindi ({cash_used} cash)")
 
     elif cmd == Constant.CMD_SET_STRATEGY:
         strategy_type = args[0]
@@ -1189,17 +1155,10 @@ def do_command(USERID, cmd, args):
         if esya_id is None:
             print(" ! BUY_STORED_ITEM_CASH: gecersiz args", args)
             return
-        fiyat = int(get_attribute_from_item_id(esya_id, "cost") or 0)
-        if get_attribute_from_item_id(esya_id, "cost_type") != "c":
-            fiyat = 0  # yalnızca cash ile satılan depo eşyaları
-        save["playerInfo"]["cash"] = max(int(save["playerInfo"]["cash"]) - fiyat, 0)
-        _gift_ekle(save, esya_id, 1)
-        print(f"Depoya esya satin alindi: {esya_id} ({fiyat} cash)")
-
-    elif cmd == Constant.CMD_HIRE_WORKER:
-        # İşçi sistemi: kayıtta hangi alanın güncellendiği henüz doğrulanmadı.
-        # Yanlış alanı bozmamak için şimdilik yalnızca günlüğe yazıyoruz.
-        print(" ! HIRE_WORKER: protokol henuz cozulmedi, args =", args)
+        if not magaza.depo_esya_cash(save, esya_id):
+            print(" ! Depo esyasi alinamadi (cash yetersiz veya fiyat yok):", esya_id)
+            return
+        print(f"Depoya esya satin alindi: {esya_id}")
 
     elif cmd == Constant.CMD_INCREASE_POPULATION:
         print(" ! INCREASE_POPULATION: protokol henuz cozulmedi, args =", args)
@@ -1285,6 +1244,135 @@ def do_command(USERID, cmd, args):
         collection_id = args[0]
         collectible_id = args[1]
         # TODO 
+
+    elif cmd in (Constant.CMD_BUY_OFFER, Constant.CMD_BUY_OFFER_PACK):
+        veri = _json_veri(args)
+        teklif_id = None
+        if isinstance(veri, dict):
+            teklif_id = _tam(veri.get("id") or veri.get("offer") or veri.get("offer_id") or veri.get("pack"))
+        if teklif_id is None:
+            sayilar = _tamsayilar(args)
+            teklif_id = sayilar[0] if sayilar else None
+        town_id = _tam(veri.get("map") or veri.get("town")) if isinstance(veri, dict) else 0
+        if teklif_id is None or not magaza.teklif_al(save, town_id or 0, teklif_id):
+            print(" ! BUY_OFFER: gecersiz paket veya yetersiz cash:", args)
+            return
+        print("Teklif paketi alindi:", teklif_id)
+
+    elif cmd == Constant.CMD_BUY_UNIT_WITH_CASH:
+        sayilar = _tamsayilar(args)
+        birim_id = sayilar[0] if sayilar else None
+        if birim_id is None:
+            print(" ! BUY_UNIT_WITH_CASH: gecersiz args", args)
+            return
+        esya = magaza.esya(birim_id)
+        fiyat = int(esya.get("cost", 0) or 0) if esya else 0
+        if not magaza.cash_harca(save, fiyat or 1):
+            print(" ! BUY_UNIT_WITH_CASH: yetersiz cash")
+            return
+        from odul import birim_ekle
+        birim_ekle(save, 0, birim_id, 1)
+        print("Cash ile birim alindi:", birim_id, fiyat)
+
+    elif cmd in (Constant.CMD_BUY_ATTACKS, Constant.CMD_BUY_ATTACKS_PACK):
+        adet = 5 if cmd == Constant.CMD_BUY_ATTACKS_PACK else 1
+        if magaza.cash_harca(save, 1 if adet == 1 else 4):
+            ps = save.setdefault("privateState", {})
+            ps["attacks"] = int(ps.get("attacks", 0) or 0) + adet
+            print("Saldiri hakki alindi:", adet)
+        else:
+            print(" ! BUY_ATTACKS: yetersiz cash")
+
+    elif cmd in (Constant.CMD_BUY_SPYINGS, Constant.CMD_BUY_SPYINGS_PACK):
+        adet = 5 if cmd == Constant.CMD_BUY_SPYINGS_PACK else 1
+        if magaza.cash_harca(save, 1 if adet == 1 else 4):
+            ps = save.setdefault("privateState", {})
+            ps["spyings"] = int(ps.get("spyings", 0) or 0) + adet
+            print("Casusluk hakki alindi:", adet)
+        else:
+            print(" ! BUY_SPYINGS: yetersiz cash")
+
+    elif cmd in (Constant.CMD_BUY_WAREHOUSE_CAPACITY, Constant.CMD_BUY_WAREHOUSE_CAPACITY_NEW):
+        if magaza.depo_kapasite(save, tek=(cmd == Constant.CMD_BUY_WAREHOUSE_CAPACITY_NEW)):
+            print("Depo kapasitesi artirildi")
+        else:
+            print(" ! Depo kapasitesi alinamadi")
+
+    elif cmd in (Constant.CMD_BUY_MANA, Constant.CMD_BUY_MAGIC):
+        g = get_game_config().get("globals", {})
+        miktar = int(g.get("MANA_PER_PURCHASE", 5) or 5)
+        if magaza.cash_harca(save, int(g.get("COST_MANA_CASH", 1) or 1)):
+            ps = save.setdefault("privateState", {})
+            ps["mana"] = int(ps.get("mana", 0) or 0) + miktar
+            print("Mana alindi:", miktar)
+        else:
+            print(" ! BUY_MANA: yetersiz cash")
+
+    elif cmd == Constant.CMD_PVP_BUY_TERRITORY:
+        if magaza.pvp_bolge_al(save):
+            print("PvP bolgesi alindi")
+        else:
+            print(" ! PvP bolgesi alinamadi")
+
+    elif cmd == Constant.CMD_PVP_BUY_ISLAND:
+        if magaza.pvp_ada_al(save):
+            print("PvP adasi alindi")
+        else:
+            print(" ! PvP adasi alinamadi")
+
+    elif cmd in (Constant.CMD_UNLOCK_BUILDING, Constant.CMD_UNLOCK_SKIN):
+        deger = _tam(args[0]) if args else None
+        if deger is not None:
+            magaza.kilidi_ac(save, "unlocked_buildings" if cmd == Constant.CMD_UNLOCK_BUILDING else "unlocked_skins", deger)
+            print("Kilit acildi:", deger)
+        else:
+            print(" ! UNLOCK: gecersiz args", args)
+
+    elif cmd == Constant.CMD_FINISH_COLLECTION:
+        sayilar = _tamsayilar(args)
+        kategori_id = sayilar[0] if sayilar else None
+        if kategori_id is None or not koleksiyon.tamamla(save, kategori_id):
+            print(" ! FINISH_COLLECTION: tamamlanamadi", args)
+            return
+        basari.kontrol(save)
+        print("Koleksiyon tamamlandi:", kategori_id)
+
+    elif cmd == Constant.CMD_UNIT_COLLECTION_COMPLETED:
+        sayilar = _tamsayilar(args)
+        birim_id = sayilar[0] if sayilar else None
+        if birim_id is None or not koleksiyon.birim_tamamlandi(save, birim_id):
+            print(" ! UNIT_COLLECTION_COMPLETED: gecersiz veya zaten tamam", args)
+            return
+        basari.kontrol(save)
+        print("Birim koleksiyonu tamamlandi:", birim_id)
+
+    elif cmd == Constant.CMD_RT_PUBLISH_ACHIEVEMENT_UNIT:
+        sayilar = _tamsayilar(args)
+        basari.yayinla(save, sayilar[0] if sayilar else None)
+        print("Basarim yayinlandi:", args)
+
+    elif cmd == Constant.CMD_COLLECT_MONDAY_BONUS:
+        if etkinlik.pazartesi_bonus(save, _tam(args[0]) if args else 0):
+            basari.kontrol(save)
+            print("Pazartesi bonusu alindi")
+        else:
+            print(" ! Pazartesi bonusu zaten alinmis")
+
+    elif cmd == Constant.CMD_COLLECT_COMEBACK_BONUS:
+        if etkinlik.geri_donus(save, _tam(args[0]) if args else 0):
+            print("Geri donus bonusu alindi")
+        else:
+            print(" ! Geri donus bonusu henuz alinamaz")
+
+    elif cmd == Constant.CMD_COLLECT_TREASURE:
+        if etkinlik.hazine(save, _tam(args[0]) if args else 0):
+            print("Hazine toplandi")
+        else:
+            print(" ! Hazine bugun zaten toplandi")
+
+    elif cmd == Constant.CMD_RESET_COMPLETED_MISSIONS:
+        gorev.sifirla(save)
+        print("Gorevler sifirlandi")
 
     else:
         print(f"Unhandled command '{cmd}' -> args", args)

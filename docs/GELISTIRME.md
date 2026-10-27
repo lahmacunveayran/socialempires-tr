@@ -349,6 +349,26 @@ dosyasına `anahtar: "Türkçe metin"` satırı eklemek yeterli; anahtarlar
 - Durum `saves/sezon.json`; atomik yazılır, yazma başarısızsa ödül verilmez.
 - Değişen kayıtlar `save_session` ile diske yazılır.
 
+## İçerik ve sistemler (tamamlandı)
+
+- **Görevler** (`gorev.py`): tamamlama, ödül, sıfırlama; ödül yalnızca
+  tamamlanmış görev için ve bir kez. Sıfırlama ödül hakkını geri vermez.
+  Haftalık 3 görev seçilir; hepsi bitince 1000 coin + 1 cash.
+- **Mağaza** (`magaza.py`): teklif paketleri (iç içe eşya grupları dahil),
+  cash ile depo eşyası, cash borsası, saldırı/casusluk hakkı, depo
+  kapasitesi (azami sınır), PvP bölge/ada alımı, kilit açma.
+  Fiyat çarpanı 0–1 aralığına sıkıştırılır; negatif/ sıfır reddedilir.
+- **Koleksiyonlar** (`koleksiyon.py`): `costs` alanı birim bazında uygulanır;
+  önce depo, sonra ordu birimleri tüketilir; kategori başına bir kez ödül.
+  Birim tamamlama yalnızca geçerli ve sahip olunan birimler için.
+- **Etkinlikler** (`etkinlik.py`): günlük bonus (config’ten, günde bir),
+  Pazartesi bonusu (haftada bir), geri dönüş (20 saatte bir), hazine
+  (günde bir). İstemcinin gönderdiği coin/cash değerlerine güvenilmez.
+- **Başarımlar** (`basari.py`): 8 başarım; görev, seviye, inşa, PvP,
+  kupa, ada ve koleksiyon koşulları; bir kez ödül.
+- Yeni uçlar: `get_achievements.php`, `get_store.php`,
+  `get_collections.php`, `get_events.php`.
+
 ## Bilinen belirsizlikler
 
 - `collect_new` aslında toplama komutu (`CMD_COLLECT`), `next_step` ise

@@ -559,6 +559,136 @@ class TurnuvaAdaTestleri(unittest.TestCase):
         import sezon
         self.assertRegex(sezon._hafta(), r"^\d{4}-W\d{2}$")
 
+
+class MagazaGorevTestleri(unittest.TestCase):
+
+    def test_komut_gorev_tamamla_odul(self):
+        k = bos_kayit()
+        command.session = lambda uid: k
+        command.do_command("test", Constant.CMD_COMPLETE_MISSION, ["2", "0"])
+        self.assertIn(2, k["privateState"]["completedMissions"])
+        command.do_command("test", Constant.CMD_REWARD_MISSION, ["0", "2"])
+        self.assertGreaterEqual(k["maps"][0]["coins"], 50000 + 10)
+        self.assertIn(2, k["privateState"]["rewardedMissions"])
+
+    def test_komut_teklif_al(self):
+        k = bos_kayit()
+        k["playerInfo"]["cash"] = 100
+        command.session = lambda uid: k
+        command.do_command("test", Constant.CMD_BUY_OFFER, ["1"])
+        self.assertEqual(k["playerInfo"]["cash"], 75)
+
+
+
+    def test_koleksiyon_basarisizsa_tuketmez(self):
+        import koleksiyon
+        from odul import depo, depo_adet
+        k = bos_kayit()
+        depo(k, 719, 15)
+        self.assertFalse(koleksiyon.tamamla(k, 33))
+        self.assertEqual(depo_adet(k, 719), 15)
+
+    def test_depo_tutarsiz_kayitta_da_sinir_koyar(self):
+        import magaza
+        k = bos_kayit()
+        k["playerInfo"]["cash"] = 1000
+        k["privateState"]["warehouse_capacity"] = 1000
+        k["privateState"]["warehouse_capacity_step"] = 19
+        self.assertFalse(magaza.depo_kapasite(k, tek=True))
+        self.assertEqual(k["playerInfo"]["cash"], 1000)
+
+    def test_gorev_sifirlama_odulu_tekrar_vermez(self):
+        import gorev
+        k = bos_kayit()
+        gorev.tamamla(k, 2)
+        gorev.odul(k, 0, 2)
+        once = k["maps"][0]["coins"]
+        gorev.sifirla(k)
+        gorev.tamamla(k, 2)
+        self.assertFalse(gorev.odul(k, 0, 2))
+        self.assertEqual(k["maps"][0]["coins"], once)
+
+    def test_koleksiyon_costs_ayri_ayri_ister(self):
+        import koleksiyon
+        from odul import depo
+        eksik = bos_kayit()
+        depo(eksik, 719, 15)
+        self.assertFalse(koleksiyon.tamamla(eksik, 33))
+        tam = bos_kayit()
+        depo(tam, 719, 15)
+        depo(tam, 721, 20)
+        self.assertTrue(koleksiyon.tamamla(tam, 33))
+
+    def test_ic_ice_paket_cokmez(self):
+        import magaza
+        k = bos_kayit()
+        k["playerInfo"]["cash"] = 100
+        self.assertTrue(magaza.teklif_al(k, 0, 11))
+        self.assertEqual(k["playerInfo"]["cash"], 40)
+        from odul import depo_adet
+        self.assertGreaterEqual(depo_adet(k, 60), 1)
+
+    def test_negatif_carpan_reddedilir(self):
+        import magaza
+        k = bos_kayit()
+        self.assertFalse(magaza.satin_al(k, 0, 1, 0, 0, True, -5))
+
+    def test_depo_azami_kapasite(self):
+        import magaza
+        k = bos_kayit()
+        k["privateState"]["warehouse_capacity_step"] = 19
+        k["playerInfo"]["cash"] = 1000
+        self.assertFalse(magaza.depo_kapasite(k, tek=True))
+
+    def test_gorev_tamamla_ve_odul(self):
+        import gorev
+        k = bos_kayit()
+        self.assertTrue(gorev.tamamla(k, 2))
+        self.assertIn(2, k["privateState"]["completedMissions"])
+        self.assertTrue(gorev.odul(k, 0, 2))
+        self.assertFalse(gorev.odul(k, 0, 2))
+
+    def test_teklif_paketi_cash_dusurur(self):
+        import magaza
+        k = bos_kayit()
+        k["playerInfo"]["cash"] = 100
+        self.assertTrue(magaza.teklif_al(k, 0, 1))
+        self.assertEqual(k["playerInfo"]["cash"], 75)
+        self.assertEqual(k["maps"][0]["coins"], 50000 + 5000)
+
+    def test_cash_borsasi_ve_depo(self):
+        import magaza
+        k = bos_kayit()
+        k["playerInfo"]["cash"] = 100
+        self.assertTrue(magaza.cash_borsasi(k, 0))
+        self.assertEqual(k["maps"][0]["coins"], 50000 + 2500)
+        self.assertTrue(magaza.depo_kapasite(k))
+        self.assertEqual(k["privateState"]["warehouse_capacity_step"], 1)
+
+    def test_koleksiyon_tamamlanir(self):
+        import koleksiyon
+        k = bos_kayit()
+        k["privateState"]["gifts"] = [0] * 700
+        k["privateState"]["gifts"][509] = 1
+        self.assertTrue(koleksiyon.tamamla(k, 1))
+        self.assertIn("1", k["privateState"]["unitCollections"])
+        self.assertFalse(koleksiyon.tamamla(k, 1))
+
+    def test_etkinlikler_tek_kez(self):
+        import etkinlik
+        k = bos_kayit()
+        self.assertTrue(etkinlik.pazartesi_bonus(k, 0))
+        self.assertFalse(etkinlik.pazartesi_bonus(k, 0))
+        self.assertTrue(etkinlik.hazine(k, 0))
+        self.assertFalse(etkinlik.hazine(k, 0))
+
+    def test_basari_acilir(self):
+        import basari
+        k = bos_kayit()
+        k["privateState"]["completedMissions"] = [2]
+        yeni = basari.kontrol(k)
+        self.assertIn("ilk_gorev", yeni)
+
 class KayitTestleri(unittest.TestCase):
     def setUp(self):
         gecici_kok = os.path.join(KOK, "tests", "_gecici")

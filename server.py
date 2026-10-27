@@ -36,6 +36,11 @@ from world import Dunya
 import turnuva as Turnuva
 import ada as Ada
 import sezon as Sezon
+import basari
+import koleksiyon
+import etkinlik
+import gorev
+import magaza
 
 dunya = Dunya()
 app_secret = os.environ.get('SE_SECRET_KEY', 'SECRET_KEY')
@@ -371,6 +376,59 @@ def flash_sync_error_response():
 
     print("flash_sync_error", reason, ". --", request.values)
     return redirect("/play.html")
+
+@app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_achievements.php", methods=["GET", "POST"])
+def get_achievements_response():
+    uid = request.values.get("USERID", "")
+    kayit = kayit_oturumu(uid) if uid else None
+    if not kayit:
+        return {"result": "ok", "achievements": []}
+    with save_lock:
+        basari.kontrol(kayit)
+        save_session(uid)
+    return {"result": "ok", "achievements": basari.liste(kayit), "data": basari.liste(kayit)}
+
+
+@app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_store.php", methods=["GET", "POST"])
+def get_store_response():
+    uid = request.values.get("USERID", "")
+    kayit = kayit_oturumu(uid) if uid else None
+    cash = int(kayit.get("playerInfo", {}).get("cash", 0) or 0) if kayit else 0
+    return {
+        "result": "ok",
+        "cash": cash,
+        "offers": get_game_config().get("offer_packs", []),
+        "warehouse": magaza.stok_durumu(kayit) if kayit else {},
+    }
+
+
+@app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_collections.php", methods=["GET", "POST"])
+def get_collections_response():
+    uid = request.values.get("USERID", "")
+    kayit = kayit_oturumu(uid) if uid else None
+    return {
+        "result": "ok",
+        "categories": koleksiyon.kategoriler(),
+        "status": koleksiyon.durum(kayit) if kayit else {},
+    }
+
+
+@app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_events.php", methods=["GET", "POST"])
+def get_events_response():
+    uid = request.values.get("USERID", "")
+    kayit = kayit_oturumu(uid) if uid else None
+    if kayit:
+        with save_lock:
+            haftalik = gorev.haftalik_durum(kayit)
+            save_session(uid)
+    else:
+        haftalik = {}
+    return {
+        "result": "ok",
+        "events": etkinlik.durum(kayit) if kayit else {},
+        "weekly": haftalik,
+    }
+
 
 @app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/command.php", methods=['POST'])
 def command_response():

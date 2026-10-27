@@ -1,0 +1,14 @@
+social-emperors_*.exe
+build/
+.venv/
+saves/
+.idea
+__pycache__/
+.DS_Store
+.vs/
+*.lnk
+download_assets/
+Include/
+Lib/
+Scripts/
+pyvenv.cfg

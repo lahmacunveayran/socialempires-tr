@@ -231,6 +231,34 @@ class KomutTestleri(unittest.TestCase):
         command.do_command("test", Constant.CMD_REWARD_MISSION, [0, 2])
         self.assertEqual(self.kayit["maps"][0]["coins"], ilk)
 
+    def test_gercek_kayit_uzerinde_yukseltme(self):
+        """Gerçek bir köy kaydı (7 elemanlı eşyalar) üzerinde yükseltme."""
+        from get_game_config import get_item_from_id
+        yol = os.path.join(KOK, "villages", "AcidCaos.json")
+        with open(yol, encoding="utf-8") as f:
+            kayit = json.load(f)
+        command.session = lambda userid: kayit
+
+        harita = kayit["maps"][0]
+        harita["coins"] = 10 ** 6
+        harita["wood"] = 10 ** 6
+        harita["stone"] = 10 ** 6
+
+        hedef = None
+        for esya in harita["items"]:
+            cfg = get_item_from_id(esya[0])
+            if cfg and cfg.get("upgrades_to") not in (0, "0", None):
+                hedef = esya
+                break
+        self.assertIsNotNone(hedef, "Test kaydında yükseltilebilir bina yok")
+
+        eski_id = hedef[0]
+        yeni_id = int(get_item_from_id(eski_id)["upgrades_to"])
+        command.do_command("test", Constant.CMD_UPGRADE, [eski_id, hedef[1], hedef[2], 0])
+        self.assertEqual(hedef[0], yeni_id)
+        # Kayıt yeniden JSON'a yazılabiliyor mu?
+        json.dumps(kayit)
+
 
 class KayitTestleri(unittest.TestCase):
     def setUp(self):

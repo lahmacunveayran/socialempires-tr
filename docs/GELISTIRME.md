@@ -42,6 +42,11 @@ projesinin (GPLv3) yerel bir çalışma kopyasıdır. Buradaki değişiklikler
 | `place_stored_item` | Depodaki eşyayı haritaya yerleştirir |
 | `sell_stored_item` | Depodaki eşyayı %5 iade ile satar |
 | `buy_stored_item_cash` | Depo eşyasını cash ile satın alır |
+| `attack_player` | Hedef oyuncuyu doğrular, saldırıyı başlatır |
+| `end_attack` | Savaş sonucunu iki tarafa uygular (ganimet, kayıp, rapor) |
+| `clean_attacks` | Savunma raporlarını temizler |
+| `set_attack_team` | Saldırı takımını kaydeder |
+| `spy_player` | Casusluk komutu (şimdilik yalnızca günlük) |
 
 ### Kayıt biçimi
 `version.py` 0.05a'ya yükseltildi. 0.04a kayıtları açılışta otomatik
@@ -121,6 +126,25 @@ Sunucu açıkken `backups_daily` iş parçacığı saatte bir kontrol eder ve he
 gün için `saves/gunluk_yedek/YYYY-AA-GG/` klasörüne o günkü kayıtları
 kopyalar. Son 14 gün saklanır. Anlık yedek için hile panelindeki
 "Şimdi yedek al" düğmesi `saves/backups/` altına zaman damgalı kopya atar.
+
+## PvP (oyuncuya saldırı)
+
+Komşu bir oyuncuya saldırınca istemci `attack_player`, savaş bitince
+`end_attack` gönderiyor. Sunucu `end_attack` içindeki JSON'u iki tarafa
+uyguluyor:
+
+- saldıran: `resources` içindeki altın/XP kazancı,
+- savunan: `resources_victim` kadar kaynak kaybı (mevcut kaynağın üstüne
+  çıkamaz),
+- savunanın `attacksReceived` listesine saldıranın adı/seviyesiyle rapor,
+- saldıranın `attacksSent` listesine hedef kaydı.
+
+Saldırı hakkı config'te `ATTACKS_PERIOD_MAX = 3` / `ATTACKS_PERIOD_HOURS = 6`;
+sunucu şimdilik yalnızca uyarı basıyor, engellemiyor.
+
+> Not: `end_attack` gövdesi gerçek oyundan alınan log ile doğrulanmalı.
+> Bir komşuya saldırıp `saves/komut_gunlugu.jsonl` dosyasına bakmak yeterli;
+> alan adları farklıysa handler'ı ona göre daraltırız.
 
 ## Bilinen belirsizlikler
 

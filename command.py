@@ -3,7 +3,7 @@ import math
 import os
 import traceback
 
-from sessions import session, save_session
+from sessions import session, save_session, neighbor_session, all_saves_userid
 from get_game_config import get_game_config, get_level_from_xp, get_name_from_item_id, get_attribute_from_mission_id, get_xp_from_level, get_attribute_from_item_id, get_item_from_subcat_functional, get_item_from_id
 from constants import Constant
 from engine import apply_cost, apply_collect, apply_collect_xp, timestamp_now
@@ -299,6 +299,146 @@ def _pazar(save, args):
         harita["coins"] += toplam
         traded[kaynak] = max(-max_azalis, min(max_artis, onceki - adet))
         print(f"Pazar: {adet} {kaynak} satildi, {toplam} altin alindi")
+    return True
+
+
+# ---------------------------------------------------------------------------
+# PvP (oyuncuya saldırı)
+# ---------------------------------------------------------------------------
+
+KAYNAK_ALANLARI = {"g": "coins", "w": "wood", "s": "stone", "f": "food"}
+
+
+def _liste_al(kap, anahtar):
+    """Kayıtta liste alanı yoksa/None ise boş liste oluşturup döndürür."""
+    deger = kap.get(anahtar)
+    if not isinstance(deger, list):
+        deger = []
+        kap[anahtar] = deger
+    return deger
+
+
+def _oyuncu_ozeti(kayit):
+    pi = kayit.get("playerInfo", {})
+    harita = (kayit.get("maps") or [{}])[0]
+    return {
+        "name": pi.get("name") or "Oyuncu",
+        "user_id": str(pi.get("pid") or ""),
+        "world_id": pi.get("world_id", 0),
+        "level": harita.get("level", 1),
+        "pic": pi.get("pic", ""),
+    }
+
+
+def _saldiri_baslat(saldiran, args):
+    """attack_player: hedefi doğrular ve saldırıyı başlatır.
+
+    Asıl sonuç `end_attack` geldiğinde uygulanır; burada yalnızca hedefin
+    gerçekten var olduğunu kontrol ediyoruz.
+    """
+    hedef = str(args[0]) if args else ""
+    if not hedef:
+        print(" ! Saldiri: hedef yok, args =", args)
+        return False
+    kurban = neighbor_session(hedef)
+    if kurban is None:
+        print(" ! Saldiri: hedef bulunamadi:", hedef)
+        return False
+    print(f"Saldiri basladi: {_oyuncu_ozeti(kurban)['name']} ({hedef})")
+    return True
+
+
+def _saldiri_bitir(saldiran, args):
+    """end_attack: istemcinin gönderdiği savaş sonucunu iki tarafa uygular.
+
+    Beklenen JSON: victim_id, map, win, duration, townhall_gold,
+    resources {x,g...}, resources_victim {g,w,s,f}, attacker_units,
+    victim_units, voluntary_end.
+    """
+    veri = _json_veri(args)
+    if not isinstance(veri, dict):
+        print(" ! end_attack: JSON veri yok, args =", args)
+        return False
+
+    kurban_id = str(veri.get("victim_id") or veri.get("defender_id") or veri.get("rival_id") or "")
+    if not kurban_id:
+        print(" ! end_attack: victim_id yok:", veri)
+        return False
+
+    kurban = neighbor_session(kurban_id)
+    if kurban is None:
+        print(" ! end_attack: kurban kaydi bulunamadi:", kurban_id)
+        return False
+
+    kendi_id = str(saldiran.get("playerInfo", {}).get("pid", ""))
+    if kurban_id == kendi_id:
+        print(" ! end_attack: kendine saldiri yok sayildi")
+        return False
+
+    # Saldırı hakkı: son 6 saatte 3'ten fazla saldırı varsa uyar (engellemez).
+    simdi_once = timestamp_now()
+    son_saldirilar = [
+        a for a in _liste_al(saldiran.setdefault("privateState", {}), "attacksSent")
+        if _tam(a.get("time")) and simdi_once - _tam(a.get("time")) < 6 * 3600
+    ]
+    if len(son_saldirilar) >= 3:
+        print(" ! Saldiri hakki dolmus görünüyor (son 6 saatte 3+), yine de uygulaniyor")
+
+    town_id = _tam(veri.get("map")) or 0
+    if not (0 <= town_id < len(saldiran.get("maps", []))):
+        town_id = 0
+    harita = saldiran["maps"][town_id]
+
+    # Saldıranın kazancı (istemci hesaplıyor; sunucu yalnızca uygular)
+    kazanc = veri.get("resources") or {}
+    if isinstance(kazanc, dict):
+        for anahtar, deger in kazanc.items():
+            miktar = _tam(deger) or 0
+            if miktar == 0:
+                continue
+            if anahtar == "x":
+                harita["xp"] = int(harita.get("xp", 0)) + miktar
+            elif anahtar in KAYNAK_ALANLARI:
+                alan = KAYNAK_ALANLARI[anahtar]
+                harita[alan] = int(harita.get(alan, 0)) + miktar
+
+    # Kurbandan eksilen kaynaklar (mevcut kaynağın üstüne çıkmasın)
+    kurban_harita = kurban["maps"][0]
+    kayip = veri.get("resources_victim") or {}
+    if isinstance(kayip, dict):
+        for anahtar, deger in kayip.items():
+            miktar = _tam(deger) or 0
+            if miktar <= 0 or anahtar not in KAYNAK_ALANLARI:
+                continue
+            alan = KAYNAK_ALANLARI[anahtar]
+            gercek = min(miktar, int(kurban_harita.get(alan, 0)))
+            kurban_harita[alan] = int(kurban_harita.get(alan, 0)) - gercek
+
+    simdi = timestamp_now()
+    saldiran_ps = saldiran.setdefault("privateState", {})
+    kurban_ps = kurban.setdefault("privateState", {})
+
+    _liste_al(saldiran_ps, "attacksSent").append({
+        "victim_id": kurban_id,
+        "time": str(simdi),
+    })
+
+    rapor = dict(veri)
+    rapor["oponent"] = _oyuncu_ozeti(saldiran)
+    rapor["time"] = simdi
+    _liste_al(kurban_ps, "attacksReceived").append({
+        "time": simdi,
+        "attacker_id": str(saldiran.get("playerInfo", {}).get("pid", "")),
+        "description": rapor,
+    })
+
+    # Kurbanın kaydı da diske yazılsın (komut sonunda saldıran yazılıyor).
+    # Statik komşular (Arthur, AcidCaos...) kayıtlı oyuncu değil; onlar için yazma yok.
+    if kurban_id in all_saves_userid():
+        save_session(kurban_id)
+
+    sonuc = "kazandi" if _tam(veri.get("win")) == 1 else "kaybetti"
+    print(f"Saldiri bitti: {_oyuncu_ozeti(kurban)['name']} - {sonuc}")
     return True
 
 
@@ -974,6 +1114,38 @@ def do_command(USERID, cmd, args):
     elif cmd == Constant.CMD_INCREASE_POPULATION:
         print(" ! INCREASE_POPULATION: protokol henuz cozulmedi, args =", args)
 
+    elif cmd == Constant.CMD_ATTACK_PLAYER:
+        _saldiri_baslat(save, args)
+
+    elif cmd == Constant.CMD_END_ATTACK:
+        _saldiri_bitir(save, args)
+
+    elif cmd == Constant.CMD_CLEAN_ATTACKS:
+        raporlar = _liste_al(save.setdefault("privateState", {}), "attacksReceived")
+        adet = _tam(args[0]) if args else None
+        if adet and adet > 0:
+            del raporlar[:adet]
+        else:
+            raporlar.clear()
+        print("Saldiri raporlari temizlendi, kalan:", len(raporlar))
+
+    elif cmd == Constant.CMD_SET_ATTACK_TEAM:
+        veri = _json_veri(args)
+        takim = veri if veri is not None else args
+        ps = save.setdefault("privateState", {})
+        takimlar = ps.get("teams")
+        if not isinstance(takimlar, dict):
+            takimlar = {}
+            ps["teams"] = takimlar
+        takimlar["attack"] = takim
+        print("Saldiri takimi kaydedildi:", str(takim)[:120])
+
+    elif cmd == Constant.CMD_SPY:
+        print("Casusluk komutu (kayitta degisiklik yok):", args)
+
+    elif cmd == Constant.CMD_WIN_TROPHY:
+        print("Kupa komutu (kayitta degisiklik yok):", args)
+
     elif cmd == Constant.CMD_ADD_COLLECTABLE:
         collection_id = args[0]
         collectible_id = args[1]
@@ -983,3 +1155,4 @@ def do_command(USERID, cmd, args):
         print(f"Unhandled command '{cmd}' -> args", args)
         return
     
+

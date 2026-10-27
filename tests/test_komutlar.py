@@ -120,11 +120,14 @@ class KomutTestleri(unittest.TestCase):
         self.kayit = bos_kayit()
         self._eski_session = command.session
         self._eski_save = command.save_session
+        self._eski_komsu = command.neighbor_session
         command.session = lambda userid: self.kayit
+        command.neighbor_session = lambda userid: self.kayit if userid == "test" else None
         command.save_session = lambda userid: None
 
     def tearDown(self):
         command.session = self._eski_session
+        command.neighbor_session = self._eski_komsu
         command.save_session = self._eski_save
 
     def test_bozuk_komut_digerlerini_dusurmez(self):
@@ -207,6 +210,59 @@ class KomutTestleri(unittest.TestCase):
     def test_pazar_sayaci_guncellenir(self):
         command.do_command("test", Constant.CMD_SET_RESOURCES_TRADED, [json.dumps({"w": 7, "s": 3})])
         self.assertEqual(self.kayit["maps"][0]["resourcesTraded"], {"w": 7, "s": 3})
+
+    # -- PvP ---------------------------------------------------------------
+    def test_saldiri_sonucu_iki_tarafa_uygulanir(self):
+        kurban = bos_kayit()
+        kurban["playerInfo"]["pid"] = "rakip"
+        kurban["playerInfo"]["name"] = "Rakip"
+        cozum = lambda uid: self.kayit if uid == "test" else (kurban if uid == "rakip" else None)
+        command.session = cozum
+        command.neighbor_session = cozum
+
+        veri = json.dumps({
+            "victim_id": "rakip", "map": 0, "win": 1, "duration": 20,
+            "resources": {"x": 5, "g": 25},
+            "resources_victim": {"g": 100},
+            "attacker_units": [[512, 1, 0, 0]], "victim_units": [],
+            "voluntary_end": 1,
+        })
+        command.do_command("test", Constant.CMD_END_ATTACK, [veri])
+
+        self.assertEqual(self.kayit["maps"][0]["coins"], 50025)
+        self.assertEqual(self.kayit["maps"][0]["xp"], 5)
+        self.assertEqual(kurban["maps"][0]["coins"], 50000 - 100)
+
+        raporlar = kurban["privateState"]["attacksReceived"]
+        self.assertEqual(len(raporlar), 1)
+        self.assertEqual(raporlar[0]["attacker_id"], "test")
+        self.assertEqual(raporlar[0]["description"]["oponent"]["name"], "Test")
+
+        gonderilen = self.kayit["privateState"]["attacksSent"]
+        self.assertEqual(gonderilen[0]["victim_id"], "rakip")
+
+    def test_saldiri_kurban_kaynagindan_fazla_alinamaz(self):
+        kurban = bos_kayit()
+        kurban["playerInfo"]["pid"] = "rakip"
+        kurban["maps"][0]["coins"] = 30
+        cozum = lambda uid: self.kayit if uid == "test" else (kurban if uid == "rakip" else None)
+        command.session = cozum
+        command.neighbor_session = cozum
+        veri = json.dumps({
+            "victim_id": "rakip", "map": 0, "win": 1,
+            "resources": {"g": 0}, "resources_victim": {"g": 100},
+        })
+        command.do_command("test", Constant.CMD_END_ATTACK, [veri])
+        self.assertEqual(kurban["maps"][0]["coins"], 0)
+
+    def test_saldiri_raporlari_temizlenir(self):
+        self.kayit["privateState"]["attacksReceived"] = [{"time": 1}, {"time": 2}]
+        command.do_command("test", Constant.CMD_CLEAN_ATTACKS, [])
+        self.assertEqual(self.kayit["privateState"]["attacksReceived"], [])
+
+    def test_saldiri_takimi_kaydedilir(self):
+        command.do_command("test", Constant.CMD_SET_ATTACK_TEAM, [json.dumps({"units": [512, 516]})])
+        self.assertEqual(self.kayit["privateState"]["teams"]["attack"], {"units": [512, 516]})
 
     # -- depo --------------------------------------------------------------
     def test_depoya_ekle_ve_yerlestir(self):

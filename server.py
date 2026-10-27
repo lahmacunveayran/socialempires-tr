@@ -297,28 +297,66 @@ def command_response():
 @app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_continent_ranking.php")
 def get_continent_ranking_response():
 
-    USERID = request.values['USERID']
-    worldChange = request.values['worldChange']
+    USERID = request.values.get('USERID', '')
+    worldChange = request.values.get('worldChange', '0')
     if 'spdebug' in request.values:
         spdebug = request.values['spdebug']
-    town_id = request.values['map']
-    user_key = request.values['user_key']
+    town_id = request.values.get('map', '0')
+    user_key = request.values.get('user_key', '')
 
-    # TODO - stub
-    response = {
-        "world_id": 0,
-        "continent": [
-            {"posicion": 0, "nivel": 1, "user_id": 1111}, # villages/AcidCaos
-            {"posicion": 1, "nivel": 0},
-            {"posicion": 2, "nivel": 0},
-            {"posicion": 3, "nivel": 0},
-            {"posicion": 4, "nivel": 0},
-            {"posicion": 5, "nivel": 0},
-            {"posicion": 6, "nivel": 0},
-            {"posicion": 7, "nivel": 0}
-        ]
-    }
-    return(response)
+    # Kayıtlı oyuncuları XP'ye göre sırala; istemci ilk 8 sırayı gösteriyor.
+    oyuncular = []
+    for uid in all_saves_userid():
+        kayit = kayit_oturumu(uid)
+        if not kayit:
+            continue
+        harita = kayit["maps"][0]
+        oyuncular.append({
+            "user_id": str(uid),
+            "name": kayit["playerInfo"].get("name", ""),
+            "nivel": harita.get("level", 1),
+            "xp": harita.get("xp", 0),
+        })
+    oyuncular.sort(key=lambda o: o["xp"], reverse=True)
+
+    continent = [
+        {"posicion": i, "nivel": o["nivel"], "user_id": o["user_id"]}
+        for i, o in enumerate(oyuncular[:8])
+    ]
+    for i in range(len(continent), 8):
+        continent.append({"posicion": i, "nivel": 0})
+
+    return {"world_id": 0, "continent": continent}
+
+
+########
+# KEŞİF: henüz uygulanmayan uçları günlüğe yaz
+########
+
+def _http_gunlugune_yaz(yol):
+    """İstemcinin çağırdığı ama sunucuda karşılığı olmayan istekleri kaydeder."""
+    try:
+        os.makedirs(os.path.join(BASE_DIR, "saves"), exist_ok=True)
+        with open(os.path.join(BASE_DIR, "saves", "http_gunlugu.jsonl"), "a", encoding="utf-8") as f:
+            f.write(json.dumps(
+                {"yol": yol, "method": request.method, "args": request.values.to_dict()},
+                ensure_ascii=False,
+            ) + "\n")
+    except OSError:
+        pass
+    print(f"[EKSIK UC] {request.method} /{yol} -> {dict(request.values)}")
+
+
+@app.route("/tournaments/<path:yol>", methods=["GET", "POST"])
+def tournament_kesif(yol):
+    _http_gunlugune_yaz("tournaments/" + yol)
+    return ("", 404)
+
+
+@app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/<path:yol>", methods=["GET", "POST"])
+def bilinmeyen_dinamik_uc(yol):
+    _http_gunlugune_yaz(yol)
+    return ("", 404)
 
 
 ########

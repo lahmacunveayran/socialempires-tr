@@ -585,6 +585,7 @@ def get_continent_response():
     kayit = kayit_oturumu(uid) if uid else None
     durum = Ada.ada_durumu(kayit) if kayit else {"ada": 99, "fetih": 0, "toplam": 7, "slotlar": []}
     slotlar = durum["slotlar"]
+    fetih_pozisyonlari = [s["posicion"] for s in slotlar if s["conquered"]]
     print(f"[ADA] get_continent: {dict(request.values)} -> {len(slotlar)} bolge")
     ada = {
         "id": durum["ada"], "number": durum["ada"], "continentId": durum["ada"], "continentNumber": durum["ada"],
@@ -595,6 +596,7 @@ def get_continent_response():
         "conquered": durum["fetih"],
         "progress": {"done": durum["fetih"], "total": durum["toplam"]},
         "island": durum["ada"],
+        "arCurrentConquered": fetih_pozisyonlari,
     }
     return {
         "result": "ok",
@@ -613,6 +615,7 @@ def get_continent_response():
         "ada": durum["ada"],
         "island": durum["ada"],
         "conquered": durum["fetih"],
+        "arCurrentConquered": fetih_pozisyonlari,
         "progress": {"done": durum["fetih"], "total": durum["toplam"]},
     }
 

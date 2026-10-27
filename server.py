@@ -2,7 +2,10 @@ print (" [+] Loading basics...")
 import os
 import json
 import hashlib
-import urllib
+import urllib.request
+import urllib.error
+import tempfile
+import traceback
 if os.name == 'nt':
     os.system("color")
     os.system("title Social Empires Server")
@@ -32,11 +35,14 @@ from bundle import ASSETS_DIR, STUB_DIR, TEMPLATES_DIR, BASE_DIR
 from world import Dunya
 
 dunya = Dunya()
+app_secret = os.environ.get('SE_SECRET_KEY', 'SECRET_KEY')
 
+OYUN_DILI = 'tr'  # istemci yerel ayarı 'en' kalsa da metinler Türkçe gönderilir
 host = '127.0.0.1'
 port = 5050
 
 app = Flask(__name__, template_folder=TEMPLATES_DIR)
+app.secret_key = app_secret
 # Statik varlıklar (SWF/JPG) tarayıcıda/Flash'ta önbelleklensin: her açılışta
 # yüzlerce dosya yeniden indirilmesin. Geliştirme sırasında değiştirdiğiniz
 # dosyalar için Ctrl+F5 ile önbelleği temizleyin.
@@ -115,8 +121,8 @@ def login():
     load_saved_villages()
     # If logging in, set session USERID, and go to play
     if request.method == 'POST':
-        session['USERID'] = request.form['USERID']
-        session['GAMEVERSION'] = request.form['GAMEVERSION']
+        session['USERID'] = request.form.get('USERID', '')
+        session['GAMEVERSION'] = request.form.get('GAMEVERSION', 'SocialEmpires0926bsec.swf')
         # Bir bot kaydıyla giriş yapıldıysa onu oyuncuya devret; aksi halde
         # dünya simülasyonu aynı kaydı yazarken çakışma/domma olabiliyor.
         giris_kaydi = kayit_oturumu(session['USERID'])
@@ -125,8 +131,8 @@ def login():
             giris_kaydi["playerInfo"].pop("bot_kisi", None)
             save_session(session['USERID'])
             print("[LOGIN] Bot kaydi oyuncuya devredildi:", session['USERID'])
-        print("[LOGIN] USERID:", request.form['USERID'])
-        print("[LOGIN] GAMEVERSION:", request.form['GAMEVERSION'])
+        print("[LOGIN] USERID:", session['USERID'])
+        print("[LOGIN] GAMEVERSION:", session['GAMEVERSION'])
         return redirect("/play.html")
     # Login page
     if request.method == 'GET':
@@ -222,17 +228,44 @@ def static_assets_loader(path):
     if os.path.exists(yerel):
         return send_from_directory(ASSETS_DIR, path)
 
+    def _varlik_gecerli(yol):
+        try:
+            if os.path.getsize(yol) < 64:
+                return False
+            with open(yol, "rb") as f:
+                ilk = f.read(4)
+            return not ilk.startswith(b"<")  # CDN'in HTML hata sayfası olmasın
+        except OSError:
+            return False
+
     if os.path.exists(indirilen):
-        print(f"====== USING EXTERNAL: download_assets/assets/{path}")
-        return send_from_directory(indirilen_klasor, path)
+        if _varlik_gecerli(indirilen):
+            print(f"====== USING EXTERNAL: download_assets/assets/{path}")
+            return send_from_directory(indirilen_klasor, path)
+        # Yarım/bozuk indirme: sil, yeniden dene
+        try:
+            os.remove(indirilen)
+        except OSError:
+            pass
 
     # Dosya hiçbir yerde yok: Social Point CDN'inden indirmeyi dene.
     os.makedirs(os.path.dirname(indirilen), exist_ok=True)
     URL = f"https://static.socialpointgames.com/static/socialempires/assets/{path}"
+    gecici = None
     try:
-        urllib.request.urlretrieve(URL, indirilen)
+        fd, gecici = tempfile.mkstemp(dir=os.path.dirname(indirilen), prefix="indir-", suffix=".tmp")
+        os.close(fd)
+        urllib.request.urlretrieve(URL, gecici)
+        if not _varlik_gecerli(gecici):
+            raise OSError("indirilen dosya gecersiz")
+        os.replace(gecici, indirilen)  # atomik: yarım dosya servis edilmez
     except (urllib.error.HTTPError, urllib.error.URLError, OSError) as hata:
         print(f" ! Asset indirilemedi: {URL} ({hata})")
+        if gecici and os.path.exists(gecici):
+            try:
+                os.remove(gecici)
+            except OSError:
+                pass
         return ("", 404)
 
     print(f"====== DOWNLOADED ASSET: {URL}")
@@ -242,9 +275,9 @@ def static_assets_loader(path):
 
 @app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/track_game_status.php", methods=['POST'])
 def track_game_status_response():
-    status = request.values['status']
-    installId = request.values['installId']
-    user_id = request.values['user_id']
+    status = request.values.get('status', '')
+    installId = request.values.get('installId', '')
+    user_id = request.values.get('user_id', '')
 
     print(f"track_game_status: status={status}, installId={installId}, user_id={user_id}. --", request.values)
     return ("", 200)
@@ -253,31 +286,36 @@ def track_game_status_response():
 def get_game_config_response():
     spdebug = None
 
-    USERID = request.values['USERID']
-    user_key = request.values['user_key']
+    USERID = request.values.get('USERID', '')
+    user_key = request.values.get('user_key', '')
     if 'spdebug' in request.values:
         spdebug = request.values['spdebug']
-    language = request.values.get('language', 'tr')
+    language = request.values.get('language', 'en')
 
-    print(f"get_game_config: USERID: {USERID} dil: {language}. --", request.values)
-    # Dile göre çeviri + zaman ölçeği uygulanmış config istemciye gider.
-    return get_client_game_config(language)
+    print(f"get_game_config: USERID: {USERID} istemci dili: {language} -> {OYUN_DILI}. --", request.values)
+    # İstemci yerel ayarı 'en' kalır (bilinen çalışan yol); metinler OYUN_DILI'ne göre gelir.
+    try:
+        return get_client_game_config(OYUN_DILI)
+    except Exception:
+        traceback.print_exc()
+        print(" ! Ceviri config'i uretilemedi; Ingilizceye donuluyor")
+        return get_client_game_config("en")
 
 @app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_player_info.php", methods=['POST'])
 def get_player_info_response():
 
-    USERID = request.values['USERID']
-    user_key = request.values['user_key']
-    spdebug = request.values['spdebug'] if 'spdebug' in request.values else None
+    USERID = request.values.get('USERID', '')
+    user_key = request.values.get('user_key', '')
+    spdebug = request.values.get('spdebug')
     language = request.values.get('language', 'en')
     neighbors = request.values['neighbors'] if 'neighbors' in request.values else None
     client_id = request.values['client_id']
-    user = request.values['user'] if 'user' in request.values else None
+    user = request.values.get('user')
     if user and str(user).isdigit():
         cozulen = _kimlikten_uid(user)
         if cozulen:
             user = cozulen
-    map = int(request.values['map']) if 'map' in request.values else None
+    map = int(request.values.get('map', 0) or 0)
 
     print(f"get_player_info: USERID: {USERID}. user: {user} --", request.values)
 
@@ -300,25 +338,26 @@ def get_player_info_response():
 def sync_error_track_response():
     spdebug = None
 
-    USERID = request.values['USERID']
-    user_key = request.values['user_key']
+    USERID = request.values.get('USERID', '')
+    user_key = request.values.get('user_key', '')
     if 'spdebug' in request.values:
         spdebug = request.values['spdebug']
     language = request.values.get('language', 'en')
-    error = request.values['error']
-    current_failed = request.values['current_failed']
+    error = request.values.get('error', '')
+    current_failed = request.values.get('current_failed', '')
     tries = request.values['tries'] if 'tries' in request.values else None
-    survival = request.values['survival']
-    previous_failed = request.values['previous_failed']
-    description = request.values['description']
-    user_id = request.values['user_id']
+    survival = request.values.get('survival', '')
+    previous_failed = request.values.get('previous_failed', '')
+    description = request.values.get('description', '')
+    user_id = request.values.get('user_id', '')
 
     print(f"sync_error_track: USERID: {USERID}. [Error: {error}] tries: {tries}. --", request.values)
     return ("", 200)
 
 @app.route("/null")
 def flash_sync_error_response():
-    sp_ref_cat = request.values['sp_ref_cat']
+    sp_ref_cat = request.values.get('sp_ref_cat', '')
+    reason = "reload"
 
     if sp_ref_cat == "flash_sync_error":
         reason = "reload On Sync Error"
@@ -334,8 +373,8 @@ def flash_sync_error_response():
 def command_response():
     spdebug = None
 
-    USERID = request.values['USERID']
-    user_key = request.values['user_key']
+    USERID = request.values.get('USERID', '')
+    user_key = request.values.get('user_key', '')
     if 'spdebug' in request.values:
         spdebug = request.values['spdebug']
     language = request.values.get('language', 'en')
@@ -651,7 +690,7 @@ if __name__ == '__main__':
         from backups_daily import baslat as yedekleri_baslat
         yedekleri_baslat()
         dunya.baslat()
-        app.secret_key = 'SECRET_KEY'
+        app.secret_key = app_secret
         # threaded=True: Flash aynı anda onlarca varlık istiyor; tek iş
         # parçacığı bunları sırayla sunup yükleme süresini uzatıyordu.
         app.run(host=host, port=port, debug=False, threaded=True, use_reloader=False)

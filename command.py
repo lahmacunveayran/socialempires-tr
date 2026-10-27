@@ -119,16 +119,23 @@ def _gift_cikar(save, esya_id, adet=1):
     return True
 
 
-def _komut_gunlugune_yaz(USERID, cmd, args):
-    """Protokol keşfi için komutları saves/komut_gunlugu.jsonl dosyasına yazar."""
+def _komutlari_gunluge_yaz(USERID, komutlar):
+    """Protokol keşfi için bir paketteki komutları tek seferde dosyaya yazar.
+
+    Her komut için dosya açıp kapatmak (özellikle yüzlerce komutluk eğitim
+    paketlerinde) gereksiz yavaşlık yaratıyordu.
+    """
+    if not komutlar:
+        return
     try:
         os.makedirs(SAVES_DIR, exist_ok=True)
-        satir = json.dumps(
-            {"ts": timestamp_now(), "user": str(USERID), "cmd": cmd, "args": args},
-            ensure_ascii=False,
-        )
+        simdi = timestamp_now()
         with open(os.path.join(SAVES_DIR, "komut_gunlugu.jsonl"), "a", encoding="utf-8") as f:
-            f.write(satir + "\n")
+            for cmd, args in komutlar:
+                f.write(json.dumps(
+                    {"ts": simdi, "user": str(USERID), "cmd": cmd, "args": args},
+                    ensure_ascii=False,
+                ) + "\n")
     except OSError:
         pass  # günlük yazılamazsa oyun akışı bozulmasın
 
@@ -342,10 +349,11 @@ def command(USERID, data):
     publishActions = data["publishActions"]
     commands = data["commands"]
 
+    gunluk = []
     for i, comm in enumerate(commands):
         cmd = comm.get("cmd")
         args = comm.get("args", [])
-        _komut_gunlugune_yaz(USERID, cmd, args)
+        gunluk.append((cmd, args))
         try:
             do_command(USERID, cmd, args)
         except Exception:
@@ -354,6 +362,7 @@ def command(USERID, data):
             print(f" ! KOMUT HATASI: {cmd} args={args}")
             traceback.print_exc()
 
+    _komutlari_gunluge_yaz(USERID, gunluk)
     save_session(USERID) # Save session
 
 def do_command(USERID, cmd, args):
@@ -409,17 +418,30 @@ def do_command(USERID, cmd, args):
                 break
     
     elif cmd == Constant.CMD_COLLECT:
-        x = args[0]
-        y = args[1]
-        town_id = args[2]
-        id = args[3]
-        num_units_contained_when_harvested = args[4]#TODO does this affect multiplier?
-        resource_multiplier = args[5]
-        cash_to_substract = args[6]
+        # Boş/eksik paketler (istemci bazen [] gönderiyor) sunucuyu düşürmesin.
+        if len(args) < 7:
+            print(" ! Collect: eksik argüman, atlandı:", args)
+            return
+        x = _tam(args[0])
+        y = _tam(args[1])
+        town_id = _tam(args[2])
+        id = _tam(args[3])
+        resource_multiplier = _tam(args[5]) or 1
+        cash_to_substract = _tam(args[6]) or 0
+        if id is None or town_id is None or not (0 <= town_id < len(save["maps"])):
+            print(" ! Collect: geçersiz argüman, atlandı:", args)
+            return
         print("Collect", str(get_name_from_item_id(id)))
         map = save["maps"][town_id]
         apply_collect(save["playerInfo"], map, id, resource_multiplier)
         save["playerInfo"]["cash"] = max(save["playerInfo"]["cash"] - cash_to_substract, 0)
+        # Üretim sayacını sıfırla: aksi halde kayıt yeniden yüklenince bina
+        # anında yine "toplanabilir" görünüyordu.
+        for esya in map["items"]:
+            if _tam(esya[0]) == id and _tam(esya[1]) == x and _tam(esya[2]) == y:
+                if len(esya) > 4:
+                    esya[4] = timestamp_now()
+                break
     
     elif cmd == Constant.CMD_SELL:
         x = args[0]

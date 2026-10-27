@@ -14,7 +14,9 @@ from get_game_config import get_game_config, get_client_game_config, patch_game_
 
 print (" [+] Loading players...")
 from get_player_info import get_player_info, get_neighbor_info
-from sessions import load_saved_villages, all_saves_userid, all_saves_info, save_info, new_village, fb_friends_str, save_lock
+from sessions import (load_saved_villages, all_saves_userid, all_saves_info,
+                      save_info, new_village, fb_friends_str, save_lock,
+                      backup_session, save_session, session as kayit_oturumu)
 load_saved_villages()
 
 print (" [+] Loading server...")
@@ -320,12 +322,112 @@ def get_continent_ranking_response():
 
 
 ########
+# HİLE PANELİ (yalnızca bu bilgisayar)
+########
+
+def _hile_izinli():
+    """Panelin yalnızca yerel makineden ve aynı kökenden çağrılmasını sağlar."""
+    if request.remote_addr not in ("127.0.0.1", "::1"):
+        return False
+    koken = request.headers.get("Origin")
+    if koken and koken.rstrip("/") != request.host_url.rstrip("/"):
+        return False
+    return True
+
+
+def _kayit_ozeti(kayit):
+    harita = kayit["maps"][0]
+    return {
+        "seviye": harita["level"],
+        "xp": harita["xp"],
+        "altin": harita["coins"],
+        "odun": harita["wood"],
+        "tas": harita["stone"],
+        "yemek": harita["food"],
+        "cash": kayit["playerInfo"]["cash"],
+    }
+
+
+@app.route("/cheat")
+def cheat_sayfasi():
+    if not _hile_izinli():
+        return ("", 403)
+    uid = session.get("USERID")
+    if not uid or uid not in all_saves_userid():
+        return redirect("/")
+    return render_template("cheat.html", save_info=save_info(uid), version=version_name)
+
+
+@app.route("/cheat/uygula", methods=["POST"])
+def cheat_uygula():
+    if not _hile_izinli():
+        return ({"hata": "yasak"}, 403)
+    if not request.is_json:
+        return ({"hata": "JSON gerekli"}, 400)
+
+    uid = session.get("USERID")
+    if not uid or uid not in all_saves_userid():
+        return ({"hata": "oturum yok"}, 401)
+
+    veri = request.get_json(silent=True) or {}
+    islem = veri.get("islem")
+    kayit = kayit_oturumu(uid)
+    harita = kayit["maps"][0]
+
+    try:
+        with save_lock:
+            if islem == "kaynak":
+                tur = veri.get("tur")
+                miktar = int(veri.get("miktar", 1000))
+                if miktar <= 0 or miktar > 10 ** 9:
+                    return ({"hata": "gecersiz miktar"}, 400)
+                if tur == "cash":
+                    kayit["playerInfo"]["cash"] = int(kayit["playerInfo"].get("cash", 0)) + miktar
+                elif tur in ("wood", "stone", "food", "coins"):
+                    harita[tur] = int(harita.get(tur, 0)) + miktar
+                else:
+                    return ({"hata": "gecersiz kaynak"}, 400)
+
+            elif islem == "seviye":
+                seviyeler = get_game_config()["levels"]
+                yeni = int(veri.get("delta", 1)) + int(harita["level"])
+                yeni = max(0, min(yeni, len(seviyeler) - 1))
+                harita["level"] = yeni
+                harita["xp"] = int(seviyeler[yeni]["exp_required"])
+
+            elif islem == "max_seviye":
+                seviyeler = get_game_config()["levels"]
+                yeni = len(seviyeler) - 1
+                harita["level"] = yeni
+                harita["xp"] = int(seviyeler[yeni]["exp_required"])
+
+            elif islem == "egitim":
+                kayit["playerInfo"]["completed_tutorial"] = 1
+                kayit["privateState"]["dragonNestActive"] = 1
+
+            elif islem == "yedek":
+                backup_session(uid)
+
+            else:
+                return ({"hata": "bilinmeyen islem"}, 400)
+
+            save_session(uid)
+    except (KeyError, ValueError, TypeError) as hata:
+        return ({"hata": str(hata)}, 400)
+
+    print(f"[HILE] {islem} {veri} -> ok")
+    return ({"ok": True, "ozet": _kayit_ozeti(kayit)}, 200)
+
+
+########
 # MAIN #
 ########
 
 print (" [+] Running server...")
 
 if __name__ == '__main__':
+    from backups_daily import baslat as yedekleri_baslat
+    yedekleri_baslat()
     app.secret_key = 'SECRET_KEY'
     # threaded=True: Flash aynı anda onlarca varlık istiyor; tek iş
     # parçacığı bunları sırayla sunup yükleme süresini uzatıyordu.

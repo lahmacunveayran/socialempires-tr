@@ -170,6 +170,16 @@ class KomutTestleri(unittest.TestCase):
         self.assertEqual(self.kayit["maps"][0]["items"][0][0], 1)
         self.assertEqual(self.kayit["maps"][0]["wood"], 10)
 
+    def test_collect_zaman_damgasi_guncellenir(self):
+        esya = self.kayit["maps"][0]["items"][1]  # (20,20) Tree
+        self.assertEqual(esya[4], 0)
+        command.do_command("test", Constant.CMD_COLLECT, [20, 20, 0, 19, 1, 1, 0])
+        self.assertGreater(esya[4], 0)
+        self.assertEqual(self.kayit["maps"][0]["wood"], 1000 + 20)
+
+    def test_bos_collect_cokmez(self):
+        command.do_command("test", Constant.CMD_COLLECT, [])
+
     # -- pazar -------------------------------------------------------------
     def test_pazar_alim_json_paketiyle(self):
         veri = json.dumps({"resource": "w", "amount": 100, "action": "buy", "map": 0})

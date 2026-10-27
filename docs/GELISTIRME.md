@@ -154,31 +154,12 @@ sunucu şimdilik yalnızca uyarı basıyor, engellemiyor.
 > Bir komşuya saldırıp `saves/komut_gunlugu.jsonl` dosyasına bakmak yeterli;
 > alan adları farklıysa handler'ı ona göre daraltırız.
 
-## Dünya paneli (tasarım notları)
+## Ayrı web paneli hakkında
 
-`/dunya` paneli ikinci sürümde baştan tasarlandı. Amaç “oyun içi gazete /
-harp dairesi” hissi: kâğıt zemin, serif başlıklar, monospace veriler,
-ince kurallar; gradyan, cam efekti, emoji ve parlayan kart yok.
-
-Tasarım kararlarının dayandığı ilkeler:
-
-- **Veri mürekkebi (data-ink)**: süs değil bilgi. Harita ızgarası ve
-  ölçek çubuğu işlevsel; süsleyici gölge/parlama kaldırıldı.
-  (Tufte’nin *The Visual Display of Quantitative Information* ilkeleri.)
-- **Renk + biçim birlikte**: mizaçlar yalnızca renkle değil, üçgen /
-  kare / eşkenar dörtgen / daire ile de kodlanıyor. Renk körlüğü olan
-  okuyucu da ayırt edebilir; palet Okabe–Ito renk evrensel tasarım
-  paletinden seçildi: <https://jfly.uni-koeln.de/color/>
-- **Hiyerarşi**: solda dünya toplamları, ortada harita, sağda sefer
-  kayıtları ve sıralama. Bir bakışta “ne kadar”, “nerede”, “ne oldu”.
-- **Performans**: 50+ düğüm için SVG yeterli; ağır filtre/gölge yok,
-  panel 8 saniyede bir yenileniyor, sekme gizliyken istek atılmıyor.
-- **Erişilebilirlik**: düğümler klavyeyle odaklanabilir (Tab + Enter),
-  `aria-label` var, kontrast kâğıt/inek üzerinde yüksek.
-
-Bu sürümde ayrıca harita düğümlerinin iki kez ötelenmesine yol açan SVG
-koordinat hatası düzeltildi (daire/kare mutlak koordinatla çizilip grup
-translate’i ile bir kez daha kaydırılıyordu).
+Ayrı bir `/dunya` paneli denendi; oyunun kendi sanat yönüne ve
+atmosferine uymadığı için **kaldırıldı**. Dünya simülasyonu görünmez
+şekilde çalışmaya devam ediyor; sonuçları oyun içi saldırı/savunma
+raporlarında görünüyor.
 
 ## Kardeşlik Loncası (arkadaş işçi çözümü)
 
@@ -277,12 +258,6 @@ Sunucu açıkken bot köyleri boş durmuyor: `world.py` arka planda her
 - Oyuncuya gelen saldırılar oyun içindeki savunma raporlarında görünür.
 - Tüm değişiklikler normal `.save.json` dosyalarına yazılır.
 
-### Panel
-
-`http://127.0.0.1:5050/dunya` — koyları haritada gösteren, savaş
-günlüğünü ve güç sıralamasını canlı yenileyen panel. Oyun sayfasındaki
-“dünya” bağlantısından da açılır.
-
 ### Ayar: `dunya.json`
 
 ```json
@@ -300,11 +275,7 @@ günlüğünü ve güç sıralamasını canlı yenileyen panel. Oyun sayfasında
 - `saldiri_olasiligi` → bir botun tur başına akın düzenleme olasılığı.
 - `oyuncuya_saldiri` → hedefin oyuncu olma olasılığı.
 
-Simülasyonu elle ilerletmek için (yalnızca bu bilgisayar):
-
-```bat
-curl -X POST http://127.0.0.1:5050/dunya/tick
-```
+Simülasyon `tick_saniye` aralığıyla kendiliğinden ilerler.
 
 ## Bilinen belirsizlikler
 

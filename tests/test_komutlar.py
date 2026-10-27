@@ -403,6 +403,25 @@ class DunyaTestleri(unittest.TestCase):
             world.all_saves_userid, world.session, world.save_session = eski
 
 
+
+class CeviriTestleri(unittest.TestCase):
+    def test_istemci_config_turkce_gelir(self):
+        from get_game_config import get_game_config, get_client_game_config
+        tr = get_client_game_config("tr")
+        en = get_game_config()
+        tr_sozluk = {e["name"]: e["text"] for e in tr["localization_strings"] if isinstance(e, dict)}
+        en_sozluk = {e["name"]: e["text"] for e in en["localization_strings"] if isinstance(e, dict)}
+        self.assertEqual(tr_sozluk.get("AUX_ACEPTAR"), "Kabul Et")
+        self.assertEqual(en_sozluk.get("AUX_ACEPTAR"), "Accept")
+        self.assertEqual(tr["levels"][0]["name"], "Köle")
+        # Asıl config değişmemeli
+        self.assertEqual(en["levels"][0]["name"], "Slave")
+
+    def test_yer_tutucular_korunur(self):
+        from turkce import dogrula
+        self.assertEqual(dogrula("Hi #0#, you have #1# gold", "Merhaba #0#, #1# altının var"), [])
+
+
 class KayitTestleri(unittest.TestCase):
     def setUp(self):
         gecici_kok = os.path.join(KOK, "tests", "_gecici")

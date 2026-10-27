@@ -257,11 +257,11 @@ def get_game_config_response():
     user_key = request.values['user_key']
     if 'spdebug' in request.values:
         spdebug = request.values['spdebug']
-    language = request.values.get('language', 'en')
+    language = request.values.get('language', 'tr')
 
-    print(f"get_game_config: USERID: {USERID}. --", request.values)
-    # Zaman ölçeği uygulanmış config istemciye gider (sunucu aslını kullanır).
-    return get_client_game_config()
+    print(f"get_game_config: USERID: {USERID} dil: {language}. --", request.values)
+    # Dile göre çeviri + zaman ölçeği uygulanmış config istemciye gider.
+    return get_client_game_config(language)
 
 @app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_player_info.php", methods=['POST'])
 def get_player_info_response():

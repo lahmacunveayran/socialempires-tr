@@ -277,6 +277,23 @@ Sunucu açıkken bot köyleri boş durmuyor: `world.py` arka planda her
 
 Simülasyon `tick_saniye` aralığıyla kendiliğinden ilerler.
 
+## Türkçe sürüm (devam ediyor)
+
+Sunucu, istemciye gönderdiği `game_config` metinlerini dile göre
+değiştirebiliyor. `language=tr` geldiğinde:
+
+- 167 arayüz metni (düğmeler, ipuçları, eğitim, hata mesajları),
+- 100 seviye adı (Köle → Fatih),
+- 29 kategori adı (Köy, Savunma, Ordu…)
+
+`ceviri/tr.json` içinden Türkçeleştiriliyor. Oyun sayfaları da artık
+Türkçe ve Flash değişkeni `language=tr` gönderiyor.
+
+Kapsam dışı (sıradaki adımlar): eşya adları (~1.500), görev metinleri
+(~230) ve uzun yardım metinleri. Çeviri eklemek için `ceviri/tr.json`
+dosyasına `anahtar: "Türkçe metin"` satırı eklemek yeterli; anahtarlar
+`ceviri/sozluk.csv` içinde listeli.
+
 ## Bilinen belirsizlikler
 
 - `collect_new` aslında toplama komutu (`CMD_COLLECT`), `next_step` ise

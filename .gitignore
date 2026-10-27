@@ -13,3 +13,5 @@ Lib/
 Scripts/
 pyvenv.cfgtests/_gecici/
 tests/sonuc.txt
+ceviri/sozluk.csv
+ceviri/sozluk.json

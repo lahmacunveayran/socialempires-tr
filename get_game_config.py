@@ -4,6 +4,7 @@ import os
 import jsonpatch
 from bundle import MODS_DIR, CONFIG_DIR, CONFIG_PATCH_DIR
 from time_scale import zaman_olcegi
+from turkce import turkce_uygula
 
 __game_config = json.load(open(os.path.join(CONFIG_DIR, "game_config_20120826.json"), 'r', encoding='utf-8'))
 
@@ -82,19 +83,27 @@ __istemci_config_onbellegi = {}
 SURE_ALANLARI = ("activation", "expiration", "training_time", "sm_training_time")
 
 
-def get_client_game_config() -> dict:
+def get_client_game_config(dil: str = "en") -> dict:
     """İstemciye gönderilecek config'i döndürür.
 
-    Zaman ölçeği 1.0 değilse eşyaların süre alanları ölçeğe bölünür.
-    Sunucunun kullandığı asıl config ve kayıtlar değiştirilmez; ölçek
-    değiştirildiğinde oyun yeniden başlatılmadan etkili olur.
+    - `dil` "tr" ise metinler Türkçeleştirilir (ceviri/tr.json).
+    - Zaman ölçeği 1.0 değilse eşyaların süre alanları ölçeğe bölünür.
+    Sunucunun kullandığı asıl config ve kayıtlar değiştirilmez.
     """
     olcek = zaman_olcegi()
-    if olcek == 1.0:
-        return __game_config
+    dil = (dil or "en").lower()[:2]
+    anahtar = (dil, olcek)
+    if anahtar in __istemci_config_onbellegi:
+        return __istemci_config_onbellegi[anahtar]
 
-    if olcek not in __istemci_config_onbellegi:
+    if dil == "tr":
+        kopya = turkce_uygula(__game_config)
+    elif olcek == 1.0:
+        return __game_config
+    else:
         kopya = copy.deepcopy(__game_config)
+
+    if olcek != 1.0:
         for esya in kopya.get("items", []):
             for alan in SURE_ALANLARI:
                 deger = esya.get(alan)
@@ -106,10 +115,11 @@ def get_client_game_config() -> dict:
                     continue
                 if sayi > 0:
                     esya[alan] = f"{sayi / olcek:.6g}"
-        __istemci_config_onbellegi.clear()
-        __istemci_config_onbellegi[olcek] = kopya
         print(f" [+] Zaman olcegi {olcek}: uretim/insaat sureleri {olcek} kat kisaltildi")
-    return __istemci_config_onbellegi[olcek]
+
+    __istemci_config_onbellegi.clear()
+    __istemci_config_onbellegi[anahtar] = kopya
+    return kopya
 
 
 def game_config() -> dict:

@@ -473,15 +473,16 @@ class TurnuvaAdaTestleri(unittest.TestCase):
         oyuncu = bos_kayit()
         oyuncu["playerInfo"].update(pid="u1", name="Oyuncu", bot=False)
         kayitlar["u1"] = oyuncu
-        eski = (turnuva.all_saves_userid, turnuva.session)
+        eski = (turnuva.all_saves_userid, turnuva.session, turnuva.save_session)
         turnuva.all_saves_userid = lambda: list(kayitlar)
         turnuva.session = lambda uid: kayitlar.get(uid)
+        turnuva.save_session = lambda uid: None
         try:
             t = turnuva.turnuva_olustur("u1")
             self.assertEqual(len(t["players"]), 4)
             self.assertEqual(len(t["matches"]), 6)
         finally:
-            turnuva.all_saves_userid, turnuva.session = eski
+            turnuva.all_saves_userid, turnuva.session, turnuva.save_session = eski
 
     def test_adada_yedi_bolge_ve_fetih(self):
         import ada
@@ -516,9 +517,10 @@ class TurnuvaAdaTestleri(unittest.TestCase):
         oyuncu = bos_kayit()
         oyuncu["playerInfo"].update(pid="u1", name="Oyuncu", bot=False)
         kayitlar["u1"] = oyuncu
-        eski = (turnuva.all_saves_userid, turnuva.session)
+        eski = (turnuva.all_saves_userid, turnuva.session, turnuva.save_session)
         turnuva.all_saves_userid = lambda: list(kayitlar)
         turnuva.session = lambda uid: kayitlar.get(uid)
+        turnuva.save_session = lambda uid: None
         try:
             t = turnuva.turnuva_olustur("u1")
             for _ in range(3):
@@ -531,7 +533,7 @@ class TurnuvaAdaTestleri(unittest.TestCase):
             turnuva.mac_bitir(t["id"], "u1", True)
             self.assertEqual(oyuncu["privateState"]["trophies"], 30)
         finally:
-            turnuva.all_saves_userid, turnuva.session = eski
+            turnuva.all_saves_userid, turnuva.session, turnuva.save_session = eski
 
     def test_ada_tamamlaninca_sonraki_adaya_gecer(self):
         import ada
@@ -564,19 +566,29 @@ class MagazaGorevTestleri(unittest.TestCase):
 
     def test_komut_gorev_tamamla_odul(self):
         k = bos_kayit()
+        eski_kaydet = command.save_session
+        command.save_session = lambda uid: None
         command.session = lambda uid: k
-        command.do_command("test", Constant.CMD_COMPLETE_MISSION, ["2", "0"])
-        self.assertIn(2, k["privateState"]["completedMissions"])
-        command.do_command("test", Constant.CMD_REWARD_MISSION, ["0", "2"])
-        self.assertGreaterEqual(k["maps"][0]["coins"], 50000 + 10)
-        self.assertIn(2, k["privateState"]["rewardedMissions"])
+        try:
+            command.do_command("test", Constant.CMD_COMPLETE_MISSION, ["2", "0"])
+            self.assertIn(2, k["privateState"]["completedMissions"])
+            command.do_command("test", Constant.CMD_REWARD_MISSION, ["0", "2"])
+            self.assertGreaterEqual(k["maps"][0]["coins"], 50000 + 10)
+            self.assertIn(2, k["privateState"]["rewardedMissions"])
+        finally:
+            command.save_session = eski_kaydet
 
     def test_komut_teklif_al(self):
         k = bos_kayit()
         k["playerInfo"]["cash"] = 100
+        eski_kaydet = command.save_session
+        command.save_session = lambda uid: None
         command.session = lambda uid: k
-        command.do_command("test", Constant.CMD_BUY_OFFER, ["1"])
-        self.assertEqual(k["playerInfo"]["cash"], 75)
+        try:
+            command.do_command("test", Constant.CMD_BUY_OFFER, ["1"])
+            self.assertEqual(k["playerInfo"]["cash"], 75)
+        finally:
+            command.save_session = eski_kaydet
 
 
 
@@ -688,6 +700,44 @@ class MagazaGorevTestleri(unittest.TestCase):
         k["privateState"]["completedMissions"] = [2]
         yeni = basari.kontrol(k)
         self.assertIn("ilk_gorev", yeni)
+
+
+class SosyalTestleri(unittest.TestCase):
+    def test_komsu_yardimi_odul_ve_kayit(self):
+        import sosyal
+        a = bos_kayit(); a["playerInfo"]["pid"] = "a"
+        b = bos_kayit(); b["playerInfo"]["pid"] = "b"
+        self.assertTrue(sosyal.yardim_et(a, b, "b"))
+        self.assertEqual(a["maps"][0]["coins"], 50000 + 100)
+        self.assertEqual(len(b["privateState"]["receivedAssists"]), 1)
+        self.assertFalse(sosyal.yardim_et(a, b, "b"))  # aynı gün tekrar
+
+    def test_hediye_gonder_ve_limit(self):
+        import sosyal
+        from odul import depo, depo_adet
+        a = bos_kayit(); a["playerInfo"]["pid"] = "a"
+        b = bos_kayit(); b["playerInfo"]["pid"] = "b"
+        depo(a, 500, 1)
+        self.assertTrue(sosyal.hediye_gonder(a, b, "b", 500))
+        self.assertEqual(depo_adet(a, 500), 0)
+        self.assertEqual(depo_adet(b, 500), 1)
+        self.assertFalse(sosyal.hediye_gonder(a, b, "b", 500))
+
+
+class CeviriKapsamTestleri(unittest.TestCase):
+    def test_bos_olmayan_tum_metinler_cevrilmis(self):
+        from get_game_config import get_game_config
+        from turkce import _bolum_anahtarlari, cevirileri_yukle
+        ceviri = cevirileri_yukle()
+        eksik = [k for k, _b, m, _y in _bolum_anahtarlari(get_game_config()) if m.strip() and k not in ceviri]
+        self.assertEqual(eksik, [])
+
+    def test_esya_ve_gorev_turkce(self):
+        from get_game_config import get_client_game_config
+        c = get_client_game_config("tr")
+        adlar = {i["id"]: i["name"] for i in c["items"]}
+        self.assertEqual(adlar["1"], "Ev I")
+        self.assertEqual(c["missions"][1]["title"][:3], "Köy")
 
 class KayitTestleri(unittest.TestCase):
     def setUp(self):

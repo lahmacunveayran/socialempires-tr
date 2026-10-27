@@ -369,6 +369,31 @@ dosyasına `anahtar: "Türkçe metin"` satırı eklemek yeterli; anahtarlar
 - Yeni uçlar: `get_achievements.php`, `get_store.php`,
   `get_collections.php`, `get_events.php`.
 
+## Sosyal döngü (tamamlandı)
+
+- Komşu yardımı: günde 20, aynı komşuya günde bir; yardım edene 100 coin + 5 XP,
+  alıcının `receivedAssists` listesine kayıt (son 100).
+- Hediye: `send_gift.php` (günlük 20, depodan düşer, alıcıya yazılır, son 100).
+- `get_social.php` günlük limitleri ve komşu sayısını döndürür.
+- Alıcı kayıtları `save_session` ile diske yazılır.
+
+## İstemci uçları
+
+- Turnuva uçları hem `/tournaments/...` hem de istemcinin çağırdığı
+  `/dynamic.../srvempires/tournaments/...` altında kayıtlı.
+- `get_tournament_info` aktif oda yoksa kilit altında tek bir bekleyen oda açar.
+- Ada slotları `ada:uid` anahtarıyla kararlı; `user_id` sayısal, `uid` UUID.
+- `get_game_config` istemci `language=en` gelse de Türkçe metin gönderir.
+
+## Türkçe kapsamı (tamamlandı)
+
+- Boş olmayan **tüm** metinler çevrildi: eşya adları + başarım açıklamaları,
+  görev başlıkları/açıklamaları, arayüz/yardım, keşif eşyaları, seviye
+  ipuçları, sosyal işçi adları, komşu yardımı metinleri.
+- `ceviri/oto_tr.json` (makine çevirisi) + `ceviri/tr.json` (elle düzeltme);
+  elle çeviri önceliklidir. `turkce.dogrula` yer tutucu/HTML/newline
+  bozulursa çeviriyi uygulamaz.
+
 ## Bilinen belirsizlikler
 
 - `collect_new` aslında toplama komutu (`CMD_COLLECT`), `next_step` ise

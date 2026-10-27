@@ -20,7 +20,7 @@ print (" [+] Loading players...")
 from get_player_info import get_player_info, get_neighbor_info
 from sessions import (load_saved_villages, all_saves_userid, all_saves_info,
                       save_info, new_village, fb_friends_str, save_lock,
-                      backup_session, save_session, session as kayit_oturumu)
+                      backup_session, save_session, neighbors, session as kayit_oturumu)
 load_saved_villages()
 
 print (" [+] Loading server...")
@@ -41,6 +41,7 @@ import koleksiyon
 import etkinlik
 import gorev
 import magaza
+import sosyal
 
 dunya = Dunya()
 app_secret = os.environ.get('SE_SECRET_KEY', 'SECRET_KEY')
@@ -430,6 +431,43 @@ def get_events_response():
     }
 
 
+@app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_social.php", methods=["GET", "POST"])
+def get_social_response():
+    uid = request.values.get("USERID", "")
+    kayit = kayit_oturumu(uid) if uid else None
+    if kayit:
+        with save_lock:
+            durum = sosyal.durum(kayit)
+            save_session(uid)
+    else:
+        durum = {}
+    return {
+        "result": "ok",
+        "social": durum,
+        "neighbors": max(0, len(all_saves_userid()) - 1) if uid else 0,
+    }
+
+
+@app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/send_gift.php", methods=["GET", "POST"])
+def send_gift_response():
+    uid = request.values.get("USERID", "")
+    hedef_uid = request.values.get("target") or request.values.get("to") or request.values.get("friend")
+    esya_id = request.values.get("item") or request.values.get("item_id")
+    if not (uid and hedef_uid and esya_id):
+        return {"result": "error", "message": "eksik alan"}, 400
+    gonderen = kayit_oturumu(uid)
+    hedef = kayit_oturumu(str(hedef_uid))
+    if not gonderen or not hedef:
+        return {"result": "error", "message": "oyuncu bulunamadi"}, 404
+    with save_lock:
+        oldu = sosyal.hediye_gonder(gonderen, hedef, str(hedef_uid), int(esya_id))
+        if oldu:
+            save_session(uid)
+            if str(hedef_uid) in all_saves_userid():
+                save_session(str(hedef_uid))
+    return {"result": "ok" if oldu else "error"}
+
+
 @app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/command.php", methods=['POST'])
 def command_response():
     spdebug = None
@@ -698,7 +736,7 @@ def turnuva_finish_match():
 def turnuva_info():
     uid = request.values.get("USERID", "")
     Turnuva.eski_turnuvalari_temizle()
-    turnuva = Turnuva.turnuva_bul(uid)
+    turnuva = Turnuva.bul_veya_olustur(uid) if uid else None
     if turnuva:
         return _turnuva_yanit(turnuva)
     return {"result": "ok", "tournament": None, "tournaments": Turnuva.turnuvalar(uid), "data": None}
@@ -736,6 +774,29 @@ def turnuva_clean():
 def turnuva_admin_islem():
     Turnuva.gunluge_yaz("admin", dict(request.values))
     return {"result": "ok"}
+
+
+@app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/tournaments/<path:ad>", methods=["GET", "POST"])
+def turnuva_dinamik(ad):
+    """İstemci turnuva uçlarını /srvempires/tournaments/... altından çağırıyor."""
+    islevler = {
+        "create_tournament.php": turnuva_create,
+        "join_tournament.php": turnuva_join,
+        "start_tournament_match.php": turnuva_start_match,
+        "finish_tournament_match.php": turnuva_finish_match,
+        "get_tournament_info.php": turnuva_info,
+        "cancel_tournament.php": turnuva_cancel,
+        "leave_tournament.php": turnuva_leave,
+        "clean_tournament.php": turnuva_clean,
+        "finish_all_match_tournament.php": turnuva_admin_islem,
+        "reset_player_tournament.php": turnuva_admin_islem,
+        "add_player_tournament.php": turnuva_admin_islem,
+    }
+    islev = islevler.get(ad)
+    if not islev:
+        Turnuva.gunluge_yaz("bilinmeyen", {"ad": ad, "args": dict(request.values)})
+        return {"result": "error", "message": "unknown tournament endpoint"}, 404
+    return islev()
 
 
 ########

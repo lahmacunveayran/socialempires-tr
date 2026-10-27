@@ -14,6 +14,7 @@ import magaza
 import koleksiyon
 import etkinlik
 import basari
+import sosyal
 
 # ---------------------------------------------------------------------------
 # Komut argümanlarını çözümleme yardımcıları
@@ -1231,7 +1232,14 @@ def do_command(USERID, cmd, args):
 
     elif cmd in (Constant.CMD_ASSIST_NEIGHBOUR, Constant.CMD_ASSIST_NEIGHBOUR_NEW,
                  Constant.CMD_ALLY_ASSIST, Constant.CMD_ASSIST_RECEIVE):
-        print("Komsu yardimi alindi:", args)
+        hedef_uid = str(args[0]) if args else ""
+        hedef = neighbor_session(hedef_uid) if hedef_uid else None
+        if sosyal.yardim_et(save, hedef, hedef_uid):
+            if hedef_uid in all_saves_userid():
+                save_session(hedef_uid)
+            print("Komsuya yardim edildi:", hedef_uid)
+        else:
+            print(" ! Komsu yardimi yapilamadi (limit/tekrar/gecersiz):", args)
 
     elif cmd == Constant.CMD_CLEAN_RECEIVED_ASSISTS:
         save.setdefault("privateState", {})["receivedAssists"] = []

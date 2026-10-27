@@ -16,7 +16,7 @@ import time
 import uuid
 
 from bundle import SAVES_DIR
-from sessions import all_saves_userid, session
+from sessions import all_saves_userid, save_session, session
 
 KILIT = threading.RLock()
 TURNUVALAR = {}
@@ -116,6 +116,10 @@ def _turnuvayi_bitir(turnuva):
             ps["trophies"] = int(ps.get("trophies", 0) or 0) + 30
             ps["turnuva_zaferi"] = int(ps.get("turnuva_zaferi", 0) or 0) + 1
             kayit.setdefault("playerInfo", {})["cash"] = int(kayit.get("playerInfo", {}).get("cash", 0) or 0) + 2
+            try:
+                save_session(kazanan)
+            except Exception as hata:
+                print(" ! Turnuva odulu kaydedilemedi:", hata)
 
 
 def turnuva_olustur(owner_uid, tip="general", ucret=0):
@@ -154,6 +158,15 @@ def turnuva_bul(uid):
             if any(o["user_id"] == str(uid) for o in turnuva["players"]):
                 return turnuva
     return None
+
+
+def bul_veya_olustur(uid):
+    """Aktif turnuvayı döndürür; yoksa kilit altında tek bir tane açar."""
+    with KILIT:
+        mevcut = turnuva_bul(uid)
+        if mevcut:
+            return mevcut
+        return turnuva_olustur(uid)
 
 
 def turnuvalar(uid=None):
@@ -258,7 +271,7 @@ def eski_turnuvalari_temizle():
     SON_TEMIZLIK = simdi
     with KILIT:
         for tid, turnuva in list(TURNUVALAR.items()):
-            if turnuva["state"] in ("finished", "cancelled") and simdi - turnuva["created"] > 3600:
+            if turnuva["state"] in ("finished", "cancelled", "waiting") and simdi - turnuva["created"] > (3600 if turnuva["state"] != "waiting" else 7200):
                 del TURNUVALAR[tid]
 
 

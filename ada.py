@@ -8,6 +8,8 @@ Fetihler `ada:posicion` anahtarıyla saklanır; böylece bot listesi değişse
 bile aynı adadaki aynı bölge kastedilir.
 """
 
+import hashlib
+
 from sessions import all_saves_userid, session
 
 
@@ -26,6 +28,10 @@ def _botlar():
     return botlar
 
 
+def _sayisal(uid):
+    return int(hashlib.md5(str(uid).encode("utf-8")).hexdigest()[:8], 16)
+
+
 def _ada_no(kayit):
     return int(kayit.get("privateState", {}).get("ada", 99) or 99)
 
@@ -42,12 +48,12 @@ def ada_slotlari(kayit):
     slotlar = []
     for i in range(7):
         uid, ad, seviye, pic = botlar[(baslangic + i) % len(botlar)]
-        anahtar = f"{ada}:{i}"
-        conquered = anahtar in fetih or uid in fetih  # eski kayıtlarla uyum
+        anahtar = f"{ada}:{uid}"
+        conquered = anahtar in fetih or uid in fetih or f"{ada}:{i}" in fetih
         slotlar.append({
             "posicion": i, "pos": i, "position": i,
             "key": anahtar,
-            "user_id": uid, "id": uid, "uid": uid, "saveId": uid,
+            "user_id": _sayisal(uid), "id": _sayisal(uid), "uid": uid, "saveId": _sayisal(uid),
             "name": ad,
             "nivel": seviye, "level": seviye,
             "pic": pic,
@@ -72,7 +78,7 @@ def ada_durumu(kayit):
 def fetih_kaydet(kayit, kurban_id):
     """Kurban adadaki bölgelerden birindeyse fethedildi olarak işaretler."""
     slotlar = ada_slotlari(kayit)
-    hedef = next((s for s in slotlar if s["user_id"] == str(kurban_id)), None)
+    hedef = next((s for s in slotlar if str(s.get("uid")) == str(kurban_id) or str(s.get("user_id")) == str(kurban_id)), None)
     if not hedef:
         return None
     ps = kayit.setdefault("privateState", {})

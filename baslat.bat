@@ -12,7 +12,7 @@ if errorlevel 1 (
     python -m pip install -r requirements.txt
     if errorlevel 1 (
         echo.
-        echo HATA: Paketler kurulamadi. Python 3 kurulu mu?
+        echo HATA: Paketler kurulamadi. Python 3 kurulu mu? Internet var mi?
         pause
         exit /b 1
     )
@@ -25,6 +25,7 @@ if not exist "assets" (
 )
 
 echo [2/2] Sunucu baslatiliyor: http://127.0.0.1:5050/
-start "" http://127.0.0.1:5050/
+echo       Kapatmak icin bu pencereyi kapatmayin, Ctrl+C yapin.
+start "" /b powershell -NoProfile -Command "Start-Sleep -Seconds 2; Start-Process 'http://127.0.0.1:5050/'"
 python server.py
 pause

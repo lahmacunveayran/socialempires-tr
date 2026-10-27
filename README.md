@@ -1,81 +1,125 @@
-![Social Empires](templates/img/logo.png "Social Empires logo")
+![Social Empires](templates/img/logo.png "Social Empires")
 
-> ## Social Empires Türkçe — topluluk sürümü
->
-> Bu depo, Social Empires'ı Türkçe oynamak ve yerel olarak geliştirmek için
-> hazırlanmış bir çataldır. Oyunun tüm metinleri Türkçe; PvP, turnuva, ada
-> fetih, görev/mağaza/koleksiyon/etkinlik, sosyal döngü ve 49 bot köyü dahil
-> edilmiştir.
->
-> **Başlatmak için:** `baslat.bat` (Windows). Sunucu hazır olduğunda tarayıcı
-> otomatik açılır: <http://127.0.0.1:5050/>
->
-> Ayrıntılı geliştirme notları: [`docs/GELISTIRME.md`](docs/GELISTIRME.md)
->
-> Orijinal proje: [AcidCaos/socialemperors](https://github.com/AcidCaos/socialemperors).
-> Bu çatal GPLv3 ile aynı lisans altındadır; Social Point ile bağlantılı değildir.
+# Social Empires Türkçe
 
-The Social Empires preservation project by the Social Emperors team.
-This project is dedicated to preserving this Flash game so that it's not lost to time.
+[![Testler](https://github.com/lahmacunveayran/socialempires-tr/actions/workflows/tests.yml/badge.svg)](https://github.com/lahmacunveayran/socialempires-tr/actions/workflows/tests.yml)
+[![Lisans: GPLv3](https://img.shields.io/badge/lisans-GPLv3-blue.svg)](LICENSE)
 
-[![Downloads](https://img.shields.io/github/downloads/AcidCaos/socialemperors/total?label=downloads%40all)](../../releases/latest)
-[![Discord](https://img.shields.io/discord/984545703558783016?logo=discord&label=Discord&color=blue)](https://discord.gg/zW5gSbQJBw)
+Social Empires'ı **Türkçe** oynamak ve yerel olarak geliştirmek için hazırlanmış
+bir topluluk çatalı. Oyun, Flash istemcisi ile konuşan bir Python/Flask
+sunucusu üzerinde çalışır; internet bağlantısı veya Facebook hesabı gerekmez.
+
+> Bu proje Social Point ile bağlantılı değildir. Yalnızca kültürel miras
+> amaçlı bir koruma çalışmasıdır. Orijinal proje:
+> [AcidCaos/socialemperors](https://github.com/AcidCaos/socialemperors).
 
 ---
 
-## Latest Release
+## Özellikler
 
-| Version | Release date | Source | Download |
-| --- | --- | --- | --- |
-| **alpha 0.04a** | September 26, 2025 | :label: [tag](../../releases/tag/0.04a) | :package: [Bundle](../../releases/download/0.04a/social-emperors_0.04a.zip) |
-
-:information_source: For older versions check [this](RELEASES.md).
-
-## Reporting Bugs and Contacting
-
-:speech_balloon: Check our [Discord group](https://discord.gg/zW5gSbQJBw)
-
-:paw_prints: The project [Contributors](../../contributors)
-
-## How to Install on Windows
-
-- Download a flash-compatible browser. :flashlight: **Recommended:** [FlashBrowser](https://github.com/radubirsan/FlashBrowser/releases/latest). Alternatives can be found [here](FLASH.md).
-- Download the latest Bundle version from the [Latest Release](#latest-release) section.
-- Extract the downloaded zip file to a suitable location.
-
-## How to Play
-
-- Run the *social-emperors* executable.
-- Open your flash browser and navigate to `http://127.0.0.1:5050/`.
-
-:information_source: To play on GNU/Linux check [this page](LINUX.md).
-
-## Tools
-
-:penguin: [Social Empires on GNU/Linux](LINUX.md)
-
-:flashlight: [Flash Continuation](FLASH.md) documentation
-
-## Geliştirme (bu çalışma kopyası)
-
-- [Geliştirme notları ve komut protokolü](docs/GELISTIRME.md)
-- Birim testleri: `python tests\test_komutlar.py`
-
-## On archives and accessibility to digital heritage
-
-- [Exemption to PCCPSACT](https://www.federalregister.gov/documents/2018/10/26/2018-23241/exemption-to-prohibition-on-circumvention-of-copyright-protection-systems-for-access-control), exemptions to the provision of the Digital Millennium Copyright Act (“DMCA”). 
-- [EFGAMP](https://efgamp.eu/), the European Federation of Video Game Archives, Museums and Preservation projects.
-- [UNESCO PERSIST Programme](https://unescopersist.org/), helps ensure that digital information can continue to be accessed in the future.
-- [The Internet Archive](https://archive.org/), a digital library of Internet sites and other cultural artifacts in digital form.
-- [BlueMaxima's Flashpoint](https://bluemaxima.org/flashpoint/), the webgame preservation project.
-- [Adobe Flash Player Archive](https://archive.org/download/flashplayerarchive/), the Adobe Inc. archive.org Flash Player Archive.
+- **Tam Türkçe**: eşya, bina, birim, görev, arayüz, yardım ve başarım
+  metinleri; resmî Türkçe fontlarla `ş, ğ, İ, ı, ç, ö, ü` desteği.
+- **PvP**: 3 saldırı / 6 saat, ganimet, savaş raporları, kalkan, intikam,
+  kupalar ve savunma raporları.
+- **49 bot köyü**: gerçek portreler, kişilikler, öfke hafızası ve dünya
+  simülasyonu.
+- **Turnuvalar**: 4 kişilik odalar, bot doldurma, otomatik bot maçları ve
+  ödüller.
+- **Ada fetih**: 7 bölgeli adalar, fetih takibi ve ödül (sunucu tarafı).
+- **Haftalık sezon**: kupa sıralaması, ödüller ve sezon sıfırlama.
+- **Görevler, mağaza, koleksiyonlar, etkinlikler ve başarımlar**.
+- **Sosyal döngü**: komşu yardımı ve hediye gönderme (günlük limitli).
+- **Yeni içerik**: Büyük Ev, Büyük Değirmen, Büyük Kule; Süper Şövalye,
+  Süper Okçu, Süper Kılıçlı ve yeni mağaza paketleri.
+- **Güvenli kayıt**: atomik yazım, `.bak` yedeği, günlük yedekler ve
+  `USERID` doğrulaması.
 
 ---
 
-## License [![GPL v3](https://img.shields.io/badge/GPL%20v3-blue)](http://www.gnu.org/licenses/gpl-3.0)
+## Kurulum (Windows)
+
+1. **Python 3.12+** kurulu olsun.
+2. Depoyu indirin veya klonlayın:
+   ```bat
+   git clone https://github.com/lahmacunveayran/socialempires-tr.git
+   cd socialempires-tr
+   ```
+3. `baslat.bat` dosyasını çalıştırın.
+   - Gerekli Python paketleri (`flask`, `jsonpatch`) eksikse otomatik kurulur.
+   - Sunucu hazır olduğunda tarayıcı otomatik açılır:
+     <http://127.0.0.1:5050/>
+4. Giriş ekranından bir köy seçin veya yeni imparatorluk kurun.
+
+**Flash desteği:** Flash uyumlu bir tarayıcı ya da Ruffle gerekir.
+Ayrıntılar: [FLASH.md](FLASH.md). GNU/Linux: [LINUX.md](LINUX.md).
+
+---
+
+## Oynanış
+
+- Sunucu: `http://127.0.0.1:5050/`
+- Sağlık kontrolü: `http://127.0.0.1:5050/saglik`
+- Oyunu kapatmak için sunucu penceresinde `Ctrl+C` kullanın.
+
+### Türkçe
+
+Oyun içi metinler `ceviri/oto_tr.json` (makine çevirisi) ve
+`ceviri/tr.json` (elle düzeltmeler) dosyalarından gelir. Türkçe fontlar
+`assets/fonts` altındadır; istemciye `language=tr` gönderilir.
+
+---
+
+## Geliştirme
+
+```bat
+python tests\test_komutlar.py   :: birim testleri
+python tests\test_http.py       :: HTTP uçtan uca testleri
+```
+
+- Geliştirme notları ve komut protokolü: [docs/GELISTIRME.md](docs/GELISTIRME.md)
+- Katkı rehberi: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Güvenlik politikası: [SECURITY.md](SECURITY.md)
+
+### Proje yapısı
+
+| Yol | Açıklama |
+| --- | --- |
+| `server.py` | Flask sunucusu, istemci uçları |
+| `command.py` | Oyun içi komutlar |
+| `sessions.py` | Kayıt yükleme/kaydetme, yedekler |
+| `world.py` | Bot ekonomisi ve dünya simülasyonu |
+| `turnuva.py`, `ada.py`, `sezon.py` | Turnuva, ada fetih, haftalık sezon |
+| `gorev.py`, `magaza.py`, `koleksiyon.py`, `etkinlik.py`, `basari.py` | Oyun sistemleri |
+| `sosyal.py` | Komşu yardımı ve hediyeler |
+| `config/` | Oyun yapılandırması ve yamalar |
+| `ceviri/` | Türkçe çeviriler |
+| `tests/` | Birim ve HTTP testleri |
+
+---
+
+## Veri ve gizlilik
+
+- `saves/` altındaki oyun kayıtları **depoya dahil edilmez**.
+- Sunucu yalnızca yerel makinede dinler (`127.0.0.1:5050`).
+- Gizli anahtar `SE_SECRET_KEY` ortam değişkeniyle değiştirilebilir.
+
+---
+
+## Lisans
+
+[GNU GPLv3](LICENSE).
 
 ```
 Social Empires preservation project.
 Copyright (C) 2022  The Social Emperors team
 See the GNU General Public License <https://www.gnu.org/licenses/>.
 ```
+
+### Teşekkürler
+
+- [AcidCaos/socialemperors](https://github.com/AcidCaos/socialemperors) —
+  orijinal koruma projesi ve sunucu temeli.
+- [Ruffle](https://ruffle.rs/) — Flash çalıştırma.
+- [BlueMaxima's Flashpoint](https://bluemaxima.org/flashpoint/) ve
+  [Internet Archive](https://archive.org/) — dijital koruma çalışmaları.
+- Tüm katkıda bulunanlar.

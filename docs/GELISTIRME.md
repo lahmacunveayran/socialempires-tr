@@ -404,6 +404,26 @@ dosyasına `anahtar: "Türkçe metin"` satırı eklemek yeterli; anahtarlar
 - `tests/test_http.py`: Flask test istemcisiyle 7 uçtan uca test
   (sağlık, giriş, oyun sayfası, Türkçe/ASCII config, ada, turnuva, sosyal).
 
+## İçerik genişletme (yeni)
+
+`config/patch/yeni_icerik.json` ile mevcut görselleri kullanan yeni içerik:
+
+- Binalar: **Büyük Ev**, **Büyük Değirmen**, **Büyük Kule** (daha yüksek
+  nüfus/üretim/savunma, seviye 20+).
+- Birimler: **Süper Şövalye**, **Süper Okçu**, **Süper Kılıçlı** (seviye 25+).
+- Mağaza paketleri: **66** (süper birlikler) ve **67** (büyük inşaatlar).
+- Yeni eşyalar mevcut `img_name` görsellerini kullanır; ekstra istemci
+  varlığı gerekmez.
+
+## Türkçe font (istemci tarafı)
+
+- Resmî `tr_ArialRoundedBold.swf` ve `tr_ErasBold.swf` indirildi
+  (`assets/fonts`).
+- `en_*` font dosyaları da Türkçe fontla değiştirildi; istemci hangi dili
+  isterse istesin `ş/ğ/İ/ı/ç/ö/ü` glifleri bulunur.
+- Flash değişkeni `language=tr`; sunucu artık **ASCII modu kapalı** gerçek
+  Türkçe metin gönderiyor.
+
 ## Bilinen belirsizlikler
 
 - `collect_new` aslında toplama komutu (`CMD_COLLECT`), `next_step` ise

@@ -377,6 +377,12 @@
   "assist:4:task": "Yardım! Küçük bir köylü kızı kayboldu ve annesi onu bulamıyor!",
   "assist:4:action": "Küçük köylü kızını bulmak için TAMAM'a tıklayın",
   "assist:4:notification": "küçük köylü kızını bulmaya yardım etti",
-  "social:24:workers": "Piskopos,Rahip,Sunak Çocuğu,Rahibe,Kilise Cemaati,Orgcu,Koro Oğlan,Koro Kız,Mum Oğlan,Mum Kız"
+  "social:24:workers": "Piskopos,Rahip,Sunak Çocuğu,Rahibe,Kilise Cemaati,Orgcu,Koro Oğlan,Koro Kız,Mum Oğlan,Mum Kız",
+  "item:9001": "Büyük Ev",
+  "item:9002": "Büyük Değirmen",
+  "item:9003": "Büyük Kule",
+  "item:9101": "Süper Şövalye",
+  "item:9102": "Süper Okçu",
+  "item:9103": "Süper Kılıçlı"
  }
 }

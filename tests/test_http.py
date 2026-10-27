@@ -47,13 +47,25 @@ class HttpDumanTestleri(unittest.TestCase):
         cevap = self.istemci.get("/play.html")
         self.assertEqual(cevap.status_code, 200)
 
-    def test_config_turkce_ve_ascii(self):
-        cevap = self.istemci.get(f"{BASE}/get_game_config.php?USERID=x&user_key=1&language=en&client_id=c")
+    def test_config_turkce(self):
+        cevap = self.istemci.get(f"{BASE}/get_game_config.php?USERID=x&user_key=1&language=tr&client_id=c")
         self.assertEqual(cevap.status_code, 200)
         veri = cevap.get_json()
         adlar = [e["name"] for e in veri["items"]]
         self.assertEqual(adlar[0], "Ev I")
-        self.assertFalse(any(any(h in a for h in "şğİıçöüŞĞÇÖÜ") for a in adlar))
+        self.assertIn("Köylüyü eğit", [m["title"] for m in veri["missions"]])
+
+    def test_turkce_font_yayini(self):
+        cevap = self.istemci.get("/default01.static.socialpointgames.com/static/socialempires/fonts/tr_ErasBold.swf")
+        self.assertEqual(cevap.status_code, 200)
+        self.assertIn(cevap.data[:3], (b"CWS", b"FWS", b"ZWS"))
+
+    def test_turkce_font_dosyalari(self):
+        for ad in ("tr_ArialRoundedBold.swf", "tr_ErasBold.swf"):
+            yol = os.path.join(KOK, "assets", "fonts", ad)
+            self.assertTrue(os.path.exists(yol), ad)
+            with open(yol, "rb") as f:
+                self.assertIn(f.read(3), (b"CWS", b"FWS", b"ZWS"))
 
     def test_ada_yedi_bolge(self):
         cevap = self.istemci.get(f"{BASE}/get_continent.php?USERID={UID}&map=99&worldChange=0&user_key=1")

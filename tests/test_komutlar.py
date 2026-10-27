@@ -733,6 +733,25 @@ class CeviriKapsamTestleri(unittest.TestCase):
         self.assertEqual(eksik, [])
 
 
+
+
+    def test_yeni_paket_satin_alma(self):
+        import magaza
+        k = bos_kayit()
+        k["playerInfo"]["cash"] = 100
+        self.assertTrue(magaza.teklif_al(k, 0, 66))
+        self.assertEqual(k["playerInfo"]["cash"], 60)
+        from odul import depo_adet
+        self.assertGreaterEqual(depo_adet(k, 9101), 1)
+
+    def test_yeni_icerik_yuklendi(self):
+        from get_game_config import get_game_config
+        c = get_game_config()
+        adlar = {i["id"]: i["name"] for i in c["items"]}
+        self.assertEqual(adlar.get("9001"), "Büyük Ev")
+        self.assertEqual(adlar.get("9101"), "Süper Şövalye")
+        self.assertIn(66, [p["id"] for p in c["offer_packs"]])
+
     def test_istemci_ascii_modunda_turkce_harf_yok(self):
         from get_game_config import get_client_game_config
         c = get_client_game_config("tr", ascii_mode=True)

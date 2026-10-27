@@ -118,6 +118,10 @@ def _seviyeyi_duzelt(save: dict) -> bool:
     except Exception:
         return False
     duzeltildi = False
+    ps = save.setdefault("privateState", {})
+    if "trophies" not in ps:
+        ps["trophies"] = 0
+        duzeltildi = True
     for harita in save.get("maps", []):
         try:
             beklenen = get_level_from_xp(int(harita.get("xp", 0)))

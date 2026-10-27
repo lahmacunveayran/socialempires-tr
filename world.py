@@ -511,6 +511,13 @@ class Dunya:
         self._ofke_artir(hedef, saldiran_id)
         if not kazandi:
             self._ofke_artir(saldiran, hedef_id)
+        if kazandi:
+            saldiran.setdefault("privateState", {})["trophies"] = int(saldiran.get("privateState", {}).get("trophies", 0)) + 10
+            hedef.setdefault("privateState", {})["trophies"] = max(0, int(hedef.get("privateState", {}).get("trophies", 0)) - 5)
+        else:
+            saldiran.setdefault("privateState", {})["trophies"] = max(0, int(saldiran.get("privateState", {}).get("trophies", 0)) - 3)
+            hedef.setdefault("privateState", {})["trophies"] = int(hedef.get("privateState", {}).get("trophies", 0)) + 5
+
         hafiza = saldiran.setdefault("privateState", {}).setdefault("bot_hafiza", {})
         hafiza["son_hedef"] = {"id": str(hedef_id), "zaman": simdi}
 

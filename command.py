@@ -375,8 +375,23 @@ def _saldiri_bitir(saldiran, args):
         print(" ! end_attack: kendine saldiri yok sayildi")
         return False
 
+    if int(kurban.get("privateState", {}).get("shield_until", 0) or 0) > timestamp_now():
+        print(" ! end_attack: hedefin kalkani aktif, saldiri reddedildi")
+        return False
+
     # Orijinal kural: 6 saatte en fazla 3 saldırı ve aynı hedefe tekrar saldırı yok.
+    # Ancak hedef son 24 saatte sana saldırdıysa intikam saldırısına izin verilir.
     simdi_once = timestamp_now()
+    intikam = False
+    for eski_rapor in (_liste_al(saldiran.get("privateState", {}), "attacksReceived")[-30:]):
+        if str(eski_rapor.get("attacker_id")) == kurban_id:
+            try:
+                if simdi_once - int(eski_rapor.get("time", 0)) < 24 * 3600:
+                    intikam = True
+                    break
+            except (TypeError, ValueError):
+                pass
+
     onceki_saldirilar = [
         a for a in _liste_al(saldiran.setdefault("privateState", {}), "attacksSent")
         if _tam(a.get("time")) and simdi_once - _tam(a.get("time")) < 6 * 3600
@@ -384,7 +399,7 @@ def _saldiri_bitir(saldiran, args):
     if len(onceki_saldirilar) >= 3:
         print(" ! end_attack: 6 saatlik saldiri hakki doldu, reddedildi")
         return False
-    if any(str(a.get("victim_id")) == kurban_id for a in onceki_saldirilar):
+    if any(str(a.get("victim_id")) == kurban_id for a in onceki_saldirilar) and not intikam:
         print(" ! end_attack: ayni hedefe 6 saat icinde ikinci saldiri, reddedildi")
         return False
 
@@ -431,11 +446,21 @@ def _saldiri_bitir(saldiran, args):
     rapor = dict(veri)
     rapor["oponent"] = _oyuncu_ozeti(saldiran)
     rapor["time"] = simdi
-    _liste_al(kurban_ps, "attacksReceived").append({
+    kazandi = _tam(veri.get("win")) == 1
+    kupa = _tam(veri.get("trophies"))
+    if kupa is None:
+        kupa = 10 if kazandi else -5
+    saldiran_ps["trophies"] = max(0, int(saldiran_ps.get("trophies", 0)) + kupa)
+    kurban_ps["trophies"] = max(0, int(kurban_ps.get("trophies", 0)) - int(kupa / 2))
+
+    raporlar = _liste_al(kurban_ps, "attacksReceived")
+    raporlar.append({
         "time": simdi,
         "attacker_id": str(saldiran.get("playerInfo", {}).get("pid", "")),
         "description": rapor,
     })
+    if len(raporlar) > 50:
+        del raporlar[:-50]
 
     # Kurbanın kaydı da diske yazılsın (komut sonunda saldıran yazılıyor).
     # Statik komşular (Arthur, AcidCaos...) kayıtlı oyuncu değil; onlar için yazma yok.
@@ -1202,7 +1227,10 @@ def do_command(USERID, cmd, args):
         print("Casusluk komutu (kayitta degisiklik yok):", args)
 
     elif cmd == Constant.CMD_WIN_TROPHY:
-        print("Kupa komutu (kayitta degisiklik yok):", args)
+        miktar = _tam(args[0]) if args else 1
+        ps = save.setdefault("privateState", {})
+        ps["trophies"] = max(0, int(ps.get("trophies", 0)) + max(1, miktar))
+        print("Kupa kazanildi:", ps["trophies"])
 
     elif cmd == Constant.CMD_BUY_SI_HELP:
         harita, esya = _sosyal_esya_bul(save, args)

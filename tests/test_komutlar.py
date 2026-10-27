@@ -274,6 +274,45 @@ class KomutTestleri(unittest.TestCase):
         command.do_command("test", Constant.CMD_END_ATTACK, [veri])
         self.assertEqual(kurban["maps"][0]["coins"], ilk)
 
+    def test_kalkanli_hedefe_saldiri_reddedilir(self):
+        kurban = bos_kayit()
+        kurban["playerInfo"]["pid"] = "rakip"
+        kurban["privateState"]["shield_until"] = 2 ** 40
+        cozum = lambda uid: self.kayit if uid == "test" else (kurban if uid == "rakip" else None)
+        command.session = cozum
+        command.neighbor_session = cozum
+        veri = json.dumps({"victim_id": "rakip", "map": 0, "win": 1,
+                           "resources": {"g": 0}, "resources_victim": {"g": 10}})
+        command.do_command("test", Constant.CMD_END_ATTACK, [veri])
+        self.assertEqual(kurban["maps"][0]["coins"], 50000)
+        self.assertEqual(len(kurban["privateState"].get("attacksReceived", [])), 0)
+
+    def test_intikam_ayni_hedefe_izin_verir(self):
+        from engine import timestamp_now
+        kurban = bos_kayit()
+        kurban["playerInfo"]["pid"] = "rakip"
+        self.kayit["privateState"]["attacksReceived"] = [{"time": timestamp_now(), "attacker_id": "rakip", "description": {}}]
+        self.kayit["privateState"]["attacksSent"] = [{"victim_id": "rakip", "time": str(timestamp_now())}]
+        cozum = lambda uid: self.kayit if uid == "test" else (kurban if uid == "rakip" else None)
+        command.session = cozum
+        command.neighbor_session = cozum
+        veri = json.dumps({"victim_id": "rakip", "map": 0, "win": 1,
+                           "resources": {"g": 0}, "resources_victim": {"g": 10}})
+        command.do_command("test", Constant.CMD_END_ATTACK, [veri])
+        self.assertEqual(kurban["maps"][0]["coins"], 50000 - 10)
+
+    def test_kupa_kazanilir_ve_kaybedilir(self):
+        kurban = bos_kayit()
+        kurban["playerInfo"]["pid"] = "rakip"
+        cozum = lambda uid: self.kayit if uid == "test" else (kurban if uid == "rakip" else None)
+        command.session = cozum
+        command.neighbor_session = cozum
+        veri = json.dumps({"victim_id": "rakip", "map": 0, "win": 1,
+                           "resources": {"g": 0}, "resources_victim": {"g": 1}})
+        command.do_command("test", Constant.CMD_END_ATTACK, [veri])
+        self.assertEqual(self.kayit["privateState"]["trophies"], 10)
+        self.assertEqual(kurban["privateState"]["trophies"], 0)
+
     def test_saldiri_kurban_kaynagindan_fazla_alinamaz(self):
         kurban = bos_kayit()
         kurban["playerInfo"]["pid"] = "rakip"

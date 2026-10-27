@@ -429,13 +429,14 @@ def get_continent_ranking_response():
             "nivel": harita.get("level", 1),
             "level": harita.get("level", 1),
             "xp": harita.get("xp", 0),
+            "trophies": int(kayit.get("privateState", {}).get("trophies", 0)),
         })
     oyuncular.sort(key=lambda o: o["xp"], reverse=True)
 
     continent = [
         {"posicion": i, "nivel": o["nivel"], "level": o["level"],
          "user_id": o["user_id"], "id": o["user_id"], "uid": o["uid"],
-         "name": o["name"], "pic": o["pic"]}
+         "name": o["name"], "pic": o["pic"], "trophies": o["trophies"]}
         for i, o in enumerate(oyuncular[:8])
     ]
     for i in range(len(continent), 8):
@@ -531,6 +532,7 @@ def get_public_player_info_response():
             "level": int(harita.get("level", 1)),
             "nivel": int(harita.get("level", 1)),
             "xp": int(harita.get("xp", 0)),
+            "trophies": int(kayit.get("privateState", {}).get("trophies", 0)),
             "world_id": int(pi.get("world_id") or 0),
         },
     }

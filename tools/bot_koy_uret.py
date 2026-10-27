@@ -22,6 +22,10 @@ sys.path.insert(0, KOK)
 
 from bundle import SAVES_DIR, VILLAGES_DIR  # noqa: E402
 from version import version_code  # noqa: E402
+try:
+    from bot_pp_uret import mevcut_pp
+except ImportError:
+    mevcut_pp = lambda ad: None
 
 # 50 farklı isim
 ISIMLER = [
@@ -191,7 +195,7 @@ def bot_uret(adet=50):
         pi.update({
             "pid": pid,
             "name": isim,
-            "pic": "/img/profile/1025.png",
+            "pic": mevcut_pp(isim) or "/img/profile/1025.png",
             "cash": 0,
             "completed_tutorial": 1,
             "default_map": 0,

@@ -198,6 +198,28 @@ Böylece World Explorer ekranındaki boş harita yerine bölgeler ve
 > `get_continent_ranking.php` hem GET hem POST kabul ediyor.
 > Gelen istek ve dönen gövde `saves/http_gunlugu.jsonl` dosyasına yazılır.
 
+## Bot profil resimleri
+
+49 bot için Wikipedia/Wikimedia Commons'tan **gerçek, AI üretilmemiş**
+portre ve tarihî resimler indirildi (`tools/bot_pp_uret.py`). Dosyalar
+`templates/img/profile/bot_<ad>.jpg|png` altında; kaynak listesi
+[RESIM_KAYNAKLARI.md](RESIM_KAYNAKLARI.md) dosyasında.
+
+Bot üreticisi yeni köylerde mevcut resmi otomatik atar; resmi olmayanlar
+varsayılan profile döner.
+
+## PvP kuralları (tamamlandı)
+
+- 6 saatte 3 saldırı, aynı hedefe tekrar saldırı yasağı.
+- **İntikam istisnası**: hedef son 24 saatte sana saldırdıysa aynı hedefe
+  tekrar saldırabilirsin.
+- **Kalkan**: `shield_until` aktifken saldırı reddedilir.
+- **Kupalar**: kazanan +10, kaybeden -5 (rapor içindeki `trophies` alanı
+  varsa o kullanılır). `win_trophy` komutu da kupa ekler.
+- Ganimet kaynak başına 100.000 ile sınırlı; savunanın mevcut
+  kaynağından fazlası alınamaz.
+- Savunma raporları son 50 kayıtla sınırlı; `clean_attacks` temizler.
+
 ## Bot köyleri (PvP için rakip üretme)
 
 PvP listesi boşsa yapay komşular üretilebilir:

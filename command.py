@@ -375,14 +375,18 @@ def _saldiri_bitir(saldiran, args):
         print(" ! end_attack: kendine saldiri yok sayildi")
         return False
 
-    # Saldırı hakkı: son 6 saatte 3'ten fazla saldırı varsa uyar (engellemez).
+    # Orijinal kural: 6 saatte en fazla 3 saldırı ve aynı hedefe tekrar saldırı yok.
     simdi_once = timestamp_now()
-    son_saldirilar = [
+    onceki_saldirilar = [
         a for a in _liste_al(saldiran.setdefault("privateState", {}), "attacksSent")
         if _tam(a.get("time")) and simdi_once - _tam(a.get("time")) < 6 * 3600
     ]
-    if len(son_saldirilar) >= 3:
-        print(" ! Saldiri hakki dolmus görünüyor (son 6 saatte 3+), yine de uygulaniyor")
+    if len(onceki_saldirilar) >= 3:
+        print(" ! end_attack: 6 saatlik saldiri hakki doldu, reddedildi")
+        return False
+    if any(str(a.get("victim_id")) == kurban_id for a in onceki_saldirilar):
+        print(" ! end_attack: ayni hedefe 6 saat icinde ikinci saldiri, reddedildi")
+        return False
 
     town_id = _tam(veri.get("map")) or 0
     if not (0 <= town_id < len(saldiran.get("maps", []))):
@@ -410,6 +414,7 @@ def _saldiri_bitir(saldiran, args):
             miktar = _tam(deger) or 0
             if miktar <= 0 or anahtar not in KAYNAK_ALANLARI:
                 continue
+            miktar = min(miktar, 100000)  # orijinal ganimet sınırı
             alan = KAYNAK_ALANLARI[anahtar]
             gercek = min(miktar, int(kurban_harita.get(alan, 0)))
             kurban_harita[alan] = int(kurban_harita.get(alan, 0)) - gercek

@@ -187,6 +187,9 @@
     <div class="satir"><span>Taş</span><b id="d-stone">—</b></div>
     <div class="satir"><span>Yemek</span><b id="d-food">—</b></div>
     <div class="satir"><span>Birlik</span><b id="d-birim">—</b></div>
+    <div class="satir"><span>Kişilik</span><b id="d-kisi">—</b></div>
+    <div class="satir"><span>Öfke</span><b id="d-ofke">—</b></div>
+    <div class="satir"><span>Kalkan</span><b id="d-kalkan">—</b></div>
 </div>
 
 <script>
@@ -214,6 +217,9 @@ function detayAc(o) {
     document.getElementById("d-stone").textContent = o.kaynaklar.stone.toLocaleString("tr-TR");
     document.getElementById("d-food").textContent = o.kaynaklar.food.toLocaleString("tr-TR");
     document.getElementById("d-birim").textContent = o.birim;
+    document.getElementById("d-kisi").textContent = o.kisi || "—";
+    document.getElementById("d-ofke").textContent = o.ofke || 0;
+    document.getElementById("d-kalkan").textContent = o.kalkan ? Math.round(o.kalkan / 3600) + " saat" : "yok";
 }
 
 function detayKapat() { document.getElementById("detay").style.display = "none"; }
@@ -266,7 +272,7 @@ function ciz(d) {
             d.olaylar.forEach(ev => {
                 const div = document.createElement("div");
                 div.className = "olay";
-                const ikon = ev.tur === "savas" ? "⚔️" : ev.tur === "seviye" ? "★" : "•";
+                const ikon = ev.tur === "savas" ? "⚔️" : ev.tur === "seviye" ? "★" : ev.tur === "dunya" ? "🌍" : "•";
                 div.innerHTML = `<span class="ikon">${ikon}</span><span>${ev.metin}</span><span class="saat">${saat(ev.zaman)}</span>`;
                 olaylar.appendChild(div);
             });

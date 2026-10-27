@@ -258,6 +258,22 @@ class KomutTestleri(unittest.TestCase):
         gonderilen = self.kayit["privateState"]["attacksSent"]
         self.assertEqual(gonderilen[0]["victim_id"], "rakip")
 
+    def test_ayni_hedefe_ikinci_saldiri_reddedilir(self):
+        kurban = bos_kayit()
+        kurban["playerInfo"]["pid"] = "rakip"
+        cozum = lambda uid: self.kayit if uid == "test" else (kurban if uid == "rakip" else None)
+        command.session = cozum
+        command.neighbor_session = cozum
+
+        veri = json.dumps({
+            "victim_id": "rakip", "map": 0, "win": 1,
+            "resources": {"g": 0}, "resources_victim": {"g": 10},
+        })
+        command.do_command("test", Constant.CMD_END_ATTACK, [veri])
+        ilk = kurban["maps"][0]["coins"]
+        command.do_command("test", Constant.CMD_END_ATTACK, [veri])
+        self.assertEqual(kurban["maps"][0]["coins"], ilk)
+
     def test_saldiri_kurban_kaynagindan_fazla_alinamaz(self):
         kurban = bos_kayit()
         kurban["playerInfo"]["pid"] = "rakip"

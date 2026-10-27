@@ -172,6 +172,37 @@ python tools\bot_koy_uret.py 10
 - Yeniden üretmeden önce eski bot dosyalarını silin (aynı isimler yeni
   UUID ile gelir).
 
+## Orijinal PvP kuralları (araştırma notları)
+
+Yaşayan dünya ve PvP davranışı, orijinal oyunun kurallarına göre
+ayarlandı. Kaynaklar:
+
+- SuperCheats, “Attacking Other Players”: dünya haritası **6. seviyede**
+  açılıyor; **6 saatte 3 saldırı** hakkı var; **aynı imparatorluğa tekrar
+  saldırılamıyor**; tüm ordu savaşa gidiyor, hedef Belediye Binası’nı
+  yıkmak. <https://www.supercheats.com/guides/social-empires/attacking-other-players>
+- Unofficial Social Empires Wiki, “PVP”: kaynak başına ganimet yaklaşık
+  **100.000** ile sınırlı; cash yağmalanamıyor; kalkanlar belirli gün
+  koruma sağlıyor; saldırı/savunma modları var.
+  <https://unofficialsocialempires.fandom.com/wiki/PVP>
+- Oyunun kendi `localization_strings` metinleri (birincil kaynak):
+  “All of your Army goes to the battle”, “Destroy the Town Hall to WIN”,
+  “Attacks left”, “you will get 3 more in #0#”, “Take Revenge!!”,
+  “showing only last 10 attacks”, ada fetihleri ve savunma stratejileri.
+
+### Bunlardan koda geçenler
+
+- Botlar ve oyuncu için **6 saatte 3 saldırı** sınırı.
+- **Aynı hedefe 6 saat içinde ikinci saldırı** reddediliyor.
+- **6. seviyenin altındaki köyler** hedef alınmıyor.
+- Ganimet **kaynak başına 100.000** ile sınırlı; cash'e dokunulmuyor.
+- Oyuncunun `CMD_SET_STRATEGY` seçimi (Defensive / Mid Defensive /
+  Mid Aggressive / Aggressive) savunma gücünü etkiliyor.
+- **Kalkan** (`privateState.shield_until`) aktifken botlar oyuncuya
+  saldıramıyor; hile panelinden 12 saatlik kalkan verilebiliyor.
+- Botların hedef seçimi öfke (grudge) ve güç oranına göre ağırlıklı;
+  aynı hedefi tekrar tekrar dövmesini engelleyen hafıza tutuluyor.
+
 ## Yaşayan dünya (canlı simülasyon)
 
 Sunucu açıkken bot köyleri boş durmuyor: `world.py` arka planda her

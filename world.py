@@ -166,6 +166,10 @@ class Dunya:
         self._duruyor = False
         self._is_parcacigi = None
         self._son_guncelleme = int(time.time())
+        self._son_saldiri = {}       # bot_id -> son akın zamanı
+        self._son_oyuncu_saldiri = 0  # oyuncuya son akın zamanı
+        self._veri_onbellek = None
+        self._veri_zamani = 0
 
     # -- erişim -----------------------------------------------------------
     def oyuncular(self):
@@ -193,15 +197,36 @@ class Dunya:
             return
         with save_lock:
             self.tick += 1
+            simdi = int(time.time())
             degisen = set()
             botlar = self._botlar()
+            random.shuffle(botlar)
+            saldiri_limiti = int(self.ayar.get("tur_basina_saldiri", 8))
+            saldiri_sayisi = 0
+
             for uid, kayit in botlar:
                 if self._ekonomi(uid, kayit):
                     degisen.add(uid)
-                if random.random() < float(self.ayar.get("saldiri_olasiligi", 0.45)):
-                    hedef = self._akin(uid, kayit, botlar)
+
+                if saldiri_sayisi >= saldiri_limiti:
+                    continue
+                if simdi - self._son_saldiri.get(uid, 0) < int(self.ayar.get("bot_saldiri_araligi", 180)):
+                    continue
+                if int(kayit["maps"][0].get("level", 1)) < 6:
+                    continue
+                if not self._saldiri_hakki(kayit, simdi):
+                    continue
+
+                kisi = kayit.get("playerInfo", {}).get("bot_kisi", "dengeli")
+                carpan = {"agresif": 1.45, "savunmaci": 0.7, "tuccar": 0.9}.get(kisi, 1.0)
+                if random.random() < float(self.ayar.get("saldiri_olasiligi", 0.35)) * carpan:
+                    hedef = self._akin(uid, kayit, botlar, simdi)
                     if hedef:
+                        saldiri_sayisi += 1
+                        self._son_saldiri[uid] = simdi
                         degisen.add(hedef)
+
+            self._dunya_olayi(simdi)
 
             for uid in degisen:
                 try:
@@ -209,6 +234,26 @@ class Dunya:
                 except OSError as hata:
                     print(f" ! Dunya kaydi yazilamadi ({uid}): {hata}")
             self._son_guncelleme = int(time.time())
+            self._veri_onbellek = None
+
+    # -- dünya olayları ---------------------------------------------------
+    def _dunya_olayi(self, simdi):
+        """Her 8 turda bir tüm dünyayı etkileyen bir olay."""
+        if self.tick % 8 != 0:
+            return
+        olay = random.choice([
+            ("bereket", "Bereketli hasat: tüm köylerde yemek arttı", "food", 0.12),
+            ("kuraklik", "Kuraklık: tüm köylerde yemek azaldı", "food", -0.10),
+            ("ticaret", "Ticaret kervanı: tüm köylerde altın arttı", "coins", 0.15),
+            ("firtina", "Fırtına: bazı köylerde odun azaldı", "wood", -0.08),
+            ("panayir", "Büyük panayır: tüm köylerde odun arttı", "wood", 0.10),
+        ])
+        tur, metin, alan, oran = olay
+        for uid, kayit in self._botlar():
+            harita = kayit["maps"][0]
+            mevcut = int(harita.get(alan, 0))
+            harita[alan] = max(0, int(mevcut * (1 + oran)))
+        self.olay("dunya", metin)
 
     # -- ekonomi ----------------------------------------------------------
     def _ekonomi(self, uid, kayit):
@@ -248,25 +293,113 @@ class Dunya:
         return degisti
 
     # -- akın -------------------------------------------------------------
-    def _akin(self, saldiran_id, saldiran, botlar):
-        hedefler = [(u, k) for u, k in botlar if u != saldiran_id]
-        oyuncu_hedefleri = [(u, k) for u, k in self.oyuncular() if not k.get("playerInfo", {}).get("bot")]
-        if oyuncu_hedefleri and random.random() < float(self.ayar.get("oyuncuya_saldiri", 0.15)):
-            hedefler += oyuncu_hedefleri
-        if not hedefler:
-            return None
+    def _ofke(self, kayit, hedef_id):
+        hafiza = kayit.get("privateState", {}).get("bot_hafiza", {})
+        return int(hafiza.get("ofke", {}).get(str(hedef_id), 0))
 
-        hedef_id, hedef = random.choice(hedefler)
+    def _ofke_artir(self, kayit, hedef_id, miktar=1):
+        ps = kayit.setdefault("privateState", {})
+        hafiza = ps.get("bot_hafiza")
+        if not isinstance(hafiza, dict):
+            hafiza = {}
+            ps["bot_hafiza"] = hafiza
+        ofke = hafiza.get("ofke")
+        if not isinstance(ofke, dict):
+            ofke = {}
+            hafiza["ofke"] = ofke
+        anahtar = str(hedef_id)
+        ofke[anahtar] = int(ofke.get(anahtar, 0)) + miktar
+
+    def _saldiri_hakki(self, kayit, simdi):
+        """Son 6 saatte 3 saldırı sınırı (orijinal oyunun kuralı)."""
+        liste = kayit.get("privateState", {}).get("attacksSent") or []
+        sayi = 0
+        for a in liste:
+            try:
+                zaman = int(a.get("time"))
+            except (TypeError, ValueError, AttributeError):
+                continue
+            if simdi - zaman < 6 * 3600:
+                sayi += 1
+        return sayi < 3
+
+    def _hedefe_uygun(self, kayit, hedef_id, simdi):
+        """Aynı hedefe 6 saat içinde ikinci kez saldırmayı engeller."""
+        hafiza = kayit.get("privateState", {}).get("bot_hafiza", {})
+        son = hafiza.get("son_hedef") if isinstance(hafiza, dict) else None
+        if isinstance(son, dict) and str(son.get("id")) == str(hedef_id):
+            try:
+                if simdi - int(son.get("zaman", 0)) < 6 * 3600:
+                    return False
+            except (TypeError, ValueError):
+                pass
+        return True
+
+    def _akin(self, saldiran_id, saldiran, botlar, simdi):
         saldiran_birimler = birim_sayilari(saldiran)
         if sum(saldiran_birimler.values()) < 3:
             return None
 
-        # Ordunun %60'ı saldırıya katılır
-        giden = {i: max(1, int(n * 0.85)) for i, n in saldiran_birimler.items()}
-        savunan_birimler = birim_sayilari(hedef)
+        kendi_guc = ordu_gucu(saldiran_birimler) + kule_gucu(saldiran) * 0.5
+        adaylar = []
 
-        atak = ordu_gucu(giden) * random.uniform(0.9, 1.2) * 1.5
-        savunan_guc = {i: max(1, int(n * 0.6)) for i, n in savunan_birimler.items()}
+        # Diğer botlar: öfke duyduğuna ve zayıf olana daha istekli saldırır
+        for u, k in botlar:
+            if u == saldiran_id:
+                continue
+            if int(k["maps"][0].get("level", 1)) < 6:
+                continue
+            if not self._hedefe_uygun(saldiran, u, simdi):
+                continue
+            guc = ordu_gucu(birim_sayilari(k)) + kule_gucu(k) * 0.6
+            ofke = self._ofke(saldiran, u)
+            agirlik = (1.0 + 2.5 * ofke) * (kendi_guc / max(1.0, guc)) ** 0.8
+            adaylar.append((u, k, max(0.05, agirlik)))
+
+        # Oyuncuya saldırı: belirli aralıktan sık değil
+        oyuncu_hedefleri = [(u, k) for u, k in self.oyuncular() if not k.get("playerInfo", {}).get("bot")]
+        aralik = int(self.ayar.get("oyuncu_saldiri_araligi", 600))
+        if oyuncu_hedefleri and simdi - self._son_oyuncu_saldiri >= aralik:
+            if random.random() < float(self.ayar.get("oyuncuya_saldiri", 0.15)):
+                for u, k in oyuncu_hedefleri:
+                    if int(k["maps"][0].get("level", 1)) < 6:
+                        continue
+                    if int(k.get("privateState", {}).get("shield_until", 0) or 0) > simdi:
+                        continue
+                    guc = ordu_gucu(birim_sayilari(k)) + kule_gucu(k) * 0.6
+                    adaylar.append((u, k, max(0.05, (kendi_guc / max(1.0, guc)) ** 0.8 * 0.8)))
+
+        if not adaylar:
+            return None
+
+        toplam = sum(a for _, _, a in adaylar)
+        secim = random.uniform(0, toplam)
+        hedef_id, hedef = adaylar[-1][0], adaylar[-1][1]
+        for u, k, agirlik in adaylar:
+            secim -= agirlik
+            if secim <= 0:
+                hedef_id, hedef = u, k
+                break
+
+        if hedef_id in [u for u, _ in oyuncu_hedefleri]:
+            self._son_oyuncu_saldiri = simdi
+
+        # Savunma kişiliği: savunmacı daha fazla birliğini sahaya sürer
+        if hedef.get("playerInfo", {}).get("bot"):
+            kisi = hedef.get("playerInfo", {}).get("bot_kisi", "dengeli")
+            savunma_orani = {"savunmaci": 0.8, "agresif": 0.55, "tuccar": 0.6}.get(kisi, 0.65)
+        else:
+            # Oyuncunun seçtiği savunma stratejisi (CMD_SET_STRATEGY)
+            strateji = int(hedef.get("privateState", {}).get("strategy", 8) or 8)
+            savunma_orani = {8: 0.85, 9: 0.7, 7: 0.55, 10: 0.4}.get(strateji, 0.65)
+        savunan_birimler = birim_sayilari(hedef)
+        savunan_guc = {i: max(1, int(n * savunma_orani)) for i, n in savunan_birimler.items()}
+
+        kisi_s = saldiran.get("playerInfo", {}).get("bot_kisi", "dengeli")
+        atak_carpan = {"agresif": 1.6, "tuccar": 1.4, "savunmaci": 1.3}.get(kisi_s, 1.5)
+
+        giden = {i: max(1, int(n * 0.85)) for i, n in saldiran_birimler.items()}
+        atak = ordu_gucu(giden) * random.uniform(0.9, 1.2) * atak_carpan
         savunma = ordu_gucu(savunan_guc) + kule_gucu(hedef) * 0.8 * random.uniform(0.9, 1.1)
         kazandi = atak > savunma
 
@@ -283,7 +416,8 @@ class Dunya:
         if kazandi:
             for alan in ("coins", "wood", "stone", "food"):
                 mevcut = int(hedef["maps"][0].get(alan, 0))
-                alinacak = min(int(mevcut * 0.15), 200 * max(1, int(saldiran["maps"][0].get("level", 1))))
+                # Orijinal oyunda kaynak başına ganimet ~100.000 ile sınırlıydı.
+                alinacak = min(int(mevcut * 0.15), 100000)
                 if alinacak > 0:
                     hedef["maps"][0][alan] = mevcut - alinacak
                     saldiran["maps"][0][alan] = int(saldiran["maps"][0].get(alan, 0)) + alinacak
@@ -296,8 +430,6 @@ class Dunya:
             hedef["maps"][0]["xp"] = int(hedef["maps"][0].get("xp", 0)) + 1
 
         # Raporlar (orijinal Social Empires rapor biçimi)
-        from engine import timestamp_now
-        simdi = timestamp_now()
         rapor = {
             "duration": random.randint(20, 90),
             "townhall_gold": 0,
@@ -323,6 +455,12 @@ class Dunya:
         saldiran.setdefault("privateState", {}).setdefault("attacksSent", []).append(
             {"victim_id": str(hedef_id), "time": str(simdi)}
         )
+        # Hafıza: saldırılan, saldırana öfkelenir; kaybeden saldıran da öfkelenir.
+        self._ofke_artir(hedef, saldiran_id)
+        if not kazandi:
+            self._ofke_artir(saldiran, hedef_id)
+        hafiza = saldiran.setdefault("privateState", {}).setdefault("bot_hafiza", {})
+        hafiza["son_hedef"] = {"id": str(hedef_id), "zaman": simdi}
 
         hedef_ad = hedef.get("playerInfo", {}).get("name", hedef_id)
         saldiran_ad = saldiran.get("playerInfo", {}).get("name", saldiran_id)
@@ -356,29 +494,42 @@ class Dunya:
 
     # -- panel verisi -----------------------------------------------------
     def veri(self):
+        simdi = time.time()
+        if self._veri_onbellek is not None and simdi - self._veri_zamani < 3:
+            return self._veri_onbellek
+
         oyuncular = []
         for i, (uid, kayit) in enumerate(self.oyuncular()):
             harita = kayit["maps"][0]
             birimler = birim_sayilari(kayit)
             aci = i * 2.399963229728653
-            yaricap = 40 + math.sqrt(i) * 95
+            yaricap = 35 + math.sqrt(i) * 42
+            pi = kayit.get("playerInfo", {})
+            hafiza = kayit.get("privateState", {}).get("bot_hafiza", {})
+            ofke = hafiza.get("ofke", {}) if isinstance(hafiza, dict) else {}
             oyuncular.append({
                 "id": str(uid),
-                "ad": kayit.get("playerInfo", {}).get("name", "Oyuncu"),
-                "bot": bool(kayit.get("playerInfo", {}).get("bot")),
+                "ad": pi.get("name", "Oyuncu"),
+                "bot": bool(pi.get("bot")),
+                "kisi": pi.get("bot_kisi", ""),
                 "seviye": int(harita.get("level", 1)),
                 "xp": int(harita.get("xp", 0)),
                 "kaynaklar": {k: int(harita.get(k, 0)) for k in ("coins", "wood", "stone", "food")},
                 "birim": sum(birimler.values()),
+                "ofke": len(ofke),
+                "kalkan": max(0, int(kayit.get("privateState", {}).get("shield_until", 0) or 0) - int(time.time())),
                 "konum": {
                     "x": round(400 + yaricap * math.cos(aci), 1),
                     "y": round(260 + yaricap * math.sin(aci) * 0.62, 1),
                 },
             })
-        return {
+        veri = {
             "tick": self.tick,
             "guncelleme": self._son_guncelleme,
             "aktif": bool(self.ayar.get("aktif", True)),
             "oyuncular": oyuncular,
             "olaylar": list(reversed(self.olaylar[-40:])),
         }
+        self._veri_onbellek = veri
+        self._veri_zamani = simdi
+        return veri

@@ -489,6 +489,10 @@ def cheat_uygula():
                 kayit["playerInfo"]["completed_tutorial"] = 1
                 kayit["privateState"]["dragonNestActive"] = 1
 
+            elif islem == "kalkan":
+                saat = max(1, min(72, int(veri.get("saat", 12))))
+                kayit.setdefault("privateState", {})["shield_until"] = timestamp_now() + saat * 3600
+
             elif islem == "yedek":
                 backup_session(uid)
 

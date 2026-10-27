@@ -1,0 +1,28 @@
+name: Özellik isteği
+description: Yeni özellik veya iyileştirme öner
+title: "[Özellik] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: oneri
+    attributes:
+      label: Öneri
+      description: Ne eklenmeli / değişmeli?
+    validations:
+      required: true
+  - type: textarea
+    id: gerekce
+    attributes:
+      label: Gerekçe
+      description: Bu özellik neden gerekli?
+  - type: dropdown
+    id: alan
+    attributes:
+      label: Alan
+      options:
+        - Oyun içi sistem
+        - Türkçe / çeviri
+        - PvP / dünya
+        - İstemci / Flash
+        - Sunucu / altyapı
+        - Diğer

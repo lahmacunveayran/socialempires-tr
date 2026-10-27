@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Güvenlik açığı bildir
+    url: https://github.com/lahmacunveayran/socialempires-tr/security/advisories/new
+    about: Lütfen güvenlik açıklarını herkese açık issue olarak açmayın.
+  - name: Kurulum ve oynanış
+    url: https://github.com/lahmacunveayran/socialempires-tr#kurulum-windows
+    about: Kurulum, Flash ve oynanış soruları için README.

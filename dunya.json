@@ -1,0 +1,10 @@
+{
+  "aktif": true,
+  "tick_saniye": 60,
+  "saldiri_olasiligi": 0.3,
+  "oyuncuya_saldiri": 0.25,
+  "tur_basina_saldiri": 8,
+  "bot_saldiri_araligi": 180,
+  "oyuncu_saldiri_araligi": 600,
+  "olay_saklama": 200
+}

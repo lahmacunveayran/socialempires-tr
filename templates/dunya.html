@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<title>Social Emperors — Dünya Haritası</title>
+<link rel="shortcut icon" href="img/icon.gif"/>
+<style>
+    :root {
+        --bg: #0b0f14;
+        --panel: rgba(255, 255, 255, 0.045);
+        --panel-2: rgba(255, 255, 255, 0.08);
+        --gold: #e8b45a;
+        --gold-dim: #a67c33;
+        --text: #e9e2d3;
+        --muted: #8b8578;
+        --green: #6fcf97;
+        --red: #eb5757;
+        --blue: #6aa9ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        background:
+            radial-gradient(1200px 600px at 70% -10%, rgba(232, 180, 90, 0.12), transparent 60%),
+            radial-gradient(900px 500px at 0% 100%, rgba(106, 169, 255, 0.08), transparent 55%),
+            var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        min-height: 100vh;
+    }
+    header {
+        padding: 26px 34px 10px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    h1 {
+        margin: 0;
+        font-size: 26px;
+        letter-spacing: 3px;
+        font-weight: 600;
+        color: var(--gold);
+        text-shadow: 0 0 24px rgba(232, 180, 90, 0.35);
+    }
+    .alt { color: var(--muted); font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
+    .rozetler { display: flex; gap: 10px; flex-wrap: wrap; }
+    .rozet {
+        background: var(--panel);
+        border: 1px solid rgba(232, 180, 90, 0.22);
+        border-radius: 8px;
+        padding: 7px 12px;
+        font-size: 12px;
+        color: var(--muted);
+    }
+    .rozet b { color: var(--gold); font-size: 14px; margin-left: 6px; }
+    main {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 18px;
+        padding: 10px 34px 34px;
+    }
+    @media (max-width: 1100px) { main { grid-template-columns: 1fr; } }
+    .panel {
+        background: var(--panel);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 14px;
+        padding: 16px;
+        backdrop-filter: blur(6px);
+    }
+    .panel h2 {
+        margin: 0 0 12px;
+        font-size: 12px;
+        letter-spacing: 2px;
+        color: var(--muted);
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+    #harita { width: 100%; height: auto; display: block; }
+    .koy { cursor: pointer; transition: transform 0.15s ease; }
+    .koy:hover { transform: scale(1.08); }
+    .koy circle { transition: fill 0.3s ease, r 0.3s ease; }
+    .koy text { fill: #d8d1c2; font-size: 10px; text-anchor: middle; pointer-events: none; }
+    .oyuncu circle { stroke: var(--gold); stroke-width: 2; }
+    #detay {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        width: 280px;
+        background: #121821;
+        border: 1px solid rgba(232, 180, 90, 0.35);
+        border-radius: 12px;
+        padding: 16px;
+        display: none;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+        z-index: 10;
+    }
+    #detay h3 { margin: 0 0 4px; color: var(--gold); font-size: 16px; }
+    #detay .satir { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; color: var(--muted); }
+    #detay .satir b { color: var(--text); font-weight: 500; }
+    #detay .kapat { position: absolute; top: 10px; right: 12px; cursor: pointer; color: var(--muted); }
+    #olaylar { max-height: 340px; overflow: auto; display: flex; flex-direction: column; gap: 8px; }
+    .olay {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        background: var(--panel-2);
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 13px;
+        animation: gir 0.35s ease both;
+    }
+    .olay .ikon { font-size: 15px; line-height: 1.2; }
+    .olay .saat { color: var(--muted); font-size: 11px; margin-left: auto; white-space: nowrap; }
+    @keyframes gir { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+    #siralama { display: flex; flex-direction: column; gap: 9px; }
+    .sira { display: grid; grid-template-columns: 18px 1fr 42px; gap: 8px; align-items: center; font-size: 13px; }
+    .sira .bar { height: 7px; border-radius: 4px; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); }
+    .sira .ad { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sira .lvl { color: var(--gold); text-align: right; }
+    .bos { color: var(--muted); font-size: 13px; }
+    footer { padding: 0 34px 30px; color: var(--muted); font-size: 12px; }
+    a { color: var(--gold); }
+</style>
+</head>
+<body>
+<header>
+    <div>
+        <h1>DÜNYA HARİTASI</h1>
+        <div class="alt">Yaşayan Sosyal İmparatorluklar · canlı simülasyon</div>
+    </div>
+    <div class="rozetler">
+        <div class="rozet">Tur<b id="tur">—</b></div>
+        <div class="rozet">Köy<b id="koy">—</b></div>
+        <div class="rozet">Bot<b id="bot">—</b></div>
+        <div class="rozet">Son güncelleme<b id="zaman">—</b></div>
+    </div>
+</header>
+
+<main>
+    <section class="panel">
+        <h2>İmparatorluklar</h2>
+        <svg id="harita" viewBox="0 0 800 520" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <radialGradient id="parlak" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#e8b45a" stop-opacity="0.55"/>
+                    <stop offset="100%" stop-color="#e8b45a" stop-opacity="0"/>
+                </radialGradient>
+                <pattern id="izgara" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+                </pattern>
+            </defs>
+            <rect width="800" height="520" fill="url(#izgara)" rx="10"/>
+            <circle cx="400" cy="260" r="230" fill="none" stroke="rgba(232,180,90,0.10)" stroke-dasharray="3 7"/>
+            <circle cx="400" cy="260" r="160" fill="none" stroke="rgba(232,180,90,0.08)" stroke-dasharray="3 7"/>
+            <circle cx="400" cy="260" r="90" fill="none" stroke="rgba(232,180,90,0.06)" stroke-dasharray="3 7"/>
+            <g id="koyler"></g>
+        </svg>
+    </section>
+
+    <aside style="display:flex; flex-direction:column; gap:18px;">
+        <section class="panel">
+            <h2>Savaş günlüğü</h2>
+            <div id="olaylar"><div class="bos">Henüz olay yok. Dünya simülasyonu ilk turunu bekliyor…</div></div>
+        </section>
+        <section class="panel">
+            <h2>Güç sıralaması</h2>
+            <div id="siralama"><div class="bos">—</div></div>
+        </section>
+    </aside>
+</main>
+
+<footer>
+    Simülasyon <code>dunya.json</code> ile ayarlanır · Oyun sayfası: <a href="/play.html">oyuna dön</a> ·
+    Panel her 5 saniyede yenilenir.
+</footer>
+
+<div id="detay">
+    <span class="kapat" onclick="detayKapat()">✕</span>
+    <h3 id="d-ad">—</h3>
+    <div class="alt" id="d-tur" style="margin-bottom:10px">—</div>
+    <div class="satir"><span>Seviye</span><b id="d-seviye">—</b></div>
+    <div class="satir"><span>XP</span><b id="d-xp">—</b></div>
+    <div class="satir"><span>Altın</span><b id="d-coins">—</b></div>
+    <div class="satir"><span>Odun</span><b id="d-wood">—</b></div>
+    <div class="satir"><span>Taş</span><b id="d-stone">—</b></div>
+    <div class="satir"><span>Yemek</span><b id="d-food">—</b></div>
+    <div class="satir"><span>Birlik</span><b id="d-birim">—</b></div>
+</div>
+
+<script>
+const RENK = ["#6fcf97", "#6aa9ff", "#c39bff", "#ffb86b", "#eb5757", "#e8b45a"];
+let sonOlay = "";
+
+function renk(seviye) {
+    const i = Math.min(RENK.length - 1, Math.floor(seviye / 12));
+    return RENK[i];
+}
+
+function saat(ts) {
+    const d = new Date(ts * 1000);
+    return d.toLocaleTimeString("tr-TR", {hour: "2-digit", minute: "2-digit"});
+}
+
+function detayAc(o) {
+    document.getElementById("detay").style.display = "block";
+    document.getElementById("d-ad").textContent = o.ad;
+    document.getElementById("d-tur").textContent = (o.bot ? "Yapay köy" : "Oyuncu") + " · " + (o.birim) + " birlik";
+    document.getElementById("d-seviye").textContent = o.seviye;
+    document.getElementById("d-xp").textContent = o.xp.toLocaleString("tr-TR");
+    document.getElementById("d-coins").textContent = o.kaynaklar.coins.toLocaleString("tr-TR");
+    document.getElementById("d-wood").textContent = o.kaynaklar.wood.toLocaleString("tr-TR");
+    document.getElementById("d-stone").textContent = o.kaynaklar.stone.toLocaleString("tr-TR");
+    document.getElementById("d-food").textContent = o.kaynaklar.food.toLocaleString("tr-TR");
+    document.getElementById("d-birim").textContent = o.birim;
+}
+
+function detayKapat() { document.getElementById("detay").style.display = "none"; }
+
+function ciz(d) {
+    document.getElementById("tur").textContent = d.tick;
+    document.getElementById("koy").textContent = d.oyuncular.length;
+    document.getElementById("bot").textContent = d.oyuncular.filter(o => o.bot).length;
+    document.getElementById("zaman").textContent = saat(d.guncelleme);
+
+    const g = document.getElementById("koyler");
+    g.innerHTML = "";
+    d.oyuncular.forEach(o => {
+        const grup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        grup.setAttribute("class", "koy" + (o.bot ? "" : " oyuncu"));
+        grup.setAttribute("transform", `translate(${o.konum.x}, ${o.konum.y})`);
+
+        const hale = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        hale.setAttribute("r", 14 + o.seviye / 5);
+        hale.setAttribute("fill", "url(#parlak)");
+        grup.appendChild(hale);
+
+        const daire = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        daire.setAttribute("r", 5 + Math.min(9, o.seviye / 6));
+        daire.setAttribute("fill", renk(o.seviye));
+        daire.setAttribute("fill-opacity", "0.92");
+        grup.appendChild(daire);
+
+        const yazi = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        yazi.setAttribute("y", 22 + o.seviye / 8);
+        yazi.textContent = o.ad;
+        grup.appendChild(yazi);
+
+        const ipucu = document.createElementNS("http://www.w3.org/2000/svg", "title");
+        ipucu.textContent = `${o.ad} · seviye ${o.seviye} · ${o.birim} birlik`;
+        grup.appendChild(ipucu);
+
+        grup.addEventListener("click", () => detayAc(o));
+        g.appendChild(grup);
+    });
+
+    const olaylar = document.getElementById("olaylar");
+    const imza = JSON.stringify(d.olaylar.slice(0, 6));
+    if (imza !== sonOlay) {
+        sonOlay = imza;
+        olaylar.innerHTML = "";
+        if (!d.olaylar.length) {
+            olaylar.innerHTML = '<div class="bos">Henüz olay yok.</div>';
+        } else {
+            d.olaylar.forEach(ev => {
+                const div = document.createElement("div");
+                div.className = "olay";
+                const ikon = ev.tur === "savas" ? "⚔️" : ev.tur === "seviye" ? "★" : "•";
+                div.innerHTML = `<span class="ikon">${ikon}</span><span>${ev.metin}</span><span class="saat">${saat(ev.zaman)}</span>`;
+                olaylar.appendChild(div);
+            });
+        }
+    }
+
+    const siralama = document.getElementById("siralama");
+    const ilk = [...d.oyuncular].sort((a, b) => b.seviye - a.seviye).slice(0, 8);
+    const enYuksek = ilk.length ? Math.max(...ilk.map(o => o.seviye)) : 1;
+    siralama.innerHTML = "";
+    ilk.forEach((o, i) => {
+        const satir = document.createElement("div");
+        satir.className = "sira";
+        satir.innerHTML = `<span style="color:var(--muted)">${i + 1}</span>
+            <div><div class="ad">${o.ad}${o.bot ? "" : " ★"}</div>
+            <div class="bar" style="width:${Math.max(4, (o.seviye / enYuksek) * 100)}%"></div></div>
+            <span class="lvl">${o.seviye}</span>`;
+        siralama.appendChild(satir);
+    });
+}
+
+async function yenile() {
+    try {
+        const cevap = await fetch("/dunya/veri");
+        if (!cevap.ok) return;
+        ciz(await cevap.json());
+    } catch (e) {
+        /* sunucu kapalıysa sessiz kal */
+    }
+}
+
+yenile();
+setInterval(yenile, 5000);
+</script>
+</body>
+</html>

@@ -28,6 +28,9 @@ from version import version_name
 from constants import Constant
 from quests import get_quest_map
 from bundle import ASSETS_DIR, STUB_DIR, TEMPLATES_DIR, BASE_DIR
+from world import Dunya
+
+dunya = Dunya()
 
 host = '127.0.0.1'
 port = 5050
@@ -350,6 +353,29 @@ def get_continent_ranking_response():
 
 
 ########
+# DÜNYA HARİTASI
+########
+
+@app.route("/dunya")
+def dunya_sayfasi():
+    return render_template("dunya.html")
+
+
+@app.route("/dunya/veri")
+def dunya_verisi():
+    return (dunya.veri(), 200)
+
+
+@app.route("/dunya/tick", methods=["POST"])
+def dunya_tick():
+    """Simülasyonu elle bir tur ilerletir (yalnızca bu bilgisayar)."""
+    if not _hile_izinli():
+        return ({"hata": "yasak"}, 403)
+    dunya.tek_tick()
+    return ({"ok": True, "tick": dunya.tick}, 200)
+
+
+########
 # KEŞİF: henüz uygulanmayan uçları günlüğe yaz
 ########
 
@@ -487,6 +513,7 @@ if __name__ == '__main__':
     try:
         from backups_daily import baslat as yedekleri_baslat
         yedekleri_baslat()
+        dunya.baslat()
         app.secret_key = 'SECRET_KEY'
         # threaded=True: Flash aynı anda onlarca varlık istiyor; tek iş
         # parçacığı bunları sırayla sunup yükleme süresini uzatıyordu.

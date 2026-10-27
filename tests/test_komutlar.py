@@ -343,6 +343,42 @@ class KomutTestleri(unittest.TestCase):
         json.dumps(kayit)
 
 
+
+class DunyaTestleri(unittest.TestCase):
+    def test_birim_sayilari_ve_guc(self):
+        import world
+        kayit = bos_kayit()
+        kayit["maps"][0]["items"].append([512, 30, 30, 0, 0, 0, [], {}])
+        self.assertEqual(world.birim_sayilari(kayit).get(512), 1)
+        self.assertGreater(world.ordu_gucu({512: 2}), 0)
+
+    def test_rapor_ekle(self):
+        import world
+        kurban = bos_kayit()
+        saldiran = bos_kayit()
+        world.rapor_ekle(kurban, saldiran, {"time": 1})
+        self.assertEqual(len(kurban["privateState"]["attacksReceived"]), 1)
+
+    def test_dunya_tick_ekonomiyi_ilerletir(self):
+        import world
+        bot = bos_kayit()
+        bot["playerInfo"].update(pid="bot1", bot=True, name="Bot")
+        kayitlar = {"bot1": bot}
+        eski = (world.all_saves_userid, world.session, world.save_session)
+        world.all_saves_userid = lambda: list(kayitlar)
+        world.session = lambda uid: kayitlar.get(uid)
+        world.save_session = lambda uid: None
+        try:
+            d = world.Dunya()
+            d.ayar["saldiri_olasiligi"] = 0
+            once = bot["maps"][0]["wood"]
+            d.tek_tick()
+            self.assertEqual(d.tick, 1)
+            self.assertGreater(bot["maps"][0]["wood"], once)
+        finally:
+            world.all_saves_userid, world.session, world.save_session = eski
+
+
 class KayitTestleri(unittest.TestCase):
     def setUp(self):
         gecici_kok = os.path.join(KOK, "tests", "_gecici")

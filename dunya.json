@@ -1,0 +1,7 @@
+{
+  "aktif": true,
+  "tick_saniye": 60,
+  "saldiri_olasiligi": 0.35,
+  "oyuncuya_saldiri": 0.2,
+  "olay_saklama": 200
+}

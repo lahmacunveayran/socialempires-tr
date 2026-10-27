@@ -134,6 +134,7 @@ def bot_uret(adet=10):
             "world_id": 0,
             "last_logged_in": 0,
             "sp_ref_uid": pid,
+            "bot": True,
         })
         pi["map_names"] = [f"{isim} Kalesi"]
         pi["map_sizes"] = [0]

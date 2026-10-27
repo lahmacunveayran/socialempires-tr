@@ -172,6 +172,46 @@ python tools\bot_koy_uret.py 10
 - Yeniden üretmeden önce eski bot dosyalarını silin (aynı isimler yeni
   UUID ile gelir).
 
+## Yaşayan dünya (canlı simülasyon)
+
+Sunucu açıkken bot köyleri boş durmuyor: `world.py` arka planda her
+`tick_saniye` saniyede bir dünyayı ilerletiyor.
+
+- Her bot kaynak üretir, ara sıra birlik basar ve seviye atlar.
+- Botlar birbirine ve oyuncuya akın düzenler; savaş sonucu iki tarafın
+  kayıtlarına işlenir (birlik kaybı, ganimet, `attacksReceived` raporu).
+- Oyuncuya gelen saldırılar oyun içindeki savunma raporlarında görünür.
+- Tüm değişiklikler normal `.save.json` dosyalarına yazılır.
+
+### Panel
+
+`http://127.0.0.1:5050/dunya` — koyları haritada gösteren, savaş
+günlüğünü ve güç sıralamasını canlı yenileyen panel. Oyun sayfasındaki
+“dünya” bağlantısından da açılır.
+
+### Ayar: `dunya.json`
+
+```json
+{
+  "aktif": true,
+  "tick_saniye": 60,
+  "saldiri_olasiligi": 0.35,
+  "oyuncuya_saldiri": 0.2,
+  "olay_saklama": 200
+}
+```
+
+- `aktif: false` → simülasyon tamamen kapanır.
+- `tick_saniye` → tur süresi (sn). Küçültmek dünyayı hızlandırır.
+- `saldiri_olasiligi` → bir botun tur başına akın düzenleme olasılığı.
+- `oyuncuya_saldiri` → hedefin oyuncu olma olasılığı.
+
+Simülasyonu elle ilerletmek için (yalnızca bu bilgisayar):
+
+```bat
+curl -X POST http://127.0.0.1:5050/dunya/tick
+```
+
 ## Bilinen belirsizlikler
 
 - `collect_new` aslında toplama komutu (`CMD_COLLECT`), `next_step` ise

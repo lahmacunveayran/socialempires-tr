@@ -8,6 +8,7 @@ from get_game_config import get_game_config, get_level_from_xp, get_name_from_it
 from constants import Constant
 from engine import apply_cost, apply_collect, apply_collect_xp, timestamp_now
 from bundle import SAVES_DIR
+from ada import fetih_kaydet
 
 # ---------------------------------------------------------------------------
 # Komut argümanlarını çözümleme yardımcıları
@@ -461,6 +462,12 @@ def _saldiri_bitir(saldiran, args):
     })
     if len(raporlar) > 50:
         del raporlar[:-50]
+
+    if kazandi:
+        try:
+            fetih_kaydet(saldiran, kurban_id)
+        except Exception as hata:
+            print(" ! Ada fetih kaydi hatasi:", hata)
 
     # Kurbanın kaydı da diske yazılsın (komut sonunda saldıran yazılıyor).
     # Statik komşular (Arthur, AcidCaos...) kayıtlı oyuncu değil; onlar için yazma yok.

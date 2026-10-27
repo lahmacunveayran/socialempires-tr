@@ -461,6 +461,104 @@ class CeviriTestleri(unittest.TestCase):
         self.assertEqual(dogrula("Hi #0#, you have #1# gold", "Merhaba #0#, #1# altının var"), [])
 
 
+
+class TurnuvaAdaTestleri(unittest.TestCase):
+    def test_turnuva_dort_oyuncuyla_kurulur(self):
+        import turnuva
+        kayitlar = {}
+        for i in range(6):
+            k = bos_kayit()
+            k["playerInfo"].update(pid=f"b{i}", name=f"Bot {i}", bot=True)
+            kayitlar[f"b{i}"] = k
+        oyuncu = bos_kayit()
+        oyuncu["playerInfo"].update(pid="u1", name="Oyuncu", bot=False)
+        kayitlar["u1"] = oyuncu
+        eski = (turnuva.all_saves_userid, turnuva.session)
+        turnuva.all_saves_userid = lambda: list(kayitlar)
+        turnuva.session = lambda uid: kayitlar.get(uid)
+        try:
+            t = turnuva.turnuva_olustur("u1")
+            self.assertEqual(len(t["players"]), 4)
+            self.assertEqual(len(t["matches"]), 6)
+        finally:
+            turnuva.all_saves_userid, turnuva.session = eski
+
+    def test_adada_yedi_bolge_ve_fetih(self):
+        import ada
+        kayitlar = {}
+        for i in range(8):
+            k = bos_kayit()
+            k["playerInfo"].update(pid=f"b{i}", name=f"Bot {i}", bot=True)
+            kayitlar[f"b{i}"] = k
+        oyuncu = bos_kayit()
+        oyuncu["playerInfo"].update(pid="u1", name="Oyuncu", bot=False)
+        kayitlar["u1"] = oyuncu
+        eski = (ada.all_saves_userid, ada.session)
+        ada.all_saves_userid = lambda: list(kayitlar)
+        ada.session = lambda uid: kayitlar.get(uid)
+        try:
+            slotlar = ada.ada_slotlari(oyuncu)
+            self.assertEqual(len(slotlar), 7)
+            ada.fetih_kaydet(oyuncu, slotlar[0]["user_id"])
+            self.assertEqual(ada.ada_durumu(oyuncu)["fetih"], 1)
+        finally:
+            ada.all_saves_userid, ada.session = eski
+
+
+    def test_turnuva_bot_maclari_ve_tek_odul(self):
+        import turnuva
+        kayitlar = {}
+        for i in range(7):
+            k = bos_kayit()
+            k["playerInfo"].update(pid=f"b{i}", name=f"Bot {i}", bot=True)
+            k["maps"][0]["level"] = 10 + i
+            kayitlar[f"b{i}"] = k
+        oyuncu = bos_kayit()
+        oyuncu["playerInfo"].update(pid="u1", name="Oyuncu", bot=False)
+        kayitlar["u1"] = oyuncu
+        eski = (turnuva.all_saves_userid, turnuva.session)
+        turnuva.all_saves_userid = lambda: list(kayitlar)
+        turnuva.session = lambda uid: kayitlar.get(uid)
+        try:
+            t = turnuva.turnuva_olustur("u1")
+            for _ in range(3):
+                sonuc = turnuva.mac_baslat(t["id"], "u1")
+                if not sonuc:
+                    break
+                turnuva.mac_bitir(t["id"], "u1", True)
+            self.assertEqual(t["state"], "finished")
+            self.assertEqual(oyuncu["privateState"]["trophies"], 30)
+            turnuva.mac_bitir(t["id"], "u1", True)
+            self.assertEqual(oyuncu["privateState"]["trophies"], 30)
+        finally:
+            turnuva.all_saves_userid, turnuva.session = eski
+
+    def test_ada_tamamlaninca_sonraki_adaya_gecer(self):
+        import ada
+        kayitlar = {}
+        for i in range(7):
+            k = bos_kayit()
+            k["playerInfo"].update(pid=f"b{i}", name=f"Bot {i}", bot=True)
+            kayitlar[f"b{i}"] = k
+        oyuncu = bos_kayit()
+        oyuncu["playerInfo"].update(pid="u1", name="Oyuncu", bot=False)
+        kayitlar["u1"] = oyuncu
+        eski = (ada.all_saves_userid, ada.session)
+        ada.all_saves_userid = lambda: list(kayitlar)
+        ada.session = lambda uid: kayitlar.get(uid)
+        try:
+            slotlar = ada.ada_slotlari(oyuncu)
+            for slot in slotlar:
+                ada.fetih_kaydet(oyuncu, slot["user_id"])
+            self.assertEqual(ada.ada_durumu(oyuncu)["ada"], 100)
+            self.assertEqual(ada.ada_durumu(oyuncu)["fetih"], 0)
+        finally:
+            ada.all_saves_userid, ada.session = eski
+
+    def test_sezon_hafta_bicimi(self):
+        import sezon
+        self.assertRegex(sezon._hafta(), r"^\d{4}-W\d{2}$")
+
 class KayitTestleri(unittest.TestCase):
     def setUp(self):
         gecici_kok = os.path.join(KOK, "tests", "_gecici")

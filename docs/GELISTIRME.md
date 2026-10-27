@@ -316,6 +316,39 @@ Kapsam dışı (sıradaki adımlar): eşya adları (~1.500), görev metinleri
 dosyasına `anahtar: "Türkçe metin"` satırı eklemek yeterli; anahtarlar
 `ceviri/sozluk.csv` içinde listeli.
 
+## Turnuvalar (yeni)
+
+`turnuva.py` + `/tournaments/*` uçları:
+
+- 4 koltuklu turnuva; boş koltuklar gerçek bot köyleriyle dolar.
+- Herkes herkesle bir maç (6 maç); **bot-bot maçları otomatik** oynanır.
+- İnsan oyuncu maçlarını `start_tournament_match` / `finish_tournament_match`
+  ile oynar; tüm maçlar bitince turnuva kapanır.
+- Kazanan: +30 kupa, +2 cash; ödül yalnızca bir kez verilir.
+- İkinci insan oyuncu bekleyen turnuvada bot koltuğuna katılabilir.
+- Durum bellektedir; sunucu yeniden başlarsa turnuvalar sıfırlanır.
+- İstek/yanıtlar `saves/turnuva_gunlugu.jsonl` dosyasına yazılır.
+
+## Ada fetih (yeni)
+
+`ada.py` + `get_continent.php` / `get_user_world.php`:
+
+- Her adada **7 bölge**, her bölgede bir bot köyü.
+- Bölgedeki botu yenince bölge fethedilir (`ada:posicion` anahtarı).
+- 7/7 olunca: +1 cash, +50 kupa, sonraki adaya geçiş (ada numarası artar).
+- Yanıtlar `ada`, `progress.done/total`, `conquered` ve tüm `continent*`
+  alanlarını güncel ada numarasıyla döndürür.
+- 7'den az bot varsa ada üretilmez (yanlış fetih sayımı olmaz).
+
+## Haftalık sezon (yeni)
+
+`sezon.py`:
+
+- Hafta başında kupa sıralamasındaki ilk üçe cash ödülü (5/3/1).
+- Kupalar %60'a yumuşatılır.
+- Durum `saves/sezon.json`; atomik yazılır, yazma başarısızsa ödül verilmez.
+- Değişen kayıtlar `save_session` ile diske yazılır.
+
 ## Bilinen belirsizlikler
 
 - `collect_new` aslında toplama komutu (`CMD_COLLECT`), `next_step` ise

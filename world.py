@@ -19,6 +19,7 @@ import time
 from bundle import SAVES_DIR
 from get_game_config import get_game_config
 from sessions import all_saves_userid, save_lock, save_session, session
+import sezon
 
 AYAR_DOSYASI = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dunya.json")
 
@@ -228,6 +229,11 @@ class Dunya:
                         degisen.add(hedef)
 
             self._dunya_olayi(simdi)
+            if self.tick % 30 == 0:
+                try:
+                    sezon.kontrol()
+                except Exception as hata:
+                    print(" ! Sezon kontrol hatasi:", hata)
             lonca = self._lonca(simdi)
             if lonca:
                 degisen.add(lonca)

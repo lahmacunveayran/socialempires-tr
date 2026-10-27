@@ -33,6 +33,9 @@ from constants import Constant
 from quests import get_quest_map
 from bundle import ASSETS_DIR, STUB_DIR, TEMPLATES_DIR, BASE_DIR
 from world import Dunya
+import turnuva as Turnuva
+import ada as Ada
+import sezon as Sezon
 
 dunya = Dunya()
 app_secret = os.environ.get('SE_SECRET_KEY', 'SECRET_KEY')
@@ -442,7 +445,7 @@ def get_continent_ranking_response():
     for i in range(len(continent), 8):
         continent.append({"posicion": i, "nivel": 0})
 
-    return {"world_id": 0, "continent": continent}
+    return {"world_id": 0, "continent": continent, "season": Sezon.bilgi()}
 
 
 ########
@@ -482,28 +485,39 @@ def _ada_slotlari():
 
 @app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_continent.php", methods=["GET", "POST"])
 def get_continent_response():
-    slotlar = _ada_slotlari()
+    uid = request.values.get("USERID", "")
+    kayit = kayit_oturumu(uid) if uid else None
+    durum = Ada.ada_durumu(kayit) if kayit else {"ada": 99, "fetih": 0, "toplam": 7, "slotlar": []}
+    slotlar = durum["slotlar"]
     print(f"[ADA] get_continent: {dict(request.values)} -> {len(slotlar)} bolge")
     ada = {
-        "id": 99, "number": 99, "continentId": 99, "continentNumber": 99,
-        "saveId": 99, "continentSaveId": 99, "world_id": 0,
+        "id": durum["ada"], "number": durum["ada"], "continentId": durum["ada"], "continentNumber": durum["ada"],
+        "saveId": durum["ada"], "continentSaveId": durum["ada"], "world_id": 0,
         "users": slotlar, "territories": slotlar, "players": slotlar,
-        "islands": [{"id": 99, "number": 99, "users": slotlar}],
+        "islands": [{"id": durum["ada"], "number": durum["ada"], "users": slotlar}],
+        "ada": durum["ada"],
+        "conquered": durum["fetih"],
+        "progress": {"done": durum["fetih"], "total": durum["toplam"]},
+        "island": durum["ada"],
     }
     return {
         "result": "ok",
         "success": True,
         "world_id": 0,
         "continent": slotlar,
-        "continentNumber": 99,
-        "continentId": 99,
-        "continentSaveId": 99,
-        "myContinentId": 99,
+        "continentNumber": durum["ada"],
+        "continentId": durum["ada"],
+        "continentSaveId": durum["ada"],
+        "myContinentId": durum["ada"],
         "continentData": ada,
         "users": slotlar,
         "territories": slotlar,
         "players": slotlar,
-        "islands": [{"id": 99, "number": 99, "users": slotlar}],
+        "islands": [{"id": durum["ada"], "number": durum["ada"], "users": slotlar}],
+        "ada": durum["ada"],
+        "island": durum["ada"],
+        "conquered": durum["fetih"],
+        "progress": {"done": durum["fetih"], "total": durum["toplam"]},
     }
 
 
@@ -541,17 +555,135 @@ def get_public_player_info_response():
 @app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_user_world.php", methods=["GET", "POST"])
 def get_user_world_response():
     print(f"[ADA] get_user_world: {dict(request.values)}")
+    uid = request.values.get("USERID", "")
+    kayit = kayit_oturumu(uid) if uid else None
+    durum = Ada.ada_durumu(kayit) if kayit else {"ada": 99, "fetih": 0, "toplam": 7}
     return {
         "result": "ok", "success": True, "world_id": 0,
-        "continentId": 99, "continentNumber": 99, "myContinentId": 99,
-        "island": 99, "islandId": 99,
-        "islands": [{"id": 99, "number": 99}],
+        "continentId": durum["ada"], "continentNumber": durum["ada"], "myContinentId": durum["ada"],
+        "island": durum["ada"], "islandId": durum["ada"],
+        "conquered": durum["fetih"], "progress": {"done": durum["fetih"], "total": durum["toplam"]},
+        "islands": [{"id": durum["ada"], "number": durum["ada"]}],
     }
+
+
+########
+# TURNUVALAR
+########
+
+def _turnuva_govde():
+    ham = request.values.get("data", "")
+    if ";" in ham:
+        ham = ham.split(";", 1)[1]
+    try:
+        return json.loads(ham) if ham else {}
+    except json.JSONDecodeError:
+        return {}
+
+
+def _turnuva_yanit(turnuva):
+    if not turnuva:
+        return {"result": "error"}
+    return {
+        "result": "ok",
+        "tournament": turnuva,
+        "tournaments": [turnuva],
+        "data": turnuva,
+        "tournamentId": turnuva.get("id"),
+    }
+
+
+@app.route("/tournaments/create_tournament.php", methods=["GET", "POST"])
+def turnuva_create():
+    uid = request.values.get("USERID", "")
+    veri = _turnuva_govde()
+    turnuva = Turnuva.turnuva_olustur(uid, veri.get("type", "general"), veri.get("entryCost", 0))
+    Turnuva.gunluge_yaz("create", {"uid": uid, "veri": veri, "id": (turnuva or {}).get("id")})
+    return _turnuva_yanit(turnuva)
+
+
+@app.route("/tournaments/join_tournament.php", methods=["GET", "POST"])
+def turnuva_join():
+    uid = request.values.get("USERID", "")
+    veri = _turnuva_govde()
+    tid = veri.get("tournament_id") or veri.get("tournamentId") or veri.get("id")
+    turnuva = Turnuva.turnuvaya_katil(tid, uid) if tid else None
+    Turnuva.gunluge_yaz("join", {"uid": uid, "veri": veri})
+    return _turnuva_yanit(turnuva)
+
+
+@app.route("/tournaments/start_tournament_match.php", methods=["GET", "POST"])
+def turnuva_start_match():
+    uid = request.values.get("USERID", "")
+    veri = _turnuva_govde()
+    tid = veri.get("tournament_id") or veri.get("tournamentId") or veri.get("id")
+    sonuc = Turnuva.mac_baslat(tid, uid) if tid else None
+    Turnuva.gunluge_yaz("start_match", {"uid": uid, "veri": veri, "sonuc": bool(sonuc)})
+    if not sonuc:
+        return {"result": "error"}
+    return {"result": "ok", "match": sonuc["match"], "opponent": sonuc["opponent"], "data": sonuc}
+
+
+@app.route("/tournaments/finish_tournament_match.php", methods=["GET", "POST"])
+def turnuva_finish_match():
+    uid = request.values.get("USERID", "")
+    veri = _turnuva_govde()
+    tid = veri.get("tournament_id") or veri.get("tournamentId") or veri.get("id")
+    ham = veri.get("win", veri.get("kazandi", 0))
+    kazandi = str(ham).strip().lower() in ("1", "true", "yes", "evet")
+    turnuva = Turnuva.mac_bitir(tid, uid, kazandi) if tid else None
+    Turnuva.gunluge_yaz("finish_match", {"uid": uid, "veri": veri, "kazandi": kazandi})
+    return _turnuva_yanit(turnuva)
+
+
+@app.route("/tournaments/get_tournament_info.php", methods=["GET", "POST"])
+def turnuva_info():
+    uid = request.values.get("USERID", "")
+    Turnuva.eski_turnuvalari_temizle()
+    turnuva = Turnuva.turnuva_bul(uid)
+    if turnuva:
+        return _turnuva_yanit(turnuva)
+    return {"result": "ok", "tournament": None, "tournaments": Turnuva.turnuvalar(uid), "data": None}
+
+
+@app.route("/tournaments/cancel_tournament.php", methods=["GET", "POST"])
+def turnuva_cancel():
+    uid = request.values.get("USERID", "")
+    veri = _turnuva_govde()
+    tid = veri.get("tournament_id") or veri.get("tournamentId") or veri.get("id")
+    turnuva = Turnuva.turnuva_iptal(tid, uid) if tid else None
+    Turnuva.gunluge_yaz("cancel", {"uid": uid, "veri": veri})
+    return _turnuva_yanit(turnuva)
+
+
+@app.route("/tournaments/leave_tournament.php", methods=["GET", "POST"])
+def turnuva_leave():
+    uid = request.values.get("USERID", "")
+    veri = _turnuva_govde()
+    tid = veri.get("tournament_id") or veri.get("tournamentId") or veri.get("id")
+    turnuva = Turnuva.turnuvadan_ayril(tid, uid) if tid else None
+    Turnuva.gunluge_yaz("leave", {"uid": uid, "veri": veri})
+    return _turnuva_yanit(turnuva)
+
+
+@app.route("/tournaments/clean_tournament.php", methods=["GET", "POST"])
+def turnuva_clean():
+    Turnuva.eski_turnuvalari_temizle()
+    return {"result": "ok"}
+
+
+@app.route("/tournaments/finish_all_match_tournament.php", methods=["GET", "POST"])
+@app.route("/tournaments/reset_player_tournament.php", methods=["GET", "POST"])
+@app.route("/tournaments/add_player_tournament.php", methods=["GET", "POST"])
+def turnuva_admin_islem():
+    Turnuva.gunluge_yaz("admin", dict(request.values))
+    return {"result": "ok"}
 
 
 ########
 # KEŞİF: henüz uygulanmayan uçları günlüğe yaz
 ########
+
 
 def _http_gunlugune_yaz(yol):
     """İstemcinin çağırdığı ama sunucuda karşılığı olmayan istekleri kaydeder."""
@@ -691,6 +823,7 @@ if __name__ == '__main__':
     try:
         from backups_daily import baslat as yedekleri_baslat
         yedekleri_baslat()
+        Sezon.kontrol()
         dunya.baslat()
         app.secret_key = app_secret
         # threaded=True: Flash aynı anda onlarca varlık istiyor; tek iş

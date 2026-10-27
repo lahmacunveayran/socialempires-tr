@@ -475,6 +475,46 @@ def _depoya_ekle(save, veri):
                     _gift_ekle(save, n, 1)
 
 
+
+# ---------------------------------------------------------------------------
+# Sosyal eşyalar (arkadaş işçi gerektiren binalar)
+# ---------------------------------------------------------------------------
+
+def _sosyal_bilgi(esya_id):
+    for kayit in get_game_config().get("social_items", []):
+        if int(kayit["id"]) == int(esya_id):
+            return kayit
+    return None
+
+
+def _sosyal_esya_bul(save, args):
+    sayilar = _tamsayilar(args)
+    if len(sayilar) < 3:
+        return None, None
+    x, y, town_id = sayilar[0], sayilar[1], sayilar[2]
+    esya_id = sayilar[3] if len(sayilar) > 3 else None
+    if not (0 <= town_id < len(save["maps"])):
+        return None, None
+    for esya in save["maps"][town_id]["items"]:
+        if _tam(esya[1]) == x and _tam(esya[2]) == y:
+            if esya_id is None or _tam(esya[0]) == esya_id:
+                return save["maps"][town_id], esya
+    return None, None
+
+
+def _sosyal_tamamla(esya, bilgi):
+    """Sosyal binayı 8 elemanlı bitmiş biçime getirir ve işçileri yazar."""
+    while len(esya) < 8:
+        esya.append([] if len(esya) == 6 else {})
+    sozluk = esya[7] if isinstance(esya[7], dict) else {}
+    isimler = [i.strip() for i in str(bilgi.get("workers", "")).split(",") if i.strip()]
+    sozluk["workers"] = int(bilgi.get("worker_cost", 0))
+    sozluk["hired"] = isimler[: int(bilgi.get("worker_cost", 0))]
+    sozluk["guild"] = 1
+    esya[7] = sozluk
+    esya[4] = timestamp_now()
+
+
 def get_strategy_type(id):
     if id == 8:
         return "Defensive"
@@ -1163,6 +1203,48 @@ def do_command(USERID, cmd, args):
 
     elif cmd == Constant.CMD_WIN_TROPHY:
         print("Kupa komutu (kayitta degisiklik yok):", args)
+
+    elif cmd == Constant.CMD_BUY_SI_HELP:
+        harita, esya = _sosyal_esya_bul(save, args)
+        if esya is None:
+            print(" ! buy_si_help: bina bulunamadi", args)
+        else:
+            bilgi = _sosyal_bilgi(esya[0]) or {"worker_cost": 1}
+            _sosyal_tamamla(esya, bilgi)
+            print("Sosyal bina icin usta isci gonderildi:", esya[0], (esya[1], esya[2]))
+
+    elif cmd == Constant.CMD_FINISH_SI:
+        harita, esya = _sosyal_esya_bul(save, args)
+        if esya is None:
+            print(" ! finish_si: bina bulunamadi", args)
+        else:
+            bilgi = _sosyal_bilgi(esya[0]) or {"worker_cost": 1}
+            _sosyal_tamamla(esya, bilgi)
+            print("Sosyal bina tamamlandi:", esya[0], (esya[1], esya[2]))
+
+    elif cmd == Constant.CMD_HIRE_WORKER:
+        harita, esya = _sosyal_esya_bul(save, args)
+        if esya is None:
+            print(" ! hire_worker: bina bulunamadi", args)
+        else:
+            bilgi = _sosyal_bilgi(esya[0]) or {"worker_cost": 1}
+            _sosyal_tamamla(esya, bilgi)
+            print("Kardeslik loncasi isci atadi:", esya[0], (esya[1], esya[2]))
+
+    elif cmd == Constant.CMD_SET_HELP_MAP:
+        save.setdefault("privateState", {})["helpMap"] = args[0] if args else None
+        print("Yardim haritasi:", args)
+
+    elif cmd in (Constant.CMD_ASSIST_NEIGHBOUR, Constant.CMD_ASSIST_NEIGHBOUR_NEW,
+                 Constant.CMD_ALLY_ASSIST, Constant.CMD_ASSIST_RECEIVE):
+        print("Komsu yardimi alindi:", args)
+
+    elif cmd == Constant.CMD_CLEAN_RECEIVED_ASSISTS:
+        save.setdefault("privateState", {})["receivedAssists"] = []
+        print("Alinan yardimlar temizlendi")
+
+    elif cmd in (Constant.CMD_RESET_POSITION_UNIVERSE, Constant.CMD_MODIFY_POSITION_UNIVERSE):
+        print("Dunya konumu komutu:", cmd, args)
 
     elif cmd == Constant.CMD_ADD_COLLECTABLE:
         collection_id = args[0]

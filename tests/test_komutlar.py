@@ -297,6 +297,14 @@ class KomutTestleri(unittest.TestCase):
         command.do_command("test", Constant.CMD_SET_ATTACK_TEAM, [json.dumps({"units": [512, 516]})])
         self.assertEqual(self.kayit["privateState"]["teams"]["attack"], {"units": [512, 516]})
 
+    def test_sosyal_bina_lonca_ile_tamamlanir(self):
+        self.kayit["maps"][0]["items"].append([299, 56, 59, 0, 0, 0])
+        command.do_command("test", Constant.CMD_FINISH_SI, [56, 59, 0, 299])
+        esya = [e for e in self.kayit["maps"][0]["items"] if e[1] == 56 and e[2] == 59][0]
+        self.assertGreaterEqual(len(esya), 8)
+        self.assertEqual(esya[7]["workers"], 5)
+        self.assertTrue(esya[7].get("guild"))
+
     # -- depo --------------------------------------------------------------
     def test_depoya_ekle_ve_yerlestir(self):
         command.do_command("test", Constant.CMD_ADD_ITEMS_TO_STORE, [json.dumps({"id": 5, "count": 2})])

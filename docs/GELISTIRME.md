@@ -154,6 +154,37 @@ sunucu şimdilik yalnızca uyarı basıyor, engellemiyor.
 > Bir komşuya saldırıp `saves/komut_gunlugu.jsonl` dosyasına bakmak yeterli;
 > alan adları farklıysa handler'ı ona göre daraltırız.
 
+## Kardeşlik Loncası (arkadaş işçi çözümü)
+
+Orijinal oyunda bazı binalar (Zeppelin Tower, değirmenler, kiliseler…)
+**arkadaşların işçi olarak gelmesini** bekliyor; tek kişilik sunucuda
+arkadaş olmadığı için bu binalar yarım kalıyordu. Çözüm iki katmanlı:
+
+- `config/game_config_*.json` içindeki `social_items` listesi bu
+  binaların `worker_cost` (gereken işçi) ve `workers` (işçi adları)
+  bilgisini veriyor. Örnek: Zeppelin Tower → 5 işçi.
+- `buy_si_help`, `finish_si` ve `hire_worker` komutları binayı **anında
+  usta işçilerle tamamlanmış** hale getiriyor (kayıt 8 elemanlı, işçi
+  listesi dolu).
+- `world.py` içindeki **Kardeşlik Loncası** her turda, oyuncunun yarım
+  kalmış bir sosyal binasını otomatik tamamlıyor; panele
+  “Kardeşlik Loncası … binaya usta işçi gönderdi” olayı düşüyor.
+
+Ayrıca bir bot kaydıyla giriş yapılırsa sunucu o kaydı **oyuncuya
+devrediyor** (`playerInfo.bot` silinir). Böylece dünya simülasyonu aynı
+kaydı yazarken oluşan çakışma/donma engelleniyor.
+
+## Dünya Gezgini (ada haritası)
+
+Eksik olan uçlar eklendi:
+
+- `get_continent.php` → adadaki **7 bölgeyi** (posicion, user_id, name,
+  nivel, pic) döndürür; ada numarası 99.
+- `get_user_world.php` → `world_id`, `continentNumber`, `island`.
+
+Böylece World Explorer ekranındaki boş harita yerine bölgeler ve
+üzerlerinde oyuncular görünmeli.
+
 ## Bot köyleri (PvP için rakip üretme)
 
 PvP listesi boşsa yapay komşular üretilebilir:

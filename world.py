@@ -227,6 +227,9 @@ class Dunya:
                         degisen.add(hedef)
 
             self._dunya_olayi(simdi)
+            lonca = self._lonca(simdi)
+            if lonca:
+                degisen.add(lonca)
 
             for uid in degisen:
                 try:
@@ -235,6 +238,43 @@ class Dunya:
                     print(f" ! Dunya kaydi yazilamadi ({uid}): {hata}")
             self._son_guncelleme = int(time.time())
             self._veri_onbellek = None
+
+    # -- kardeşlik loncası -------------------------------------------------
+    def _lonca(self, simdi):
+        """Oyuncunun arkadaş işçi gerektiren binalarını bot ustalarla tamamlar.
+
+        Orijinal oyunda bu binalar için arkadaş davet edilir; tek kişilik
+        sunucuda lonca devreye girip bir binayı tur başına tamamlar.
+        """
+        sosyal = {int(x["id"]): x for x in get_game_config().get("social_items", [])}
+        for uid, kayit in self.oyuncular():
+            if kayit.get("playerInfo", {}).get("bot"):
+                continue
+            for esya in kayit["maps"][0]["items"]:
+                try:
+                    esya_id = int(esya[0])
+                except (TypeError, ValueError, IndexError):
+                    continue
+                bilgi = sosyal.get(esya_id)
+                if not bilgi:
+                    continue
+                gerekli = int(bilgi.get("worker_cost", 1))
+                sozluk = esya[7] if len(esya) > 7 and isinstance(esya[7], dict) else {}
+                if len(esya) >= 8 and int(sozluk.get("workers", 0)) >= gerekli:
+                    continue
+                while len(esya) < 8:
+                    esya.append([] if len(esya) == 6 else {})
+                isimler = [i.strip() for i in str(bilgi.get("workers", "")).split(",") if i.strip()]
+                esya[7] = {
+                    "workers": gerekli,
+                    "hired": isimler[:gerekli],
+                    "guild": 1,
+                }
+                esya[4] = simdi
+                ad = kayit.get("playerInfo", {}).get("name", uid)
+                self.olay("lonca", f"Kardeşlik Loncası, {ad} köyünde {esya_id} numaralı binaya usta işçi gönderdi")
+                return uid
+        return None
 
     # -- dünya olayları ---------------------------------------------------
     def _dunya_olayi(self, simdi):

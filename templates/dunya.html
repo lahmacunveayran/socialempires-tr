@@ -272,7 +272,7 @@ function ciz(d) {
             d.olaylar.forEach(ev => {
                 const div = document.createElement("div");
                 div.className = "olay";
-                const ikon = ev.tur === "savas" ? "⚔️" : ev.tur === "seviye" ? "★" : ev.tur === "dunya" ? "🌍" : "•";
+                const ikon = ev.tur === "savas" ? "⚔️" : ev.tur === "seviye" ? "★" : ev.tur === "dunya" ? "🌍" : ev.tur === "lonca" ? "🔨" : "•";
                 div.innerHTML = `<span class="ikon">${ikon}</span><span>${ev.metin}</span><span class="saat">${saat(ev.zaman)}</span>`;
                 olaylar.appendChild(div);
             });

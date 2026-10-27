@@ -81,6 +81,14 @@ def login():
     if request.method == 'POST':
         session['USERID'] = request.form['USERID']
         session['GAMEVERSION'] = request.form['GAMEVERSION']
+        # Bir bot kaydıyla giriş yapıldıysa onu oyuncuya devret; aksi halde
+        # dünya simülasyonu aynı kaydı yazarken çakışma/domma olabiliyor.
+        giris_kaydi = kayit_oturumu(session['USERID'])
+        if giris_kaydi and giris_kaydi.get("playerInfo", {}).get("bot"):
+            giris_kaydi["playerInfo"].pop("bot", None)
+            giris_kaydi["playerInfo"].pop("bot_kisi", None)
+            save_session(session['USERID'])
+            print("[LOGIN] Bot kaydi oyuncuya devredildi:", session['USERID'])
         print("[LOGIN] USERID:", request.form['USERID'])
         print("[LOGIN] GAMEVERSION:", request.form['GAMEVERSION'])
         return redirect("/play.html")
@@ -353,8 +361,64 @@ def get_continent_ranking_response():
 
 
 ########
+# DÜNYA GEZGİNİ (ada / kıta)
+########
+
+def _ada_slotlari():
+    """Adadaki 7 bölgeyi oyunculardan doldurur."""
+    oyuncular = []
+    for uid in all_saves_userid():
+        kayit = kayit_oturumu(uid)
+        if not kayit:
+            continue
+        harita = kayit["maps"][0]
+        pi = kayit.get("playerInfo", {})
+        oyuncular.append({
+            "user_id": str(uid),
+            "name": pi.get("name", "Oyuncu"),
+            "pic": pi.get("pic", ""),
+            "nivel": int(harita.get("level", 1)),
+            "conquered": 0,
+        })
+    slotlar = []
+    for i in range(7):
+        if i < len(oyuncular):
+            slot = dict(oyuncular[i])
+            slot["posicion"] = i
+        else:
+            slot = {"posicion": i, "nivel": 0}
+        slotlar.append(slot)
+    return slotlar
+
+
+@app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_continent.php")
+def get_continent_response():
+    slotlar = _ada_slotlari()
+    print(f"[ADA] get_continent: {dict(request.values)} -> {len(slotlar)} bolge")
+    ada = {"id": 99, "number": 99, "users": slotlar, "territories": slotlar}
+    return {
+        "result": "ok",
+        "world_id": 0,
+        "continent": slotlar,
+        "continentNumber": 99,
+        "continentId": 99,
+        "myContinentId": 99,
+        "continentData": ada,
+        "users": slotlar,
+        "territories": slotlar,
+    }
+
+
+@app.route("/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/get_user_world.php")
+def get_user_world_response():
+    print(f"[ADA] get_user_world: {dict(request.values)}")
+    return {"result": "ok", "world_id": 0, "continentNumber": 99, "island": 99}
+
+
+########
 # DÜNYA HARİTASI
 ########
+
 
 @app.route("/dunya")
 def dunya_sayfasi():

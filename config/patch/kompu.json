@@ -1,5 +1,5 @@
 [
- {"op": "add", "path": "/kompu_offers", "value": [{"id": 1, "starts_at": 0, "duration": 2592000, "rewards": [{"cost": 3, "unit": [2138]}, {"cost": 6, "unit": [2145]}, {"cost": 9, "unit": [2141]}, {"cost": 12, "unit": [2140]}], "hurry_up_cost": 5, "timer_between": 3600, "viral_icon": "", "game_type": 0}]},
+ {"op": "add", "path": "/kompu_offers", "value": [{"id": 1, "starts_at": 0, "duration": 2592000, "rewards": [{"cost": 3, "unit": [2138]}, {"cost": 6, "unit": [2145]}, {"cost": 9, "unit": [2141]}, {"cost": 12, "unit": [2140]}], "hurry_up_cost": 5, "timer_between": 3600, "viral_icon": [], "game_type": 0}]},
  {"op": "add", "path": "/globals/KOMPU_MIN_LEVEL", "value": 10},
  {"op": "add", "path": "/globals/KOMPU_WIZZARD_COSTS", "value": [{"g": 0}, {"g": 5000}, {"c": 10}]},
  {"op": "add", "path": "/localization_strings/-", "value": {"id": 1506, "name": "KOMPU_POPUP_TITLE", "text": "The Wizard's Potions"}},

@@ -110,14 +110,27 @@ python -m unittest discover -s tests
 `tests/ortak.py`, `SE_KAYIT_DIZINI` ortam değişkeniyle testlerin geçici bir
 kayıt klasörü kullanmasını sağlar.
 
+## Servis istekleri ve imza
+
+Komutlar dışındaki bazı istekler (büyücü iksirleri, turnuvalar, hata
+bildirimi) `data` alanında `<imza>;<json>` gönderir ve yanıtı da aynı biçimde
+bekler. İmza, istemcideki `Config.SERVER_KEY` ile HMAC-SHA256'dır
+(`oyun/istemci.py` içinde `imzali()`). Yanıtın JSON'u `{"result": ..., "data": ...}`
+biçimindedir; istemci yalnızca `data`'yı okur.
+
+## İçerik
+
+- `config/tema_setleri.json`: eski etkinliklerin mağazaya açılan setleri.
+  Yalnızca sprite ve küçük resmi arşivde eksiksiz olan eşyalar listelenir.
+- `config/patch/kompu.json`: Büyücünün İksirleri teklifi (ödüller, büyücü
+  bedelleri, metinler). Teklifin kimliği ve başlangıcı 30 günlük döneme göre
+  `oyun/config.py` içinde hesaplanır.
+
 ## Bilinen eksikler
 
-- İstemcinin çağırdığı `kompu_try.php`, `kompu_hurry_up.php`,
-  `register_found_item.php`, `clean_assaults.php`, `report_error.php` uçları
-  henüz yok; istekler `saves/http_gunlugu.jsonl` dosyasına yazılır.
-- `get_continent.php` ve turnuva yanıtlarının alan adları istemci koduyla
-  doğrulanmadı.
-- Ruffle'da birimler yere tıklanarak hareket ettirilemiyor (istemci komut
-  göndermiyor; orijinal İngilizce SWF'de de aynı). Flash Player'da bu sorun
-  yaşanmaz.
+- Ruffle'da yere tıklama işlenmiyor: birimler yürütülemiyor, binalar
+  haritaya bırakılamıyor (orijinal İngilizce SWF'de de aynı). Saldırı ve
+  turnuva savaşları bu yüzden Ruffle'da oynanamıyor; Flash Player'da sorun yok.
+- Oyuncu fotoğrafları boş görünür (istemci Facebook adresinden yüklüyor).
+- Haftalık turnuva (tür 8) kapalı.
 - `fx/p.miniFireball2.swf` orijinal arşivde de yok.

@@ -21,14 +21,18 @@ indirmek için gerekir.
 - **Tam Türkçe**: eşya, bina, birim, görev, yardım metinleri ve oyun
   SWF'sinin içindeki sabit arayüz yazıları ("İleri", "İptal", "YARDIM!"
   gibi); gömülü yazı tiplerine `ğ, Ğ, İ, ş, Ş` harfleri eklenir.
-- **PvP**: 3 saldırı / 6 saat, ganimet, savaş raporları, kalkan, intikam,
-  kupalar ve savunma raporları.
+- **PvP**: istemcinin kurallarıyla (6 saatte 3 saldırı, aynı rakibe 4 saatte
+  bir), ganimet, onur puanı, savaş raporları ve savunma raporları.
 - **50 bot köyü** (ilk açılışta otomatik üretilir): gerçek portreler, kişilikler, öfke hafızası ve dünya
   simülasyonu.
-- **Turnuvalar**: 4 kişilik odalar, bot doldurma, otomatik bot maçları ve
-  ödüller.
-- **Ada fetih**: 7 bölgeli adalar, fetih takibi ve ödül (sunucu tarafı).
-- **Haftalık sezon**: kupa sıralaması, ödüller ve sezon sıfırlama.
+- **Turnuvalar**: 4 kişilik odalar; boş koltuklar kendi ordularıyla bot
+  köyleriyle dolar, birinciye turnuva ödülü verilir.
+- **Dünya haritası**: her kıtada 7 rakip köy; hepsi fethedilince sonraki
+  kıtaya geçilir.
+- **Tema setleri**: eski etkinliklerin 15 tema seti (Çin, Viking, Mısır,
+  Atlantis, Cadılar Bayramı, Mitoloji...) ve 15 Harika mağazada.
+- **Büyücünün İksirleri**: iksir kaynatıp nadir yaratıklar kazanılan şans
+  oyunu; her 30 günde yenilenir.
 - **İstemciyle birebir uyumlu komutlar**: sunucu, istemcinin gönderdiği
   120'den fazla komutun tamamını oyun SWF'sinin bytecode'undan çıkarılan
   argüman sırasıyla işler; kayıt yeniden yüklendiğinde oyun aynı kalır.
@@ -84,6 +88,7 @@ Ayrıntılar: [FLASH.md](FLASH.md). GNU/Linux: [LINUX.md](LINUX.md).
 `ayarlar.json` dosyasından değiştirilir (sunucuyu yeniden başlatın):
 
 - `zaman_olcegi`: oyun hızı. `3.0` üretim/inşaat sürelerini üçte bire indirir.
+- `magaza_tema_setleri`: tema setlerini mağazaya açar (`config/tema_setleri.json`).
 - `dunya`: bot köylerinin simülasyonu (saldırı sıklığı vb.).
 
 ### Türkçe
@@ -121,7 +126,7 @@ Testler gerçek `saves/` klasörüne dokunmaz; geçici bir klasör kullanır.
 | `oyun/kayit.py`, `oyun/surum.py`, `oyun/yedek.py` | Kayıtlar, sürüm geçişleri, yedekler |
 | `oyun/config.py`, `oyun/turkce.py`, `oyun/zaman.py` | Oyun ayarları, çeviri, oyun hızı |
 | `oyun/pvp.py`, `oyun/dunya.py`, `oyun/denge.py` | PvP, bot dünyası, denge ayarları |
-| `oyun/turnuva.py`, `oyun/ada.py`, `oyun/sezon.py` | Turnuva, ada fetih, haftalık sezon |
+| `oyun/turnuva.py`, `oyun/ada.py` | Turnuvalar, dünya haritası ve fetih |
 | `oyun/hile.py` | Yerel hile paneli (`/cheat`) |
 | `araclar/` | Bot köyü üretimi, çeviri ve birim yaması araçları |
 | `config/`, `villages/`, `templates/`, `ceviri/` | Oyun verisi, köyler, sayfalar, çeviriler |

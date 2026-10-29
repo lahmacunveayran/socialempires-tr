@@ -551,6 +551,11 @@
   "loc:KOMPU_RESULT_WORKING": "Büyücü sözlerini mırıldanıyor...",
   "loc:KOMPU_REWARD_DESC": "Yeni bir yaratık emrinize girdi! Onu deponuzda bulacaksınız.",
   "loc:KOMPU_REWARD_TITLE": "Ödül!",
-  "loc:KOMPU_UNIQUE": "Eşsiz!"
+  "loc:KOMPU_UNIQUE": "Eşsiz!",
+  "loc:STORE_EDIFICIO_EXP": "#0# XP",
+  "loc:STORE_EDIFICIO_NIVEL": "Seviye #0# gerekli",
+  "loc:STORE_EDIFICIO_LIMITE": "SON #0# GÜN",
+  "loc:STORE_EDIFICIO_DESBLOQUEO": "Açma bedeli: #0# cash",
+  "loc:STORE_ICON_DECORATIONS": "Süsler"
  }
 }

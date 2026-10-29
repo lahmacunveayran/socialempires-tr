@@ -337,3 +337,207 @@ def metni_degistir(kayitlar, eski_fontlar, yeni_fontlar, yeni_satirlar):
             yeni_k["x"] = max(-32768, min(32767, k["x"] + fark // 2))
         sonuc.append(yeni_k)
     return sonuc
+
+
+# ---------------------------------------------------------------------------
+# Glif şekilleri (SHAPE) ve aksanlı harf üretimi
+# ---------------------------------------------------------------------------
+
+class _BitYazici:
+    def __init__(self):
+        self.bitler, self.uzunluk = 0, 0
+
+    def yaz(self, deger, n):
+        self.bitler = (self.bitler << n) | (deger & ((1 << n) - 1))
+        self.uzunluk += n
+
+    def baytlar(self):
+        dolgu = (-self.uzunluk) % 8
+        return (self.bitler << dolgu).to_bytes((self.uzunluk + dolgu) // 8, "big")
+
+
+def sekil_coz(veri: bytes):
+    """Glif şeklini kayıt listesine çevirir.
+
+    Kayıtlar: ("stil", hareket(x, y)|None, dolgu0|None, dolgu1|None, cizgi|None),
+    ("duz", dx, dy), ("egri", kx, ky, ax, ay).
+    """
+    b = _Bitler(veri, 0)
+    dolgu_bit, cizgi_bit = b.oku(4), b.oku(4)
+    kayitlar = []
+    while True:
+        if b.oku(1) == 0:
+            yeni, cizgi, d1, d0, hareket = (b.oku(1) for _ in range(5))
+            if not (yeni or cizgi or d1 or d0 or hareket):
+                break
+            konum = None
+            if hareket:
+                n = b.oku(5)
+                konum = (b.oku(n, True), b.oku(n, True))
+            k0 = b.oku(dolgu_bit) if d0 else None
+            k1 = b.oku(dolgu_bit) if d1 else None
+            kc = b.oku(cizgi_bit) if cizgi else None
+            if yeni:
+                raise ValueError("glifte yeni stil tablosu beklenmez")
+            kayitlar.append(("stil", konum, k0, k1, kc))
+        elif b.oku(1):  # düz kenar
+            n = b.oku(4) + 2
+            if b.oku(1):
+                kayitlar.append(("duz", b.oku(n, True), b.oku(n, True)))
+            elif b.oku(1):
+                kayitlar.append(("duz", 0, b.oku(n, True)))
+            else:
+                kayitlar.append(("duz", b.oku(n, True), 0))
+        else:
+            n = b.oku(4) + 2
+            kayitlar.append(("egri", *(b.oku(n, True) for _ in range(4))))
+    return dolgu_bit, cizgi_bit, kayitlar
+
+
+def sekil_yaz(dolgu_bit, cizgi_bit, kayitlar) -> bytes:
+    w = _BitYazici()
+    w.yaz(dolgu_bit, 4)
+    w.yaz(cizgi_bit, 4)
+    for kayit in kayitlar:
+        if kayit[0] == "stil":
+            _, konum, k0, k1, kc = kayit
+            w.yaz(0, 1)
+            for bayrak in (0, kc is not None, k1 is not None, k0 is not None, konum is not None):
+                w.yaz(int(bayrak), 1)
+            if konum is not None:
+                n = _bit_genisligi(konum, True)
+                w.yaz(n, 5)
+                w.yaz(konum[0], n)
+                w.yaz(konum[1], n)
+            if k0 is not None:
+                w.yaz(k0, dolgu_bit)
+            if k1 is not None:
+                w.yaz(k1, dolgu_bit)
+            if kc is not None:
+                w.yaz(kc, cizgi_bit)
+        elif kayit[0] == "duz":
+            _, dx, dy = kayit
+            n = max(2, _bit_genisligi((dx, dy), True))
+            w.yaz(0b11, 2)
+            w.yaz(n - 2, 4)
+            if dx and dy:
+                w.yaz(1, 1)
+                w.yaz(dx, n)
+                w.yaz(dy, n)
+            else:
+                w.yaz(0, 1)
+                w.yaz(1 if dx == 0 else 0, 1)
+                w.yaz(dy if dx == 0 else dx, n)
+        else:
+            degerler = kayit[1:]
+            n = max(2, _bit_genisligi(degerler, True))
+            w.yaz(0b10, 2)
+            w.yaz(n - 2, 4)
+            for d in degerler:
+                w.yaz(d, n)
+    w.yaz(0, 6)  # EndShapeRecord
+    return w.baytlar()
+
+
+def sekil_siniri(sekil: bytes):
+    """Glif şeklinin gerçek sınırları (xmin, xmax, ymin, ymax); eğri kontrol
+    noktaları dahil. Yazı tiplerindeki sınır tablosu çoğu zaman sıfırdır."""
+    x = y = 0
+    xs, ys = [], []
+    for kayit in sekil_coz(sekil)[2]:
+        if kayit[0] == "stil":
+            if kayit[1] is None:
+                continue
+            x, y = kayit[1]
+        elif kayit[0] == "duz":
+            x, y = x + kayit[1], y + kayit[2]
+        else:
+            xs.append(x + kayit[1])
+            ys.append(y + kayit[2])
+            x, y = x + kayit[1] + kayit[3], y + kayit[2] + kayit[4]
+        xs.append(x)
+        ys.append(y)
+    return (min(xs), max(xs), min(ys), max(ys)) if xs else (0, 0, 0, 0)
+
+
+def rect_coz(veri: bytes):
+    b = _Bitler(veri, 0)
+    n = b.oku(5)
+    return [b.oku(n, True) for _ in range(4)]  # xmin, xmax, ymin, ymax
+
+
+def rect_yaz(xmin, xmax, ymin, ymax) -> bytes:
+    n = _bit_genisligi((xmin, xmax, ymin, ymax), True)
+    w = _BitYazici()
+    w.yaz(n, 5)
+    for d in (xmin, xmax, ymin, ymax):
+        w.yaz(d, n)
+    return w.baytlar()
+
+
+# Türkçe harf: (temel harf, aksan, büyük harf mi)
+BIRLESIK_HARFLER = {
+    "ş": ("s", "¸", False), "Ş": ("S", "¸", False),
+    "ğ": ("g", "˘", False), "Ğ": ("G", "˘", True),
+    "İ": ("I", "˙", True),
+}
+
+
+def turkce_harfleri_uret(font: Font3, bolge: bytes = None):
+    """Eksik ğ Ğ İ ş Ş harflerini aynı yazı tipindeki harf + aksandan üretir.
+
+    Aksan işaretleri (¸ ˘ ˙) küçük harf yüksekliğinde çizilidir; büyük
+    harflerde, küçük harfteki aksan boşluğu korunarak yukarı alınır. Dönüş: yeni bölge etiketi
+    (hizalama bölgesi verilmişse) ya da None.
+    """
+    kod_no = {k: i for i, k in enumerate(font.kodlar)}
+    _, ilerleme, sinirlar, kerning = font.duzen
+
+    def sinir(harf):
+        return sekil_siniri(font.sekiller[kod_no[ord(harf)]])
+
+    yeniler = []
+    for harf, (temel, aksan, buyuk) in BIRLESIK_HARFLER.items():
+        if ord(harf) in kod_no or ord(temel) not in kod_no or ord(aksan) not in kod_no:
+            continue
+        t_i, a_i = kod_no[ord(temel)], kod_no[ord(aksan)]
+        tx0, tx1, ty0, ty1 = sinir(temel)
+        ax0, ax1, ay0, ay1 = sinir(aksan)
+        dx = ((tx0 + tx1) - (ax0 + ax1)) // 2
+        dy = 0
+        if buyuk:
+            # Küçük harfteki boşluğu (o'nun tepesi ile aksanın altı) koru.
+            bosluk = sinir("o")[2] - ay1
+            dy = (ty0 - bosluk) - ay1
+        d0, c0, temel_kayit = sekil_coz(font.sekiller[t_i])
+        d1, c1, aksan_kayit = sekil_coz(font.sekiller[a_i])
+        kaydirilmis = [("stil", (k[1][0] + dx, k[1][1] + dy), *k[2:]) if k[0] == "stil" and k[1] else k
+                       for k in aksan_kayit]
+        sekil = sekil_yaz(max(d0, d1), max(c0, c1), temel_kayit + kaydirilmis)
+        rect = sinirlar[t_i]  # tablo (genelde sıfır) temel harfinkiyle aynı kalır
+        yeniler.append((ord(harf), sekil, ilerleme[t_i], rect, t_i))
+    if not yeniler:
+        return None
+
+    bolge_kayit = _bolgeler(bolge, len(font.kodlar)) if bolge else None
+    girdiler = [(k, "h", i) for i, k in enumerate(font.kodlar)] + [(y[0], "y", j) for j, y in enumerate(yeniler)]
+    girdiler.sort()
+    sekiller, kodlar, y_ilerleme, y_sinirlar, y_bolgeler = [], [], [], [], []
+    for kod, nereden, i in girdiler:
+        kodlar.append(kod)
+        if nereden == "h":
+            sekiller.append(font.sekiller[i])
+            y_ilerleme.append(ilerleme[i])
+            y_sinirlar.append(sinirlar[i])
+            if bolge_kayit:
+                y_bolgeler.append(bolge_kayit[1][i])
+        else:
+            _, sekil, adim, rect, temel_i = yeniler[i]
+            sekiller.append(sekil)
+            y_ilerleme.append(adim)
+            y_sinirlar.append(rect)
+            if bolge_kayit:
+                y_bolgeler.append(bolge_kayit[1][temel_i])
+    font.sekiller, font.kodlar = sekiller, kodlar
+    font.duzen = (font.duzen[0], y_ilerleme, y_sinirlar, kerning)
+    return bolge_kayit[0] + b"".join(y_bolgeler) if bolge_kayit else None

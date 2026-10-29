@@ -7,7 +7,8 @@
 
 Social Empires'ı **Türkçe** oynamak ve yerel olarak geliştirmek için hazırlanmış
 bir topluluk çatalı. Oyun, Flash istemcisi ile konuşan bir Python/Flask
-sunucusu üzerinde çalışır; internet bağlantısı veya Facebook hesabı gerekmez.
+sunucusu üzerinde çalışır; Facebook hesabı gerekmez; internet yalnızca oyun varlıklarını ilk kez
+indirmek için gerekir.
 
 > Bu proje Social Point ile bağlantılı değildir. Yalnızca kültürel miras
 > amaçlı bir koruma çalışmasıdır. Orijinal proje:
@@ -21,7 +22,7 @@ sunucusu üzerinde çalışır; internet bağlantısı veya Facebook hesabı ger
   metinleri; resmî Türkçe fontlarla `ş, ğ, İ, ı, ç, ö, ü` desteği.
 - **PvP**: 3 saldırı / 6 saat, ganimet, savaş raporları, kalkan, intikam,
   kupalar ve savunma raporları.
-- **49 bot köyü**: gerçek portreler, kişilikler, öfke hafızası ve dünya
+- **50 bot köyü** (ilk açılışta otomatik üretilir): gerçek portreler, kişilikler, öfke hafızası ve dünya
   simülasyonu.
 - **Turnuvalar**: 4 kişilik odalar, bot doldurma, otomatik bot maçları ve
   ödüller.
@@ -49,6 +50,21 @@ sunucusu üzerinde çalışır; internet bağlantısı veya Facebook hesabı ger
    - Sunucu hazır olduğunda tarayıcı otomatik açılır:
      <http://127.0.0.1:5050/>
 4. Giriş ekranından bir köy seçin veya yeni imparatorluk kurun.
+
+**Oyun varlıkları (SWF, görsel, müzik):** ~1,3 GB oldukları için depoda
+tutulmaz (yalnızca Türkçe fontlar depodadır). İlk açılışta eksik dosyalar
+[AcidCaos/socialemperors](https://github.com/AcidCaos/socialemperors)
+deposundan otomatik indirilip `download_assets/` altında saklanır; bu yüzden
+ilk açılış için internet gerekir. Hepsini bir kerede indirip internetsiz
+oynamak için:
+
+```bat
+python varliklari_indir.py
+```
+
+**Bot köyleri:** `saves/` altında hiç bot yoksa sunucu ilk açılışta 50 bot
+köyü üretir (PvP, ada fetih ve turnuvalar bunlara ihtiyaç duyar). Yeniden
+üretmek için: `python tools\bot_koy_uret.py`.
 
 **Flash desteği:** Flash uyumlu bir tarayıcı ya da Ruffle gerekir.
 Ayrıntılar: [FLASH.md](FLASH.md). GNU/Linux: [LINUX.md](LINUX.md).

@@ -22,3 +22,5 @@ jobs:
         run: python -m compileall -q .
       - name: Birim testleri
         run: python tests/test_komutlar.py
+      - name: HTTP testleri
+        run: python tests/test_http.py

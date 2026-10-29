@@ -6,7 +6,9 @@ import hashlib
 import re
 import urllib.request
 import urllib.error
+import urllib.parse
 import tempfile
+import shutil
 import traceback
 if os.name == 'nt':
     os.system("color")
@@ -47,6 +49,30 @@ import magaza
 import gunluk
 import sosyal
 
+
+
+def _bot_mu(uid):
+    return bool((kayit_oturumu(uid) or {}).get("playerInfo", {}).get("bot"))
+
+
+def _botlari_hazirla():
+    """Hiç bot köyü yoksa (ilk çalıştırma) PvP/ada/turnuva için üretir."""
+    if any(_bot_mu(uid) for uid in all_saves_userid()):
+        return
+    print(" [+] Bot koyleri bulunamadi; ilk calistirma icin uretiliyor...")
+    try:
+        import sys
+        sys.path.insert(0, os.path.join(BASE_DIR, "tools"))
+        from bot_koy_uret import bot_uret
+        bot_uret()
+    except Exception:
+        traceback.print_exc()
+        print(" ! Bot koyleri uretilemedi; elle: python tools/bot_koy_uret.py")
+        return
+    load_saved_villages()
+
+
+_botlari_hazirla()
 dunya = Dunya()
 app_secret = os.environ.get('SE_SECRET_KEY', 'SECRET_KEY')
 
@@ -173,7 +199,7 @@ def login():
         return redirect("/play.html")
     # Login page
     if request.method == 'GET':
-        saves_info = all_saves_info()
+        saves_info = [k for k in all_saves_info() if not _bot_mu(k["userid"])]
         return render_template("login.html", saves_info=saves_info, version=version_name)
 
 @app.route("/play.html")
@@ -244,17 +270,26 @@ def css(path):
 ## GAME STATIC
 
 
+# Varlık dosyaları depoda tutulmaz (~1,3 GB). Yerelde olmayan bir dosya
+# istendiğinde orijinal koruma projesinden indirilip download_assets/ altında
+# önbelleklenir. Tamamını önceden indirmek için: python varliklari_indir.py
+VARLIK_KAYNAKLARI = (
+    "https://raw.githubusercontent.com/AcidCaos/socialemperors/main/assets/{path}",
+    "https://static.socialpointgames.com/static/socialempires/assets/{path}",
+)
+
+
 @app.route("/default01.static.socialpointgames.com/static/socialempires/swf/05122012_projectiles.swf")
 def similar_05122012_projectiles():
-    return send_from_directory(ASSETS_DIR + "/swf", "20130417_projectiles.swf")
+    return static_assets_loader("swf/20130417_projectiles.swf")
 
 @app.route("/default01.static.socialpointgames.com/static/socialempires/swf/05122012_magicParticles.swf")
 def similar_05122012_magicParticles():
-    return send_from_directory(ASSETS_DIR + "/swf", "20131010_magicParticles.swf")
+    return static_assets_loader("swf/20131010_magicParticles.swf")
 
 @app.route("/default01.static.socialpointgames.com/static/socialempires/swf/05122012_dynamic.swf")
 def similar_05122012_dynamic():
-    return send_from_directory(ASSETS_DIR + "/swf", "120608_dynamic.swf")
+    return static_assets_loader("swf/120608_dynamic.swf")
 
 @app.route("/default01.static.socialpointgames.com/static/socialempires/<path:path>")
 def static_assets_loader(path):
@@ -265,7 +300,8 @@ def static_assets_loader(path):
         return hedef == kok or hedef.startswith(kok + os.sep)
 
     path = str(path).replace("\\", "/")
-    if not re.fullmatch(r"[A-Za-z0-9_./\-]+", path) or ".." in path.split("/"):
+    # Boşluk gerekli: ör. "swf/music/Spirit of Eternity.mp3"
+    if not re.fullmatch(r"[A-Za-z0-9_./\- ]+", path) or ".." in path.split("/"):
         return ("", 404)
     yerel = safe_join(ASSETS_DIR, path)
     indirilen_klasor = os.path.join(BASE_DIR, "download_assets", "assets")
@@ -296,28 +332,30 @@ def static_assets_loader(path):
         except OSError:
             pass
 
-    # Dosya hiçbir yerde yok: Social Point CDN'inden indirmeyi dene.
+    # Dosya hiçbir yerde yok: kaynaklardan sırayla indirmeyi dene.
     os.makedirs(os.path.dirname(indirilen), exist_ok=True)
-    URL = f"https://static.socialpointgames.com/static/socialempires/assets/{path}"
-    gecici = None
-    try:
-        fd, gecici = tempfile.mkstemp(dir=os.path.dirname(indirilen), prefix="indir-", suffix=".tmp")
-        os.close(fd)
-        urllib.request.urlretrieve(URL, gecici)
-        if not _varlik_gecerli(gecici):
-            raise OSError("indirilen dosya gecersiz")
-        os.replace(gecici, indirilen)  # atomik: yarım dosya servis edilmez
-    except (urllib.error.HTTPError, urllib.error.URLError, OSError) as hata:
-        print(f" ! Asset indirilemedi: {URL} ({hata})")
-        if gecici and os.path.exists(gecici):
-            try:
-                os.remove(gecici)
-            except OSError:
-                pass
-        return ("", 404)
-
-    print(f"====== DOWNLOADED ASSET: {URL}")
-    return send_from_directory(indirilen_klasor, path)
+    for kalip in VARLIK_KAYNAKLARI:
+        URL = kalip.format(path=urllib.parse.quote(path))
+        gecici = None
+        try:
+            fd, gecici = tempfile.mkstemp(dir=os.path.dirname(indirilen), prefix="indir-", suffix=".tmp")
+            os.close(fd)
+            with urllib.request.urlopen(URL, timeout=30) as yanit, open(gecici, "wb") as f:
+                shutil.copyfileobj(yanit, f)
+            if not _varlik_gecerli(gecici):
+                raise OSError("indirilen dosya gecersiz")
+            os.replace(gecici, indirilen)  # atomik: yarım dosya servis edilmez
+        except (urllib.error.HTTPError, urllib.error.URLError, OSError) as hata:
+            print(f" ! Asset indirilemedi: {URL} ({hata})")
+            if gecici and os.path.exists(gecici):
+                try:
+                    os.remove(gecici)
+                except OSError:
+                    pass
+            continue
+        print(f"====== DOWNLOADED ASSET: {URL}")
+        return send_from_directory(indirilen_klasor, path)
+    return ("", 404)
 
 ## GAME DYNAMIC
 

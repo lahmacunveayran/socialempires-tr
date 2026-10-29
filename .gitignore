@@ -11,8 +11,13 @@ download_assets/
 Include/
 Lib/
 Scripts/
-pyvenv.cfgtests/_gecici/
+pyvenv.cfg
+tests/_gecici/
 tests/sonuc.txt
 ceviri/sozluk.csv
 ceviri/sozluk.json
 tests/_audit_test.txt
+# Oyun varliklari (~1,3 GB) depoya girmez; varliklari_indir.py ile indirilir.
+# Yalnizca Turkce fontlar depoda tutulur.
+assets/*
+!assets/fonts/

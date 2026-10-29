@@ -18,8 +18,9 @@ indirmek için gerekir.
 
 ## Özellikler
 
-- **Tam Türkçe**: eşya, bina, birim, görev, arayüz, yardım ve başarım
-  metinleri; resmî Türkçe fontlarla `ş, ğ, İ, ı, ç, ö, ü` desteği.
+- **Tam Türkçe**: eşya, bina, birim, görev, yardım metinleri ve oyun
+  SWF'sinin içindeki sabit arayüz yazıları ("İleri", "İptal", "YARDIM!"
+  gibi); gömülü yazı tiplerine `ğ, Ğ, İ, ş, Ş` harfleri eklenir.
 - **PvP**: 3 saldırı / 6 saat, ganimet, savaş raporları, kalkan, intikam,
   kupalar ve savunma raporları.
 - **50 bot köyü** (ilk açılışta otomatik üretilir): gerçek portreler, kişilikler, öfke hafızası ve dünya
@@ -28,8 +29,9 @@ indirmek için gerekir.
   ödüller.
 - **Ada fetih**: 7 bölgeli adalar, fetih takibi ve ödül (sunucu tarafı).
 - **Haftalık sezon**: kupa sıralaması, ödüller ve sezon sıfırlama.
-- **Görevler, mağaza, koleksiyonlar, etkinlikler ve başarımlar**.
-- **Sosyal döngü**: komşu yardımı ve hediye gönderme (günlük limitli).
+- **İstemciyle birebir uyumlu komutlar**: sunucu, istemcinin gönderdiği
+  120'den fazla komutun tamamını oyun SWF'sinin bytecode'undan çıkarılan
+  argüman sırasıyla işler; kayıt yeniden yüklendiğinde oyun aynı kalır.
 - **Yeni içerik**: Büyük Ev, Büyük Değirmen, Büyük Kule; Süper Şövalye,
   Süper Okçu, Süper Kılıçlı ve yeni mağaza paketleri.
 - **Güvenli kayıt**: atomik yazım, `.bak` yedeği, günlük yedekler ve
@@ -64,7 +66,7 @@ python varliklari_indir.py
 
 **Bot köyleri:** `saves/` altında hiç bot yoksa sunucu ilk açılışta 50 bot
 köyü üretir (PvP, ada fetih ve turnuvalar bunlara ihtiyaç duyar). Yeniden
-üretmek için: `python tools\bot_koy_uret.py`.
+üretmek için: `python araclar\bot_koy_uret.py`.
 
 **Flash desteği:** Flash uyumlu bir tarayıcı ya da Ruffle gerekir.
 Ayrıntılar: [FLASH.md](FLASH.md). GNU/Linux: [LINUX.md](LINUX.md).
@@ -77,20 +79,30 @@ Ayrıntılar: [FLASH.md](FLASH.md). GNU/Linux: [LINUX.md](LINUX.md).
 - Sağlık kontrolü: `http://127.0.0.1:5050/saglik`
 - Oyunu kapatmak için sunucu penceresinde `Ctrl+C` kullanın.
 
+### Ayarlar
+
+`ayarlar.json` dosyasından değiştirilir (sunucuyu yeniden başlatın):
+
+- `zaman_olcegi`: oyun hızı. `3.0` üretim/inşaat sürelerini üçte bire indirir.
+- `dunya`: bot köylerinin simülasyonu (saldırı sıklığı vb.).
+
 ### Türkçe
 
-Oyun içi metinler `ceviri/oto_tr.json` (makine çevirisi) ve
-`ceviri/tr.json` (elle düzeltmeler) dosyalarından gelir. Türkçe fontlar
-`assets/fonts` altındadır; istemciye `language=tr` gönderilir.
+- `ceviri/oto_tr.json` (makine çevirisi) ve `ceviri/tr.json` (elle
+  düzeltmeler): config'teki oyun metinleri.
+- `ceviri/arayuz_tr.json`: oyun SWF'sinin içindeki sabit yazılar. Sunucu
+  SWF'yi ilk istekte Türkçeleştirip `download_assets/tr/` altında saklar.
+- `assets/fonts/tr_*.swf`: Türkçe harfli yazı tipleri.
 
 ---
 
 ## Geliştirme
 
 ```bat
-python tests\test_komutlar.py   :: birim testleri
-python tests\test_http.py       :: HTTP uçtan uca testleri
+python -m unittest discover -s tests
 ```
+
+Testler gerçek `saves/` klasörüne dokunmaz; geçici bir klasör kullanır.
 
 - Geliştirme notları ve komut protokolü: [docs/GELISTIRME.md](docs/GELISTIRME.md)
 - Katkı rehberi: [CONTRIBUTING.md](CONTRIBUTING.md)
@@ -100,16 +112,20 @@ python tests\test_http.py       :: HTTP uçtan uca testleri
 
 | Yol | Açıklama |
 | --- | --- |
-| `server.py` | Flask sunucusu, istemci uçları |
-| `command.py` | Oyun içi komutlar |
-| `sessions.py` | Kayıt yükleme/kaydetme, yedekler |
-| `world.py` | Bot ekonomisi ve dünya simülasyonu |
-| `turnuva.py`, `ada.py`, `sezon.py` | Turnuva, ada fetih, haftalık sezon |
-| `gorev.py`, `magaza.py`, `koleksiyon.py`, `etkinlik.py`, `basari.py` | Oyun sistemleri |
-| `sosyal.py` | Komşu yardımı ve hediyeler |
-| `config/` | Oyun yapılandırması ve yamalar |
-| `ceviri/` | Türkçe çeviriler |
-| `tests/` | Birim ve HTTP testleri |
+| `server.py` | Sunucuyu başlatır |
+| `oyun/sunucu.py` | Flask uygulaması, giriş ve oyun sayfaları |
+| `oyun/istemci.py` | İstemcinin çağırdığı uçlar (config, oyuncu, ada, turnuva) |
+| `oyun/komutlar.py` | Oyun komutları (`command.php`) |
+| `oyun/varliklar.py` | SWF/görsel/müzik dosyaları ve otomatik indirme |
+| `oyun/swf_yama.py`, `oyun/swf_font.py` | Oyun SWF'sinin Türkçeleştirilmesi |
+| `oyun/kayit.py`, `oyun/surum.py`, `oyun/yedek.py` | Kayıtlar, sürüm geçişleri, yedekler |
+| `oyun/config.py`, `oyun/turkce.py`, `oyun/zaman.py` | Oyun ayarları, çeviri, oyun hızı |
+| `oyun/pvp.py`, `oyun/dunya.py`, `oyun/denge.py` | PvP, bot dünyası, denge ayarları |
+| `oyun/turnuva.py`, `oyun/ada.py`, `oyun/sezon.py` | Turnuva, ada fetih, haftalık sezon |
+| `oyun/hile.py` | Yerel hile paneli (`/cheat`) |
+| `araclar/` | Bot köyü üretimi, çeviri ve birim yaması araçları |
+| `config/`, `villages/`, `templates/`, `ceviri/` | Oyun verisi, köyler, sayfalar, çeviriler |
+| `tests/` | Testler |
 
 ---
 

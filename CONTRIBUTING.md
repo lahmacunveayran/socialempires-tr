@@ -17,8 +17,7 @@ Sunucu hazır olduğunda <http://127.0.0.1:5050/> açılır. Sağlık kontrolü:
 ## Testler
 
 ```bat
-python tests\test_komutlar.py
-python tests\test_http.py
+python -m unittest discover -s tests
 ```
 
 - `test_komutlar.py`: oyun komutları, kayıt, PvP, ekonomi, turnuva, ada.

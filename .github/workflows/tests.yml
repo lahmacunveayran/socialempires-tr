@@ -20,7 +20,5 @@ jobs:
         run: pip install -r requirements.txt
       - name: Sözdizimi
         run: python -m compileall -q .
-      - name: Birim testleri
-        run: python tests/test_komutlar.py
-      - name: HTTP testleri
-        run: python tests/test_http.py
+      - name: Testler
+        run: python -m unittest discover -s tests -v

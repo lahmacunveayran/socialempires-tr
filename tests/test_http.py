@@ -1,23 +1,15 @@
-# -*- coding: utf-8 -*-
-"""Uçtan uca HTTP duman testleri (Flask test istemcisi, canlı port gerekmez)."""
+"""Uçtan uca HTTP testleri (Flask test istemcisi, canlı port gerekmez).
+
+Sunucu geçici bir kayıt klasörüyle açılır ve oraya bot köyleri üretir.
+Çalıştırma: python tests/test_http.py
+"""
 
 import os
-import shutil
-import sys
-import tempfile
 import unittest
 
-KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, KOK)
-os.chdir(KOK)
+from ortak import KOK
 
-# Testler geçici bir kayıt klasörü kullanır: yerel kayıtlara bağımlı olmaz,
-# onları değiştirmez. Botlar sunucu açılışında bu klasöre üretilir.
-import bundle  # noqa: E402
-GECICI_KAYIT = tempfile.mkdtemp(prefix="se-test-")
-bundle.SAVES_DIR = GECICI_KAYIT
-
-import server  # noqa: E402
+from oyun import sunucu as server  # noqa: E402
 
 UID = None
 BASE = "/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires"
@@ -30,10 +22,6 @@ class HttpDumanTestleri(unittest.TestCase):
         UID = server.new_village()
         cls.istemci = server.app.test_client()
         cls.istemci.post("/", data={"USERID": UID, "GAMEVERSION": "SocialEmpires0926bsec.swf"})
-
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(GECICI_KAYIT, ignore_errors=True)
 
     def test_giris_sayfasi(self):
         istemci = server.app.test_client()
@@ -118,20 +106,6 @@ class HttpDumanTestleri(unittest.TestCase):
         veri = cevap.get_json()
         self.assertEqual(veri["result"], "ok")
         self.assertEqual(len(veri["tournament"]["players"]), 4)
-
-
-    def test_gunluk_durum(self):
-        cevap = self.istemci.get(f"{BASE}/get_daily.php?USERID={UID}&user_key=1")
-        self.assertEqual(cevap.status_code, 200)
-        veri = cevap.get_json()
-        self.assertEqual(veri["result"], "ok")
-        self.assertEqual(len(veri["daily"]["gorevler"]), 3)
-        self.assertIn("haftalik", veri["daily"])
-
-    def test_sosyal_durum(self):
-        cevap = self.istemci.get(f"{BASE}/get_social.php?USERID={UID}&user_key=1")
-        self.assertEqual(cevap.status_code, 200)
-        self.assertEqual(cevap.get_json()["result"], "ok")
 
 
 if __name__ == "__main__":

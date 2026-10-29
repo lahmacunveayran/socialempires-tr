@@ -1,0 +1,15 @@
+{
+  "_aciklama": "Sunucu ayarlari. Degistirdikten sonra sunucuyu yeniden baslatin.",
+  "zaman_olcegi": 3.0,
+  "_zaman_olcegi": "Oyun hizi carpani: 3.0 = uretim/insaat sureleri 3 kat kisalir, 1.0 = normal.",
+  "dunya": {
+    "aktif": true,
+    "tick_saniye": 60,
+    "saldiri_olasiligi": 0.3,
+    "oyuncuya_saldiri": 0.25,
+    "tur_basina_saldiri": 8,
+    "bot_saldiri_araligi": 180,
+    "oyuncu_saldiri_araligi": 600,
+    "olay_saklama": 200
+  }
+}

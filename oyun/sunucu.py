@@ -1,0 +1,191 @@
+"""Flask uygulaması: giriş/oyun sayfaları, hata günlüğü ve açılış.
+
+İstemcinin çağırdığı uçlar ayrı modüllerdedir:
+- oyun.varliklar: SWF/görsel/müzik dosyaları
+- oyun.istemci:   oyun sunucusu uçları (config, oyuncu bilgisi, komutlar,
+                  ada, turnuva)
+- oyun.hile:      yerel hile paneli
+"""
+
+import os
+import sys
+import time
+import traceback
+
+print(" [+] Oyun ayarlari yukleniyor...")
+from flask import Flask, redirect, render_template, request, send_from_directory, session
+
+from oyun.ekonomi import timestamp_now
+from oyun.kayit import (all_saves_info, all_saves_userid, fb_friends_str, load_saved_villages,
+                        new_village, save_info, save_lock, save_session, gecerli_uid,
+                        session as kayit_oturumu)
+from oyun.surum import version_code, version_name
+from oyun.yollar import BASE_DIR, SAVES_DIR, STUB_DIR, TEMPLATES_DIR
+
+print(" [+] Kayitlar yukleniyor...")
+load_saved_villages()
+
+HOST = "127.0.0.1"
+PORT = 5050
+OYUN_DILI = "tr"
+HATA_LOG = os.path.join(SAVES_DIR, "sunucu_hatalari.log")
+BASLANGIC = time.time()
+
+app = Flask(__name__, template_folder=TEMPLATES_DIR)
+app.secret_key = os.environ.get("SE_SECRET_KEY", "SECRET_KEY")
+# Statik varlıklar tarayıcıda/Flash'ta önbelleklensin (her açılışta yüzlerce
+# dosya yeniden indirilmesin). Değiştirdiğiniz dosyalar için Ctrl+F5.
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 86400
+app.json.sort_keys = False
+
+
+def bot_mu(uid):
+    return bool((kayit_oturumu(uid) or {}).get("playerInfo", {}).get("bot"))
+
+
+def _botlari_hazirla():
+    """Hiç bot köyü yoksa (ilk çalıştırma) PvP/ada/turnuva için üretir."""
+    if any(bot_mu(uid) for uid in all_saves_userid()):
+        return
+    print(" [+] Bot koyleri bulunamadi; ilk calistirma icin uretiliyor...")
+    try:
+        sys.path.insert(0, os.path.join(BASE_DIR, "araclar"))
+        from bot_koy_uret import bot_uret
+        bot_uret()
+    except Exception:
+        traceback.print_exc()
+        print(" ! Bot koyleri uretilemedi; elle: python araclar/bot_koy_uret.py")
+        return
+    load_saved_villages()
+
+
+_botlari_hazirla()
+
+
+@app.errorhandler(Exception)
+def _hatayi_kaydet(hata):
+    """Beklenmeyen hataları dosyaya yazar; sunucu ayakta kalır."""
+    from werkzeug.exceptions import HTTPException
+    if isinstance(hata, HTTPException):
+        return hata
+    try:
+        os.makedirs(SAVES_DIR, exist_ok=True)
+        with open(HATA_LOG, "a", encoding="utf-8") as f:
+            f.write(f"\n=== {timestamp_now()} {request.path} ===\n")
+            traceback.print_exc(file=f)
+    except OSError:
+        pass
+    print(" ! Sunucu hatasi (ayrinti saves/sunucu_hatalari.log):", hata)
+    return ({"result": "error"}, 500)
+
+
+# ---------------------------------------------------------------------------
+# Sayfalar
+# ---------------------------------------------------------------------------
+
+@app.route("/saglik")
+def saglik():
+    return {
+        "durum": "ok",
+        "surum": version_code,
+        "oyuncu": len(all_saves_userid()),
+        "calisma_suresi": int(time.time() - BASLANGIC),
+        "saat": int(time.time()),
+    }
+
+
+@app.route("/saglik/hazir")
+def saglik_hazir():
+    return ("hazir", 200)
+
+
+@app.route("/", methods=["GET", "POST"])
+def login():
+    session.pop("USERID", None)
+    session.pop("GAMEVERSION", None)
+    load_saved_villages()  # kayıtlar sunucu kapanmadan düzenlenebilsin
+    if request.method == "POST":
+        uid = request.form.get("USERID", "")
+        if not gecerli_uid(uid):
+            return ("Gecersiz oyuncu kimligi", 400)
+        session["USERID"] = uid
+        session["GAMEVERSION"] = request.form.get("GAMEVERSION", "SocialEmpires0926bsec.swf")
+        # Bot kaydıyla giriş yapıldıysa oyuncuya devret; yoksa dünya
+        # simülasyonu aynı kayda yazarken çakışabilir.
+        kayit = kayit_oturumu(uid)
+        if kayit and kayit["playerInfo"].get("bot"):
+            with save_lock:
+                kayit["playerInfo"].pop("bot", None)
+                kayit["playerInfo"].pop("bot_kisi", None)
+                save_session(uid)
+        return redirect("/play.html")
+    kayitlar = [k for k in all_saves_info() if not bot_mu(k["userid"])]
+    return render_template("login.html", saves_info=kayitlar, version=version_name)
+
+
+def _oyun_sayfasi(sablon):
+    uid, surum = session.get("USERID"), session.get("GAMEVERSION")
+    if not uid or not surum or uid not in all_saves_userid():
+        return redirect("/")
+    return render_template(sablon, save_info=save_info(uid), serverTime=timestamp_now(),
+                           friendsInfo=fb_friends_str(uid), version=version_name,
+                           GAMEVERSION=surum, SERVERIP=HOST)
+
+
+@app.route("/play.html")
+def play():
+    return _oyun_sayfasi("play.html")
+
+
+@app.route("/ruffle.html")
+def ruffle():
+    return _oyun_sayfasi("ruffle.html")
+
+
+@app.route("/new.html")
+def new():
+    session["USERID"] = new_village()
+    session["GAMEVERSION"] = "SocialEmpires0926bsec.swf"
+    return redirect("play.html")
+
+
+@app.route("/crossdomain.xml")
+def crossdomain():
+    return send_from_directory(STUB_DIR, "crossdomain.xml")
+
+
+@app.route("/img/<path:path>")
+def images(path):
+    return send_from_directory(os.path.join(TEMPLATES_DIR, "img"), path)
+
+
+@app.route("/css/<path:path>")
+def css(path):
+    return send_from_directory(os.path.join(TEMPLATES_DIR, "css"), path)
+
+
+# Diğer uçlar (içe aktarılınca rotalarını kaydeder)
+from oyun import hile, istemci, varliklar  # noqa: E402,F401
+
+
+def calistir():
+    from oyun import sezon
+    from oyun.dunya import Dunya
+    from oyun.yedek import baslat as yedekleri_baslat
+    try:
+        yedekleri_baslat()
+        sezon.kontrol()
+        Dunya().baslat()
+        print(f" [+] Sunucu hazir: http://{HOST}:{PORT}/")
+        # threaded: Flash aynı anda onlarca varlık istiyor.
+        app.run(host=HOST, port=PORT, debug=False, threaded=True, use_reloader=False)
+    except Exception:
+        try:
+            os.makedirs(SAVES_DIR, exist_ok=True)
+            with open(HATA_LOG, "a", encoding="utf-8") as f:
+                f.write(f"\n=== ACILIS HATASI {timestamp_now()} ===\n")
+                traceback.print_exc(file=f)
+        except OSError:
+            pass
+        traceback.print_exc()
+        input("Sunucu baslatilamadi. Kapatmak icin Enter'a basin...")

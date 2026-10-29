@@ -73,24 +73,55 @@ class DunyaTestleri(unittest.TestCase):
 
 
 class TurnuvaAdaTestleri(unittest.TestCase):
-    def test_turnuva_dort_oyuncuyla_kurulur(self):
+    def _turnuva(self, kayitlar):
         from oyun import turnuva
-        with SahteKayitlar(turnuva, botlar(6)):
-            t = turnuva.turnuva_olustur("u1")
-            self.assertEqual(len(t["players"]), 4)
-            self.assertEqual(len(t["matches"]), 6)
+        turnuva.sifirla()
+        for k in kayitlar.values():  # botların savaşçı birimleri
+            k["maps"][0]["items"] += [[512, 1, 1, 0, 0, 0], [516, 2, 2, 0, 0, 0]]
+        return turnuva
 
-    def test_turnuva_odulu_bir_kez(self):
+    def test_turnuva_dort_oyuncu_ve_mac_listeleri(self):
         from oyun import turnuva
-        kayitlar = botlar(7)
+        kayitlar = botlar(6)
         with SahteKayitlar(turnuva, kayitlar):
-            t = turnuva.turnuva_olustur("u1")
-            for _ in range(3):
-                if not turnuva.mac_baslat(t["id"], "u1"):
-                    break
-                turnuva.mac_bitir(t["id"], "u1", True)
-            self.assertEqual(t["state"], "finished")
-            turnuva.mac_bitir(t["id"], "u1", True)
+            self._turnuva(kayitlar)
+            veri = turnuva.katil("u1", 1, [512] + [0] * 19)
+            t = veri["tournament"]
+            self.assertEqual(len(t["players"]), 4)
+            self.assertTrue(all(len(o["matches"]) == 3 for o in t["players"]))
+            self.assertTrue(all(len(o["team"]) == 20 for o in t["players"]))
+            self.assertIsNotNone(t["date_ready"])
+            for alan in ("tournament_friends", "tournament_reward_id", "tournament_weekly"):
+                self.assertIn(alan, veri)
+            # botların maçları hemen biter, oyuncununkiler bekler
+            botlarin = [m for o in t["players"][1:] for m in o["matches"]]
+            self.assertTrue(all(m["finished"] for m in botlarin))
+            self.assertFalse(any(m["finished"] for m in t["players"][0]["matches"]))
+
+    def test_turnuva_takimsiz_girilemez(self):
+        from oyun import turnuva
+        kayitlar = botlar(6)
+        with SahteKayitlar(turnuva, kayitlar):
+            self._turnuva(kayitlar)
+            self.assertEqual(turnuva.katil("u1", 1, [0] * 20), {"result": "NOTEAM"})
+
+    def test_turnuva_kazanana_odul_ve_temizlik(self):
+        from oyun import turnuva
+        kayitlar = botlar(6)
+        with SahteKayitlar(turnuva, kayitlar):
+            self._turnuva(kayitlar)
+            t = turnuva.katil("u1", 1, [512] + [0] * 19)["tournament"]
+            for mac in t["players"][0]["matches"]:
+                self.assertEqual(turnuva.mac_baslat("u1", mac["victim_id"]), {"result": "OK"})
+                self.assertEqual(turnuva.mac_bitir("u1", mac["victim_id"], True, "100.00"), {"result": "OK"})
+            bitmis = turnuva.bilgi("u1")["tournament"]
+            self.assertIsNotNone(bitmis["date_finished"])
+            self.assertFalse(bitmis["match_playing"])
+            # 3 x 100 puanla birinci: NEWBIES ödülü 1500 altın + bir birim
+            self.assertEqual(kayitlar["u1"]["maps"][0]["coins"], 51500)
+            self.assertEqual(sum(kayitlar["u1"]["privateState"]["gifts"]), 1)
+            turnuva.temizle("u1")
+            self.assertIsNone(turnuva.bilgi("u1")["tournament"])
 
     def test_kita_sekiz_yuva_ve_fetih(self):
         from oyun import ada

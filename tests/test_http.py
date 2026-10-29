@@ -143,15 +143,10 @@ class HttpDumanTestleri(unittest.TestCase):
         self.assertEqual(veri["pid"], UID)
         self.assertIn("map_names", veri)
 
-    def test_turnuva_odasi(self):
-        cevap = self.istemci.post(
-            f"{BASE}/tournaments/get_tournament_info.php",
-            data={"USERID": UID, "user_key": "1", "data": "x;" + '{"user_id":"' + UID + '"}'},
-        )
-        self.assertEqual(cevap.status_code, 200)
-        veri = cevap.get_json()
-        self.assertEqual(veri["result"], "ok")
-        self.assertEqual(len(veri["tournament"]["players"]), 4)
+    def test_turnuva_bilgisi_data_icinde(self):
+        veri = self._servis("tournaments/get_tournament_info.php", {"user_id": UID})
+        self.assertIn("tournament_friends", veri["data"])
+        self.assertIn("tournament_reward_id", veri["data"])
 
 
 if __name__ == "__main__":

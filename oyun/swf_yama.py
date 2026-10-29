@@ -17,11 +17,15 @@ import json
 import os
 import re
 import struct
+import tempfile
+import threading
 import zlib
 
 from oyun import swf_font
 from oyun.yollar import ASSETS_DIR, CEVIRI_DIR
-YAMA_SURUMU = b"5"  # yama mantığı değişince artırın (önbellek yenilensin)
+TR_FONTLARI = ("tr_ArialRoundedBold.swf", "tr_ErasBold.swf")
+_URETIM_KILIDI = threading.Lock()
+YAMA_SURUMU = b"6"  # yama mantığı değişince artırın (önbellek yenilensin)
 SOZLUK = os.path.join(CEVIRI_DIR, "arayuz_tr.json")
 
 _ETIKET = re.compile(r"<[^>]+>")
@@ -120,7 +124,7 @@ def _turkce_fontlar():
     """assets/fonts/tr_*.swf içindeki yazı tiplerini {ad: (Font3, bölge)} olarak yükler."""
     fontlar = {}
     klasor = os.path.join(ASSETS_DIR, "fonts")
-    for ad in ("tr_ArialRoundedBold.swf", "tr_ErasBold.swf"):
+    for ad in TR_FONTLARI:
         yol = os.path.join(klasor, ad)
         if not os.path.exists(yol):
             continue
@@ -217,7 +221,7 @@ def turkcelestir(veri: bytes, sozluk=None):
                 t = swf_font.metin_yaz(onek, yeni)
                 degisen += 1
             elif eslemeler:
-                t = swf_font.metin_glifleri_esle(t, kod, eslemeler)
+                t = swf_font.metin_yaz(onek, swf_font.glifleri_esle(kayitlar, eslemeler))
             cikti.append(_baslik(kod, len(t)) + t)
             continue
         if kod == 37:
@@ -247,17 +251,20 @@ def onbellekli_turkcelestir(kaynak_yol: str, onbellek_klasoru: str) -> str:
     """
     with open(kaynak_yol, "rb") as f:
         veri = f.read()
-    with open(SOZLUK, "rb") as f:
-        sozluk_ozeti = f.read()
-    ozet = hashlib.sha1(veri + sozluk_ozeti + YAMA_SURUMU).hexdigest()[:12]
+    ozet = hashlib.sha1(veri + YAMA_SURUMU)
+    for yol in [SOZLUK] + [os.path.join(ASSETS_DIR, "fonts", ad) for ad in TR_FONTLARI]:
+        if os.path.exists(yol):
+            with open(yol, "rb") as f:
+                ozet.update(f.read())
     ad = os.path.splitext(os.path.basename(kaynak_yol))[0]
-    hedef = os.path.join(onbellek_klasoru, f"{ad}.tr-{ozet}.swf")
-    if not os.path.exists(hedef):
-        os.makedirs(onbellek_klasoru, exist_ok=True)
-        yeni, degisen = turkcelestir(veri)
-        gecici = hedef + ".tmp"
-        with open(gecici, "wb") as f:
-            f.write(yeni)
-        os.replace(gecici, hedef)
-        print(f" [+] {ad}.swf Turkcelestirildi ({degisen} metin alani)")
+    hedef = os.path.join(onbellek_klasoru, f"{ad}.tr-{ozet.hexdigest()[:12]}.swf")
+    with _URETIM_KILIDI:  # aynı anda gelen istekler dosyayı iki kez üretmesin
+        if not os.path.exists(hedef):
+            os.makedirs(onbellek_klasoru, exist_ok=True)
+            yeni, degisen = turkcelestir(veri)
+            fd, gecici = tempfile.mkstemp(dir=onbellek_klasoru, suffix=".tmp")
+            with os.fdopen(fd, "wb") as f:
+                f.write(yeni)
+            os.replace(gecici, hedef)
+            print(f" [+] {ad}.swf Turkcelestirildi ({degisen} metin alani)")
     return hedef

@@ -5,6 +5,7 @@ orijinal koruma projesinden indirilip download_assets/ altında saklanır.
 Tamamını önceden indirmek için: python varliklari_indir.py
 """
 
+import http.client
 import os
 import re
 import shutil
@@ -60,7 +61,7 @@ def _indir(path, hedef):
             os.replace(gecici, hedef)  # atomik: yarım dosya sunulmaz
             print(f" [+] Varlik indirildi: {url}")
             return True
-        except (urllib.error.URLError, OSError) as hata:
+        except (urllib.error.URLError, http.client.HTTPException, OSError) as hata:
             print(f" ! Varlik indirilemedi: {url} ({hata})")
             if os.path.exists(gecici):
                 os.remove(gecici)
@@ -82,7 +83,10 @@ def varlik_yolu(path):
     if os.path.isfile(indirilen):
         if _gecerli_dosya(indirilen):
             return indirilen
-        os.remove(indirilen)  # yarım/bozuk indirme: yeniden dene
+        try:
+            os.remove(indirilen)  # yarım/bozuk indirme: yeniden dene
+        except OSError:
+            pass
     return indirilen if _indir(path, indirilen) else None
 
 

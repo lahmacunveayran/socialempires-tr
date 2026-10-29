@@ -281,6 +281,15 @@ class SwfYamaTestleri(unittest.TestCase):
         eski_a = [k for k in kaynak.kodlar if k not in (ord("ğ"), ord("İ"), ord("ş"))].index(ord("a"))
         self.assertEqual(hedef.kodlar[eslem[eski_a]], ord("a"))
 
+    def test_glif_numarasi_buyuyunce_bit_genisligi_artar(self):
+        from oyun import swf_font
+        kayitlar = [{"bayrak": 0x88, "font": 7, "renk": None, "x": None, "y": None,
+                     "yukseklik": 240, "glifler": [(126, 100), (127, 90)]}]
+        once = swf_font.metin_yaz(b"\x01\x00\x00", kayitlar)
+        sonra = swf_font.metin_yaz(b"\x01\x00\x00", swf_font.glifleri_esle(kayitlar, {7: {127: 130}}))
+        self.assertEqual(once[3], 7)   # 7 bit yeterliydi
+        self.assertEqual(sonra[3], 8)  # 130 için 8 bit
+
     def test_arayuz_sozlugu_gecerli(self):
         with open(os.path.join(KOK, "ceviri", "arayuz_tr.json"), encoding="utf-8") as f:
             sozluk = json.load(f)

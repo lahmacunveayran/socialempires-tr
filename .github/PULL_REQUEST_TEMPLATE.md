@@ -4,8 +4,7 @@
 
 ## Nasıl doğrulandı?
 
-- [ ] `python tests\test_komutlar.py`
-- [ ] `python tests\test_http.py`
+- [ ] `python -m unittest discover -s tests`
 - [ ] Oyun içinde denendi
 
 ## Notlar

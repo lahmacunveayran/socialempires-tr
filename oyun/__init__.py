@@ -1,0 +1,1 @@
+"""Social Empires Türkçe sunucusu."""

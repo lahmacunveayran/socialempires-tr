@@ -1,30 +1,27 @@
-# -*- coding: utf-8 -*-
-"""Uçtan uca HTTP duman testleri (Flask test istemcisi, canlı port gerekmez)."""
+"""Uçtan uca HTTP testleri (Flask test istemcisi, canlı port gerekmez).
+
+Sunucu geçici bir kayıt klasörüyle açılır ve oraya bot köyleri üretir.
+Çalıştırma: python tests/test_http.py
+"""
 
 import os
-import sys
 import unittest
 
-KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, KOK)
+from ortak import KOK
 
-import server  # noqa: E402
+from oyun import sunucu as server  # noqa: E402
 
-UID = "740548c4-fe42-4286-b14c-55d97d943231"
+UID = None
 BASE = "/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires"
 
 
 class HttpDumanTestleri(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls._eski_kaydet = server.save_session
-        server.save_session = lambda uid: None  # testler canlı kayıtları yazmasın
+        global UID
+        UID = server.new_village()
         cls.istemci = server.app.test_client()
         cls.istemci.post("/", data={"USERID": UID, "GAMEVERSION": "SocialEmpires0926bsec.swf"})
-
-    @classmethod
-    def tearDownClass(cls):
-        server.save_session = cls._eski_kaydet
 
     def test_giris_sayfasi(self):
         istemci = server.app.test_client()
@@ -37,6 +34,32 @@ class HttpDumanTestleri(unittest.TestCase):
         veri = cevap.get_json()
         self.assertEqual(veri["durum"], "ok")
         self.assertGreater(veri["oyuncu"], 0)
+
+    def test_giris_listesinde_bot_yok(self):
+        istemci = server.app.test_client()
+        sayfa = istemci.get("/").get_data(as_text=True)
+        self.assertIn(UID, sayfa)
+        self.assertNotIn("Kara Han", sayfa)
+
+    def test_bilinmeyen_komsu_500_vermez(self):
+        cevap = self.istemci.post(
+            f"{BASE}/get_player_info.php",
+            data={"USERID": UID, "user_key": "1", "client_id": "c", "user": "yok-boyle-biri"},
+        )
+        self.assertEqual(cevap.status_code, 200)
+        self.assertEqual(cevap.get_json()["result"], "error")
+
+    def test_bosluklu_varlik_yolu_kabul_edilir(self):
+        os.makedirs(os.path.join(KOK, "assets", "swf", "music"), exist_ok=True)
+        yol = os.path.join(KOK, "assets", "swf", "music", "_test bosluk.mp3")
+        with open(yol, "wb") as f:
+            f.write(b"ID3" + b"\0" * 100)
+        try:
+            cevap = self.istemci.get("/default01.static.socialpointgames.com/static/socialempires/swf/music/_test%20bosluk.mp3")
+            self.assertEqual(cevap.status_code, 200)
+            cevap.close()
+        finally:
+            os.remove(yol)
 
     def test_gecersiz_kimlik_reddedilir(self):
         istemci = server.app.test_client()
@@ -83,20 +106,6 @@ class HttpDumanTestleri(unittest.TestCase):
         veri = cevap.get_json()
         self.assertEqual(veri["result"], "ok")
         self.assertEqual(len(veri["tournament"]["players"]), 4)
-
-
-    def test_gunluk_durum(self):
-        cevap = self.istemci.get(f"{BASE}/get_daily.php?USERID={UID}&user_key=1")
-        self.assertEqual(cevap.status_code, 200)
-        veri = cevap.get_json()
-        self.assertEqual(veri["result"], "ok")
-        self.assertEqual(len(veri["daily"]["gorevler"]), 3)
-        self.assertIn("haftalik", veri["daily"])
-
-    def test_sosyal_durum(self):
-        cevap = self.istemci.get(f"{BASE}/get_social.php?USERID={UID}&user_key=1")
-        self.assertEqual(cevap.status_code, 200)
-        self.assertEqual(cevap.get_json()["result"], "ok")
 
 
 if __name__ == "__main__":

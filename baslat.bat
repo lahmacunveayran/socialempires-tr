@@ -20,8 +20,9 @@ if errorlevel 1 (
     echo [1/2] Python paketleri hazir.
 )
 
-if not exist "assets" (
-    echo UYARI: assets klasoru yok; oyun varliklari yuklenemeyecek.
+if not exist "assets\flash\SocialEmpires0926bsec.swf" (
+    echo NOT: Oyun varliklari yerelde yok; ilk acilista internetten indirilecek.
+    echo      Hepsini simdi indirmek icin: python varliklari_indir.py
 )
 
 echo [2/2] Sunucu baslatiliyor: http://127.0.0.1:5050/

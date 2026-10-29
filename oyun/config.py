@@ -1,6 +1,7 @@
 import copy
 import json
 import os
+import time
 import jsonpatch
 from oyun.yollar import MODS_DIR, CONFIG_DIR, CONFIG_PATCH_DIR
 from oyun.zaman import zaman_olcegi
@@ -100,6 +101,25 @@ __istemci_config_onbellegi = {}
 SURE_ALANLARI = ("activation", "expiration", "training_time", "sm_training_time")
 
 
+KOMPU_DONEMI = 30 * 86400
+
+
+def kompu_teklifi(simdi=None):
+    """Büyücü iksirleri teklifi: her 30 günlük dönem yeni bir teklif (id = dönem no).
+
+    Dönem dolunca oyuncu yeniden baştan iksir toplayabilir.
+    """
+    teklifler = __game_config.get("kompu_offers") or []
+    if not teklifler:
+        return None
+    simdi = int(time.time()) if simdi is None else simdi
+    teklif = dict(teklifler[0])
+    teklif["id"] = simdi // KOMPU_DONEMI
+    teklif["starts_at"] = teklif["id"] * KOMPU_DONEMI
+    teklif["duration"] = KOMPU_DONEMI
+    return teklif
+
+
 def get_client_game_config(dil: str = "en", ascii_mode: bool = False) -> dict:
     """İstemciye gönderilecek config'i döndürür.
 
@@ -109,7 +129,8 @@ def get_client_game_config(dil: str = "en", ascii_mode: bool = False) -> dict:
     """
     olcek = zaman_olcegi()
     dil = (dil or "en").lower()[:2]
-    anahtar = (dil, olcek, bool(ascii_mode))
+    teklif = kompu_teklifi()
+    anahtar = (dil, olcek, bool(ascii_mode), teklif and teklif["id"])
     if anahtar in __istemci_config_onbellegi:
         return __istemci_config_onbellegi[anahtar]
 
@@ -117,10 +138,10 @@ def get_client_game_config(dil: str = "en", ascii_mode: bool = False) -> dict:
         kopya = turkce_uygula(__game_config)
         if ascii_mode:
             kopya = ascii_uygula(kopya)
-    elif olcek == 1.0:
-        return __game_config
     else:
         kopya = copy.deepcopy(__game_config)
+    if teklif:
+        kopya["kompu_offers"] = [teklif]
 
     if olcek != 1.0:
         for esya in kopya.get("items", []):

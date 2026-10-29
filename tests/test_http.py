@@ -97,6 +97,47 @@ class HttpDumanTestleri(unittest.TestCase):
         self.assertEqual(veri["continent"][0]["nivel"], 1)
         self.assertIn(UID, [g["user_id"] for g in veri["continent"]])
 
+    def _servis(self, uc, veri):
+        import hashlib
+        import hmac
+        import json
+        cevap = self.istemci.post(f"{BASE}/{uc}?USERID={UID}&user_key=1",
+                                  data={"data": "imza;" + json.dumps(veri)})
+        imza, govde = cevap.get_data(as_text=True).split(";", 1)
+        beklenen = hmac.new(b"3m0d3pwiupoetn7ysa02", govde.encode(), hashlib.sha256).hexdigest()
+        self.assertEqual(imza, beklenen)
+        return json.loads(govde)
+
+    def test_buyucu_iksirleri(self):
+        from oyun.kayit import session
+        kayit = session(UID)
+        kayit["playerInfo"]["cash"] = 100
+        for _ in range(3):  # başbüyücü (index 2) her zaman başarır
+            self.assertEqual(self._servis("kompu_try.php", {"index": 2, "town": 0})["data"], True)
+        ps = kayit["privateState"]
+        self.assertEqual(ps["kompuSpells"], 3)
+        self.assertEqual(ps["kompuSteps"], [3])
+        self.assertEqual(ps["gifts"][2138], 1)
+        self.assertEqual(kayit["playerInfo"]["cash"], 70)
+        self.assertEqual(self._servis("kompu_hurry_up.php", {"town": 0})["data"], True)
+        self.assertEqual(kayit["playerInfo"]["cash"], 65)
+
+    def test_istemci_hatasi_ve_kayip_esya(self):
+        self.assertEqual(self._servis("report_error.php", {"error_id": "1"})["result"], "success")
+        from oyun.kayit import session
+        session(UID)["maps"][0]["items"].append([92, 70, 70, 0, 0, 0])
+        cevap = self.istemci.post(f"{BASE}/register_found_item.php?USERID={UID}",
+                                  data={"sender_id": UID, "item_id": "1"})
+        self.assertIn("id", cevap.get_json())
+        self.assertNotIn(92, [e[0] for e in session(UID)["maps"][0]["items"]])
+
+    def test_config_buyucu_teklifi_donemli(self):
+        veri = self.istemci.get(f"{BASE}/get_game_config.php?USERID=x&user_key=1&language=tr").get_json()
+        teklif = veri["kompu_offers"][0]
+        self.assertEqual(teklif["starts_at"], teklif["id"] * 30 * 86400)
+        self.assertEqual(teklif["game_type"], 0)
+        self.assertIn("KOMPU_WIZZARD_COSTS", veri["globals"])
+
     def test_oyuncu_profili(self):
         veri = self.istemci.get(f"{BASE}/get_public_player_info.php?USERID={UID}&user_key=1").get_json()
         self.assertEqual(veri["pid"], UID)

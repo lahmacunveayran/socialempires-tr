@@ -1,14 +1,18 @@
 """İstemcinin oyun sunucusuna yaptığı istekler (dynamicUrl altındaki uçlar)."""
 
+import hashlib
+import hmac
 import json
 import os
+import random
 import traceback
 
 from flask import jsonify, redirect, request
 
 from oyun import ada as Ada
 from oyun import turnuva as Turnuva
-from oyun.config import get_client_game_config
+from oyun.config import get_client_game_config, get_game_config, kompu_teklifi
+from oyun.ekonomi import timestamp_now
 from oyun.kayit import (gecerli_uid, neighbor_session, save_lock, save_session,
                         session as kayit_oturumu)
 from oyun.komutlar import command
@@ -17,6 +21,29 @@ from oyun.sunucu import OYUN_DILI, app
 from oyun.yollar import SAVES_DIR
 
 DINAMIK = "/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires"
+
+
+# İstemcinin "servis" isteklerinde (kompu, hata bildirimi, turnuva) kullandığı
+# HMAC-SHA256 anahtarı (istemcideki Config.SERVER_KEY). Yanıt imzasızsa
+# istemci kompu yanıtlarını yok sayar.
+SUNUCU_ANAHTARI = b"3m0d3pwiupoetn7ysa02"
+
+
+def imzali(veri):
+    govde = json.dumps(veri, separators=(",", ":"), ensure_ascii=False)
+    imza = hmac.new(SUNUCU_ANAHTARI, govde.encode("utf-8"), hashlib.sha256).hexdigest()
+    return app.response_class(f"{imza};{govde}", mimetype="text/plain")
+
+
+def servis_govdesi():
+    """`data` alanı: "<imza>;<json>" (hata ayıklamada yalnızca json)."""
+    ham = request.values.get("data", "")
+    if ";" in ham and not ham.lstrip().startswith("{"):
+        ham = ham.split(";", 1)[1]
+    try:
+        return json.loads(ham) if ham else {}
+    except json.JSONDecodeError:
+        return {}
 
 
 @app.route(DINAMIK + "/track_game_status.php", methods=["POST"])
@@ -42,6 +69,10 @@ def get_player_info_response():
     kullanici = request.values.get("user")
     harita_no = int(request.values.get("map", 0) or 0)
     if kullanici is None:
+        kayit = kayit_oturumu(uid)
+        if kayit is not None:
+            with save_lock:
+                kompu_donemini_guncelle(kayit)
         return (get_player_info(uid, harita_no), 200)
     if neighbor_session(kullanici) is None and kullanici.startswith("100000"):
         return get_quest_map(kullanici)  # görev (quest) haritası
@@ -87,6 +118,108 @@ def command_response():
     with save_lock:  # aynı anda gelen komutlar kaydı ezmesin
         command(uid, veri)
     return ({"result": "success"}, 200)
+
+
+# ---------------------------------------------------------------------------
+# Büyücünün İksirleri (kompu): şans oyunu
+# ---------------------------------------------------------------------------
+
+KOMPU_SANSLARI = (1 / 30, 1 / 5, 1.0)  # çırak, kalfa, başbüyücü
+
+
+def kompu_donemini_guncelle(kayit):
+    """Yeni 30 günlük dönemde iksir sayacı sıfırlanır."""
+    teklif = kompu_teklifi()
+    ps = kayit["privateState"]
+    if teklif and ps.get("kompuOfferId") != teklif["id"]:
+        ps.update(kompuOfferId=teklif["id"], kompuSpells=0, kompuSteps=[], kompuLastTimeStamp=-1)
+
+
+@app.route(DINAMIK + "/kompu_try.php", methods=["POST"])
+def kompu_try_response():
+    """{index, town} -> data: true (iksir tuttu) / false."""
+    uid = request.values.get("USERID", "")
+    kayit, teklif, veri = kayit_oturumu(uid), kompu_teklifi(), servis_govdesi()
+    if kayit is None or teklif is None:
+        return imzali({"result": "error"})
+    indeks = max(0, min(2, int(veri.get("index", 0) or 0)))
+    with save_lock:
+        kompu_donemini_guncelle(kayit)
+        ps = kayit["privateState"]
+        bedel = (get_game_config()["globals"].get("KOMPU_WIZZARD_COSTS") or [{}, {}, {}])[indeks]
+        harita = kayit["maps"][int(veri.get("town", 0) or 0) % len(kayit["maps"])]
+        harita["coins"] = max(0, int(harita.get("coins", 0)) - int(bedel.get("g", 0)))
+        kayit["playerInfo"]["cash"] = max(0, int(kayit["playerInfo"].get("cash", 0)) - int(bedel.get("c", 0)))
+        ps["kompuLastTimeStamp"] = timestamp_now()
+        basari = random.random() < KOMPU_SANSLARI[indeks]
+        if basari:
+            ps["kompuSpells"] = iksir = int(ps.get("kompuSpells", 0) or 0) + 1
+            adimlar = ps.setdefault("kompuSteps", [])
+            for odul in teklif["rewards"]:
+                if int(odul["cost"]) == iksir and iksir not in adimlar:
+                    adimlar.append(iksir)
+                    gifts = ps.setdefault("gifts", [])
+                    birim = int(odul["unit"][0])
+                    gifts.extend([0] * (birim + 1 - len(gifts)))
+                    gifts[birim] += 1
+            if iksir >= max(int(o["cost"]) for o in teklif["rewards"]):
+                ps.setdefault("kompuCompleted", []).append(teklif["id"])
+        save_session(uid)
+    return imzali({"result": "success", "data": basari})
+
+
+@app.route(DINAMIK + "/kompu_hurry_up.php", methods=["POST"])
+def kompu_hurry_up_response():
+    """Bekleme süresini cash ile atla."""
+    uid = request.values.get("USERID", "")
+    kayit, teklif = kayit_oturumu(uid), kompu_teklifi()
+    if kayit is None or teklif is None:
+        return imzali({"result": "error"})
+    with save_lock:
+        ps = kayit["privateState"]
+        kayit["playerInfo"]["cash"] = max(0, int(kayit["playerInfo"].get("cash", 0)) - int(teklif["hurry_up_cost"]))
+        ps["kompuLastTimeStamp"] = max(-1, int(ps.get("kompuLastTimeStamp", -1)) - int(teklif["timer_between"]))
+        save_session(uid)
+    return imzali({"result": "success", "data": True})
+
+
+# ---------------------------------------------------------------------------
+# Diğer servisler
+# ---------------------------------------------------------------------------
+
+@app.route(DINAMIK + "/register_found_item.php", methods=["POST"])
+def register_found_item_response():
+    """Kayıp hayvan/eşya bulundu (bina 91+tür haritadan kalkar). İmzasız istek."""
+    uid = request.values.get("sender_id") or request.values.get("USERID", "")
+    kayit = kayit_oturumu(uid)
+    tur = int(request.values.get("item_id", 1) or 1)
+    if kayit is not None:
+        with save_lock:
+            for harita in kayit["maps"]:
+                esya = next((e for e in harita["items"] if e[0] == 91 + tur), None)
+                if esya:
+                    harita["items"].remove(esya)
+                    break
+            save_session(uid)
+    return jsonify({"id": timestamp_now()})
+
+
+@app.route(DINAMIK + "/report_error.php", methods=["POST"])
+def report_error_response():
+    """İstemci hatası: saves/istemci_hatalari.jsonl'a yazılır."""
+    try:
+        os.makedirs(SAVES_DIR, exist_ok=True)
+        with open(os.path.join(SAVES_DIR, "istemci_hatalari.jsonl"), "a", encoding="utf-8") as f:
+            f.write(json.dumps(servis_govdesi(), ensure_ascii=False) + "\n")
+    except OSError:
+        pass
+    return imzali({"result": "success", "data": {}})
+
+
+@app.route(DINAMIK + "/clean_assaults.php", methods=["POST"])
+def clean_assaults_response():
+    """İstemci aynı işi clean_attacks komutuyla yapar; uç yalnızca sessiz kalsın diye."""
+    return imzali({"result": "success", "data": {}})
 
 
 @app.route(DINAMIK + "/get_continent_ranking.php", methods=["GET", "POST"])

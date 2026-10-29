@@ -29,7 +29,7 @@ load_saved_villages()
 
 print (" [+] Loading server...")
 from werkzeug.utils import safe_join
-from flask import Flask, render_template, send_from_directory, request, redirect, session, jsonify
+from flask import Flask, render_template, send_from_directory, send_file, request, redirect, session, jsonify
 from flask.debughelpers import attach_enctype_error_multidict
 from command import command
 from engine import timestamp_now
@@ -48,6 +48,7 @@ import gorev
 import magaza
 import gunluk
 import sosyal
+import swf_yama
 
 
 
@@ -356,6 +357,28 @@ def static_assets_loader(path):
         print(f"====== DOWNLOADED ASSET: {URL}")
         return send_from_directory(indirilen_klasor, path)
     return ("", 404)
+
+@app.route("/default01.static.socialpointgames.com/static/socialempires/flash/<dosya>")
+def oyun_swf(dosya):
+    """Oyun SWF'sini, içindeki sabit arayüz yazıları Türkçeleştirilmiş olarak sunar."""
+    cevap = static_assets_loader(f"flash/{dosya}")  # yoksa indirir
+    if OYUN_DILI != "tr" or not re.fullmatch(r"SocialEmpires\w+\.swf", dosya):
+        return cevap
+    for kok in (ASSETS_DIR, os.path.join(BASE_DIR, "download_assets", "assets")):
+        kaynak = os.path.join(kok, "flash", dosya)
+        if os.path.exists(kaynak):
+            break
+    else:
+        return cevap
+    try:
+        yamali = swf_yama.onbellekli_turkcelestir(kaynak, os.path.join(BASE_DIR, "download_assets", "tr"))
+    except Exception:
+        traceback.print_exc()
+        print(" ! SWF Turkcelestirilemedi; orijinali sunuluyor")
+        return cevap
+    if hasattr(cevap, "close"):
+        cevap.close()
+    return send_file(os.path.abspath(yamali), mimetype="application/x-shockwave-flash")
 
 ## GAME DYNAMIC
 

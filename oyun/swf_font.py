@@ -161,54 +161,18 @@ def harf_ekle(hedef: Font3, kaynak: Font3, hedef_bolge=None, kaynak_bolge=None, 
     return eslem, yeni_bolge
 
 
-def metin_glifleri_esle(t: bytes, kod: int, eslemeler: dict) -> bytes:
-    """DefineText/DefineText2 içindeki glif numaralarını yeniden yazar.
+def glifleri_esle(kayitlar, eslemeler):
+    """metin_kayitlari çıktısındaki glif numaralarını yeni yazı tipine eşler.
 
-    eslemeler: {font_kimliği: {eski_no: yeni_no}}. Bit genişliği yetmezse
-    ValueError fırlatır.
+    eslemeler: {font_kimliği: {eski_no: yeni_no}}. metin_yaz bit genişliğini
+    yeniden hesapladığı için numaralar büyüse de sığar.
     """
-    veri = bytearray(t)
-    p = _matrix_sonu(veri, _rect_sonu(veri, 2))
-    glif_bit, ilerleme_bit = veri[p], veri[p + 1]
-    p += 2
-    renk = 4 if kod == DEFINE_TEXT2 else 3
-    font = None
-    while veri[p] != 0:
-        b = veri[p]
-        p += 1
-        if b & 0x08:
-            font = struct.unpack_from("<H", veri, p)[0]
-            p += 2
-        if b & 0x04:
-            p += renk
-        if b & 0x01:
-            p += 2
-        if b & 0x02:
-            p += 2
-        if b & 0x08:
-            p += 2
-        sayi = veri[p]
-        p += 1
-        eslem = eslemeler.get(font)
-        bit = p * 8
-        for _ in range(sayi):
-            if eslem:
-                eski = _Bitler(veri, 0)
-                eski.bit = bit
-                no = eski.oku(glif_bit)
-                yeni = eslem.get(no, no)
-                if yeni >= (1 << glif_bit):
-                    raise ValueError("glif bit genisligi yetersiz")
-                for j in range(glif_bit):
-                    konum = bit + j
-                    maske = 1 << (7 - (konum & 7))
-                    if (yeni >> (glif_bit - 1 - j)) & 1:
-                        veri[konum >> 3] |= maske
-                    else:
-                        veri[konum >> 3] &= ~maske & 0xFF
-            bit += glif_bit + ilerleme_bit
-        p = (bit + 7) // 8
-    return bytes(veri)
+    font, sonuc = None, []
+    for k in kayitlar:
+        font = k["font"] if k["font"] is not None else font
+        eslem = eslemeler.get(font) or {}
+        sonuc.append(dict(k, glifler=[(eslem.get(no, no), adim) for no, adim in k["glifler"]]))
+    return sonuc
 
 
 def _bit_genisligi(degerler, isaretli):

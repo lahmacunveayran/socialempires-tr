@@ -133,6 +133,8 @@ def kaynak_ekle(save, h, tur, miktar):
 
 
 def depo_ekle(save, esya_id, adet=1):
+    if esya_id < 0 or adet <= 0:
+        return
     gifts = save["privateState"].setdefault("gifts", [])
     if len(gifts) <= esya_id:
         gifts.extend([0] * (esya_id - len(gifts) + 1))
@@ -140,11 +142,14 @@ def depo_ekle(save, esya_id, adet=1):
 
 
 def depo_cikar(save, esya_id):
+    """Depodan bir eşya düşer; depoda yoksa False (tekrarlanan komut)."""
     gifts = save["privateState"].setdefault("gifts", [])
-    if esya_id < len(gifts) and gifts[esya_id] > 0:
-        gifts[esya_id] -= 1
+    if not 0 <= esya_id < len(gifts) or gifts[esya_id] <= 0:
+        return False
+    gifts[esya_id] -= 1
     while gifts and gifts[-1] == 0:
         gifts.pop()
+    return True
 
 
 def satis_iadesi(save, h, esya_id):
@@ -296,16 +301,16 @@ def store_item(save, a):
 def place_gift(save, a):
     """[id, x, y, yon, kasaba]"""
     esya_id = a.tam(0)
-    depo_cikar(save, esya_id)
-    esya_ekle(harita(save, a.tam(4)), esya_id, a.tam(1), a.tam(2), a.tam(3))
+    if depo_cikar(save, esya_id):
+        esya_ekle(harita(save, a.tam(4)), esya_id, a.tam(1), a.tam(2), a.tam(3))
 
 
 @komut("sell_gift", "sell_stored_item")
 def sell_gift(save, a):
     """[id, kasaba]"""
     esya_id = a.tam(0)
-    depo_cikar(save, esya_id)
-    satis_iadesi(save, harita(save, a.tam(1)), esya_id)
+    if depo_cikar(save, esya_id):
+        satis_iadesi(save, harita(save, a.tam(1)), esya_id)
 
 
 @komut("buy_stored_item_cash")
@@ -364,12 +369,12 @@ def name_map(save, a):
 @komut("buy_map")
 def buy_map(save, a):
     """[1, cash_ile(1|0), irk, mevcut_kasaba] - ikinci kasabayı açar."""
+    if len(save["maps"]) > 1:
+        return  # zaten açık (tekrarlanan komut): yeniden ücret alma
     if a.tam(1):
         cash_ekle(save, -TOWN_PRICE_CASH)
     else:
         kaynak_ekle(save, harita(save, a.tam(3)), "g", -TOWN_PRICE_GOLD)
-    if len(save["maps"]) > 1:
-        return
     with open(os.path.join(VILLAGES_DIR, "initial.json"), encoding="utf-8") as f:
         yeni = json.load(f)["maps"][0]
     yeni.update({"id": 1, "race": a.metin(2) or "h", "timestamp": timestamp_now()})

@@ -43,17 +43,20 @@ class KomutTesti(unittest.TestCase):
         self.kayit = bos_kayit()
         self.kayitlar = {"test": self.kayit}
         self._eski = (komutlar.session, komutlar.save_session, komutlar.neighbor_session,
-                      komutlar.all_saves_userid, pvp.neighbor_session, pvp.save_session)
+                      komutlar.all_saves_userid, pvp.neighbor_session, pvp.save_session,
+                      pvp.all_saves_userid)
         komutlar.session = self.kayitlar.get
         komutlar.save_session = lambda uid: None
         komutlar.neighbor_session = self.kayitlar.get
         komutlar.all_saves_userid = lambda: list(self.kayitlar)
         pvp.neighbor_session = self.kayitlar.get
         pvp.save_session = lambda uid: None
+        pvp.all_saves_userid = lambda: list(self.kayitlar)
 
     def tearDown(self):
         (self.komutlar.session, self.komutlar.save_session, self.komutlar.neighbor_session,
-         self.komutlar.all_saves_userid, self.pvp.neighbor_session, self.pvp.save_session) = self._eski
+         self.komutlar.all_saves_userid, self.pvp.neighbor_session, self.pvp.save_session,
+         self.pvp.all_saves_userid) = self._eski
 
     def komut(self, ad, *args):
         self.komutlar.do_command("test", ad, list(args))

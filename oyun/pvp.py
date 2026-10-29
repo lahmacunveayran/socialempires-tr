@@ -113,6 +113,9 @@ def saldiri_bitir(saldiran, args):
         print(" ! end_attack: gecersiz hedef", kurban_id)
         return False
     kurban = neighbor_session(kurban_id)
+    # Statik komşular (villages/: Arthur, AcidCaos...) herkes için ortaktır;
+    # saldırı onları değiştirmez.
+    kayitli = kurban is not None and kurban_id in all_saves_userid()
 
     simdi = timestamp_now()
     ps = saldiran["privateState"]
@@ -120,8 +123,10 @@ def saldiri_bitir(saldiran, args):
     kazandi = _tam(veri.get("win")) == 1
     gonderilen = _liste(ps, "attacksSent")
 
-    # Kurala uymayan saldırı (hak bitti / aynı hedef 4 saat içinde) ganimetsiz kaydedilir.
-    kurala_uygun = saldiri_hakki_var(saldiran, simdi) and not any(
+    # Kurala uymayan saldırı (hak bitti / aynı hedef 4 saat içinde / hedefin
+    # kalkanı var) ganimetsiz kaydedilir; kalkanlı hedefe dokunulmaz.
+    kalkanli = kayitli and _tam(kurban["privateState"].get("shield_until")) > simdi
+    kurala_uygun = not kalkanli and saldiri_hakki_var(saldiran, simdi) and not any(
         isinstance(a, dict) and str(a.get("victim_id")) == kurban_id
         and simdi - _tam(a.get("time")) < AYNI_HEDEF_SURESI for a in gonderilen)
     if _tam(ps.get("attacksPack")) > 0:
@@ -157,7 +162,7 @@ def saldiri_bitir(saldiran, args):
                        "description": dict(aciklama, oponent=(_ozet(kurban) if kurban else veri.get("victim")))})
     del gonderilen[:-50]
 
-    if kurban is None:
+    if not kayitli or kalkanli:
         return True
     kps = kurban["privateState"]
     savunma_odulu = 0
@@ -179,8 +184,7 @@ def saldiri_bitir(saldiran, args):
             fetih_kaydet(saldiran, veri.get("victim"))
         except Exception as hata:
             print(" ! Fetih kaydi hatasi:", hata)
-    if kurban_id in all_saves_userid():
-        save_session(kurban_id)
+    save_session(kurban_id)
     print(f"Saldiri bitti: {_ozet(kurban)['name']} - {'kazandi' if kazandi else 'kaybetti'}"
           f" ({altin} altin, {xp} XP{'' if kurala_uygun else ', kural disi: ganimet yok'})")
     return True

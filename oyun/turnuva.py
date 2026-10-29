@@ -18,6 +18,7 @@ import uuid
 
 from oyun.config import get_game_config, get_item_from_id
 from oyun.ekonomi import timestamp_now
+from oyun.komutlar import depo_ekle
 from oyun.kayit import all_saves_userid, save_session, session
 from oyun.yollar import SAVES_DIR
 
@@ -171,10 +172,7 @@ def _bitir(turnuva, simdi):
     kayit["maps"][0]["coins"] = int(kayit["maps"][0].get("coins", 0)) + int(odul.get("g", 0) or 0)
     kayit["playerInfo"]["cash"] = int(kayit["playerInfo"].get("cash", 0)) + int(odul.get("c", 0) or 0)
     for birim_id, adet in (odul.get("u") or {}).items():
-        gifts = kayit["privateState"].setdefault("gifts", [])
-        birim_id = int(birim_id)
-        gifts.extend([0] * (birim_id + 1 - len(gifts)))
-        gifts[birim_id] += int(adet)
+        depo_ekle(kayit, int(birim_id), int(adet))
     save_session(birinci["user_id"])
 
 
@@ -288,6 +286,14 @@ def mac_bitir(uid, kurban_id, kazandi, puan):
     return {"result": "OK"}
 
 
+def _cik(turnuva, uid):
+    """Oyuncu turnuvadan çıkar; gerçek oyuncu kalmayınca turnuva silinir."""
+    turnuva.setdefault("temizleyenler", []).append(str(uid))
+    gercekler = {o["user_id"] for o in turnuva["players"] if not o.get("bot")}
+    if gercekler <= set(turnuva["temizleyenler"]):
+        _hepsi().pop(turnuva["tournament_id"], None)
+
+
 def ayril(uid):
     """leave/cancel: oyuncu çekilir (maçları sayılmaz), turnuva biter."""
     with KILIT:
@@ -297,7 +303,7 @@ def ayril(uid):
                 if oyuncu["user_id"] == str(uid):
                     oyuncu["abandonned"] = "1"
             _bitir(turnuva, timestamp_now())
-            turnuva.setdefault("temizleyenler", []).append(str(uid))
+            _cik(turnuva, uid)
             _kaydet()
     return {"result": "OK"}
 
@@ -307,9 +313,6 @@ def temizle(uid):
     with KILIT:
         turnuva = _kullanicinin(uid)
         if turnuva:
-            turnuva.setdefault("temizleyenler", []).append(str(uid))
-            gercekler = {o["user_id"] for o in turnuva["players"] if not o.get("bot")}
-            if gercekler <= set(turnuva["temizleyenler"]):
-                del _hepsi()[turnuva["tournament_id"]]
+            _cik(turnuva, uid)
             _kaydet()
     return {"result": "OK"}

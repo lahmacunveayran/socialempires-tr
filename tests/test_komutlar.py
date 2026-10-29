@@ -50,6 +50,19 @@ class EsyaKomutlari(KomutTesti):
         self.assertEqual(self.ps["gifts"], [])
         self.assertEqual(self.harita["items"][-1][:4], [1, 5, 6, 1])
 
+    def test_depoda_olmayan_esya_yerlestirilip_satilamaz(self):
+        # tekrarlanan komut: depo boşken eşya çoğalmamalı, iade verilmemeli
+        self.ps["gifts"] = [0, 1]
+        self.komut("place_gift", 1, 5, 6, 0, 0)
+        self.komut("place_gift", 1, 7, 8, 0, 0)
+        self.assertEqual(sum(1 for e in self.harita["items"] if e[0] == 1), 2)  # 1 mevcut + 1 yeni
+        self.komut("sell_gift", 1, 0)
+        self.assertEqual(self.harita["wood"], 1000)
+
+    def test_depoya_gecersiz_adet_eklenmez(self):
+        self.komut("end_survival", 1, 30, json.dumps({"523": -1, "-2": 1}))
+        self.assertEqual(self.ps["gifts"], [])
+
     def test_depodaki_esyayi_sat(self):
         self.ps["gifts"] = [0, 2]
         self.komut("sell_stored_item", 1, 0)
@@ -78,6 +91,7 @@ class EsyaKomutlari(KomutTesti):
     def test_ikinci_kasaba_acilir(self):
         self.kayit["playerInfo"]["cash"] = 50
         self.komut("buy_map", 1, 1, "t", 0)
+        self.komut("buy_map", 1, 1, "t", 0)  # tekrar: yeniden ücret alınmaz
         self.assertEqual(len(self.kayit["maps"]), 2)
         self.assertEqual(self.kayit["maps"][1]["race"], "t")
         self.assertEqual(self.cash, 50 - 22)
@@ -378,6 +392,25 @@ class PvpKomutlari(KomutTesti):
         self.harita["items"] += [[512, 1, 1, 0, 0, 0], [512, 2, 2, 0, 0, 0]]
         self.saldir()
         self.assertEqual(sum(1 for e in self.harita["items"] if e[0] == 512), 1)
+
+    def test_kalkanli_hedef_ganimetsiz_ve_dokunulmaz(self):
+        self.kurban["privateState"]["shield_until"] = 2 ** 40
+        self.kurban["maps"][0]["items"].append([512, 1, 1, 0, 0, 0])
+        self.saldir()
+        self.assertEqual(self.harita["coins"], 50000)
+        self.assertNotIn("attacksReceived", self.kurban["privateState"])
+        self.assertIn([512, 1, 1, 0, 0, 0], self.kurban["maps"][0]["items"])
+
+    def test_statik_komsu_degismez(self):
+        # villages/ köyleri kayıtlı oyuncu değildir (all_saves_userid'de yok)
+        self.komutlar.all_saves_userid = lambda: ["test"]
+        self.pvp.all_saves_userid, eski = (lambda: ["test"]), self.pvp.all_saves_userid
+        try:
+            self.saldir()
+        finally:
+            self.pvp.all_saves_userid = eski
+        self.assertNotIn("attacksReceived", self.kurban["privateState"])
+        self.assertEqual(self.harita["coins"], 50500)
 
     def test_kendine_saldiri_yok(self):
         self.saldir(victim={"user_id": "test"})

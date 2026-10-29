@@ -98,6 +98,16 @@ class TurnuvaAdaTestleri(unittest.TestCase):
             self.assertTrue(all(m["finished"] for m in botlarin))
             self.assertFalse(any(m["finished"] for m in t["players"][0]["matches"]))
 
+    def test_turnuvadan_ayrilinca_silinir(self):
+        from oyun import turnuva
+        kayitlar = botlar(6)
+        with SahteKayitlar(turnuva, kayitlar):
+            self._turnuva(kayitlar)
+            turnuva.katil("u1", 1, [512] + [0] * 19)
+            turnuva.ayril("u1")
+            self.assertEqual(turnuva._hepsi(), {})
+            self.assertIsNone(turnuva.bilgi("u1")["tournament"])
+
     def test_turnuva_takimsiz_girilemez(self):
         from oyun import turnuva
         kayitlar = botlar(6)

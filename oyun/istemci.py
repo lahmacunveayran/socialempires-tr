@@ -15,7 +15,7 @@ from oyun.config import get_client_game_config, get_game_config, kompu_teklifi
 from oyun.ekonomi import timestamp_now
 from oyun.kayit import (gecerli_uid, neighbor_session, save_lock, save_session,
                         session as kayit_oturumu)
-from oyun.komutlar import command
+from oyun.komutlar import command, depo_ekle, listeye_ekle
 from oyun.oyuncu import get_neighbor_info, get_player_info, get_quest_map
 from oyun.sunucu import OYUN_DILI, app
 from oyun.yollar import SAVES_DIR
@@ -148,8 +148,15 @@ def kompu_try_response():
         ps = kayit["privateState"]
         bedel = (get_game_config()["globals"].get("KOMPU_WIZZARD_COSTS") or [{}, {}, {}])[indeks]
         harita = kayit["maps"][int(veri.get("town", 0) or 0) % len(kayit["maps"])]
-        harita["coins"] = max(0, int(harita.get("coins", 0)) - int(bedel.get("g", 0)))
-        kayit["playerInfo"]["cash"] = max(0, int(kayit["playerInfo"].get("cash", 0)) - int(bedel.get("c", 0)))
+        altin, cash = int(bedel.get("g", 0)), int(bedel.get("c", 0))
+        son = int(ps.get("kompuLastTimeStamp", -1) or -1)
+        # İstemci bunları zaten denetler; buraya gelmesi değiştirilmiş istemci demektir.
+        if (int(harita.get("coins", 0)) < altin or int(kayit["playerInfo"].get("cash", 0)) < cash
+                or teklif["id"] in ps.get("kompuCompleted", [])
+                or (son > 0 and timestamp_now() - son < int(teklif["timer_between"]))):
+            return imzali({"result": "error"})
+        harita["coins"] = int(harita.get("coins", 0)) - altin
+        kayit["playerInfo"]["cash"] = int(kayit["playerInfo"].get("cash", 0)) - cash
         ps["kompuLastTimeStamp"] = timestamp_now()
         basari = random.random() < KOMPU_SANSLARI[indeks]
         if basari:
@@ -158,12 +165,9 @@ def kompu_try_response():
             for odul in teklif["rewards"]:
                 if int(odul["cost"]) == iksir and iksir not in adimlar:
                     adimlar.append(iksir)
-                    gifts = ps.setdefault("gifts", [])
-                    birim = int(odul["unit"][0])
-                    gifts.extend([0] * (birim + 1 - len(gifts)))
-                    gifts[birim] += 1
+                    depo_ekle(kayit, int(odul["unit"][0]))
             if iksir >= max(int(o["cost"]) for o in teklif["rewards"]):
-                ps.setdefault("kompuCompleted", []).append(teklif["id"])
+                listeye_ekle(ps, "kompuCompleted", teklif["id"])
         save_session(uid)
     return imzali({"result": "success", "data": basari})
 
@@ -177,7 +181,9 @@ def kompu_hurry_up_response():
         return imzali({"result": "error"})
     with save_lock:
         ps = kayit["privateState"]
-        kayit["playerInfo"]["cash"] = max(0, int(kayit["playerInfo"].get("cash", 0)) - int(teklif["hurry_up_cost"]))
+        if int(kayit["playerInfo"].get("cash", 0)) < int(teklif["hurry_up_cost"]):
+            return imzali({"result": "error"})
+        kayit["playerInfo"]["cash"] = int(kayit["playerInfo"].get("cash", 0)) - int(teklif["hurry_up_cost"])
         ps["kompuLastTimeStamp"] = max(-1, int(ps.get("kompuLastTimeStamp", -1)) - int(teklif["timer_between"]))
         save_session(uid)
     return imzali({"result": "success", "data": True})
@@ -229,12 +235,13 @@ def get_continent_ranking_response():
     kayit = kayit_oturumu(uid)
     if kayit is None:
         return {"continent": []}
-    with save_lock:
-        if request.values.get("worldChange") == "1":
-            Ada.sonraki_kita(kayit)
-        if request.values.get("relocate") == "1":
-            Ada.yer_degistir(kayit)
-        save_session(uid)
+    if request.values.get("worldChange") == "1" or request.values.get("relocate") == "1":
+        with save_lock:
+            if request.values.get("worldChange") == "1":
+                Ada.sonraki_kita(kayit)
+            if request.values.get("relocate") == "1":
+                Ada.yer_degistir(kayit)
+            save_session(uid)
     kita = int(request.values.get("level_id") or 0) or None
     return {"world_id": Ada.dunya_kimligi(kayit), "continent": Ada.kita_listesi(kayit, kita)}
 
@@ -246,8 +253,10 @@ def get_public_player_info_response():
     if kayit is None:
         return {}
     pi = kayit["playerInfo"]
-    raporlar = [r for r in kayit["privateState"].get("attacksSent") or [] if isinstance(r, dict)]
-    kazanilan = sum(1 for r in raporlar if (r.get("description") or {}).get("win") in (1, "1"))
+    # Sonucu bilinen saldırılar (bot akınlarının kaydında sonuç yok)
+    raporlar = [r for r in kayit["privateState"].get("attacksSent") or []
+                if isinstance(r, dict) and isinstance(r.get("description"), dict)]
+    kazanilan = sum(1 for r in raporlar if r["description"].get("win") in (1, "1"))
     return {
         "pid": str(pi.get("pid", "")),
         "name": pi.get("name", ""),
@@ -284,7 +293,8 @@ def turnuva_ucu(ad):
     elif ad == "start_tournament_match.php":
         sonuc = Turnuva.mac_baslat(uid, veri.get("victim_id"))
     elif ad == "finish_tournament_match.php":
-        sonuc = Turnuva.mac_bitir(uid, veri.get("victim_id"), veri.get("attacker_won"),
+        sonuc = Turnuva.mac_bitir(uid, veri.get("victim_id"),
+                                  str(veri.get("attacker_won")).lower() in ("true", "1"),
                                   veri.get("attacker_points"))
     elif ad in ("cancel_tournament.php", "leave_tournament.php"):
         sonuc = Turnuva.ayril(uid)

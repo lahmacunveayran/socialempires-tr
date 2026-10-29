@@ -111,16 +111,39 @@ class HttpDumanTestleri(unittest.TestCase):
     def test_buyucu_iksirleri(self):
         from oyun.kayit import session
         kayit = session(UID)
+        ps = kayit["privateState"]
         kayit["playerInfo"]["cash"] = 100
         for _ in range(3):  # başbüyücü (index 2) her zaman başarır
+            ps["kompuLastTimeStamp"] = -1  # bekleme süresini atla
             self.assertEqual(self._servis("kompu_try.php", {"index": 2, "town": 0})["data"], True)
-        ps = kayit["privateState"]
         self.assertEqual(ps["kompuSpells"], 3)
         self.assertEqual(ps["kompuSteps"], [3])
         self.assertEqual(ps["gifts"][2138], 1)
         self.assertEqual(kayit["playerInfo"]["cash"], 70)
+        # bekleme süresi dolmadan deneme reddedilir
+        self.assertEqual(self._servis("kompu_try.php", {"index": 2, "town": 0})["result"], "error")
         self.assertEqual(self._servis("kompu_hurry_up.php", {"town": 0})["data"], True)
         self.assertEqual(kayit["playerInfo"]["cash"], 65)
+        # parası yetmeyen deneme ve hızlandırma reddedilir
+        kayit["playerInfo"]["cash"] = 3
+        ps["kompuLastTimeStamp"] = -1
+        self.assertEqual(self._servis("kompu_try.php", {"index": 2, "town": 0})["result"], "error")
+        self.assertEqual(self._servis("kompu_hurry_up.php", {"town": 0})["result"], "error")
+        self.assertEqual(kayit["playerInfo"]["cash"], 3)
+
+    def test_buyucu_tamamlaninca_bir_kez_kaydedilir(self):
+        from oyun.kayit import session
+        kayit = session(UID)
+        ps = kayit["privateState"]
+        kayit["playerInfo"]["cash"] = 1000
+        ps["kompuSpells"] = 11
+        ps["kompuLastTimeStamp"] = -1
+        self.assertEqual(self._servis("kompu_try.php", {"index": 2, "town": 0})["data"], True)
+        self.assertEqual(len(ps["kompuCompleted"]), 1)
+        ps["kompuLastTimeStamp"] = -1
+        self.assertEqual(self._servis("kompu_try.php", {"index": 2, "town": 0})["result"], "error")
+        self.assertEqual(len(ps["kompuCompleted"]), 1)
+        ps.update(kompuSpells=0, kompuSteps=[], kompuCompleted=[])
 
     def test_istemci_hatasi_ve_kayip_esya(self):
         self.assertEqual(self._servis("report_error.php", {"error_id": "1"})["result"], "success")
@@ -139,9 +162,16 @@ class HttpDumanTestleri(unittest.TestCase):
         self.assertIn("KOMPU_WIZZARD_COSTS", veri["globals"])
 
     def test_oyuncu_profili(self):
+        from oyun.kayit import session
+        session(UID)["privateState"]["attacksSent"] = [
+            {"time": 1, "victim_id": "x", "description": {"win": 1}},
+            {"time": 2, "victim_id": "y", "description": {"win": 0}},
+            {"time": 3, "victim_id": "z"},  # bot akını kaydı: sonuç yok
+        ]
         veri = self.istemci.get(f"{BASE}/get_public_player_info.php?USERID={UID}&user_key=1").get_json()
         self.assertEqual(veri["pid"], UID)
         self.assertIn("map_names", veri)
+        self.assertEqual((veri["attacks_won"], veri["attacks_lost"]), (1, 1))
 
     def test_turnuva_bilgisi_data_icinde(self):
         veri = self._servis("tournaments/get_tournament_info.php", {"user_id": UID})

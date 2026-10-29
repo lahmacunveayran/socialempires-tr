@@ -379,6 +379,25 @@ class PvpKomutlari(KomutTesti):
         self.saldir()
         self.assertEqual(sum(1 for e in self.harita["items"] if e[0] == 512), 1)
 
+    def test_kalkanli_hedef_ganimetsiz_ve_dokunulmaz(self):
+        self.kurban["privateState"]["shield_until"] = 2 ** 40
+        self.kurban["maps"][0]["items"].append([512, 1, 1, 0, 0, 0])
+        self.saldir()
+        self.assertEqual(self.harita["coins"], 50000)
+        self.assertNotIn("attacksReceived", self.kurban["privateState"])
+        self.assertIn([512, 1, 1, 0, 0, 0], self.kurban["maps"][0]["items"])
+
+    def test_statik_komsu_degismez(self):
+        # villages/ köyleri kayıtlı oyuncu değildir (all_saves_userid'de yok)
+        self.komutlar.all_saves_userid = lambda: ["test"]
+        self.pvp.all_saves_userid, eski = (lambda: ["test"]), self.pvp.all_saves_userid
+        try:
+            self.saldir()
+        finally:
+            self.pvp.all_saves_userid = eski
+        self.assertNotIn("attacksReceived", self.kurban["privateState"])
+        self.assertEqual(self.harita["coins"], 50500)
+
     def test_kendine_saldiri_yok(self):
         self.saldir(victim={"user_id": "test"})
         self.assertNotIn("attacksSent", self.ps)

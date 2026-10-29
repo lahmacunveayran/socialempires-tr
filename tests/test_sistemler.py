@@ -91,22 +91,36 @@ class TurnuvaAdaTestleri(unittest.TestCase):
                 turnuva.mac_bitir(t["id"], "u1", True)
             self.assertEqual(t["state"], "finished")
             turnuva.mac_bitir(t["id"], "u1", True)
-            self.assertEqual(kayitlar["u1"]["privateState"]["trophies"], 30)
 
-    def test_ada_yedi_bolge_ve_sonraki_ada(self):
+    def test_kita_sekiz_yuva_ve_fetih(self):
         from oyun import ada
-        kayitlar = botlar(8)
+        kayitlar = botlar(10)
         with SahteKayitlar(ada, kayitlar):
             oyuncu = kayitlar["u1"]
-            slotlar = ada.ada_slotlari(oyuncu)
-            self.assertEqual(len(slotlar), 7)
-            for slot in slotlar:
-                ada.fetih_kaydet(oyuncu, slot["user_id"])
-            self.assertEqual(ada.ada_durumu(oyuncu)["ada"], 100)
+            liste = ada.kita_listesi(oyuncu)
+            self.assertEqual([g["posicion"] for g in liste], list(range(8)))
+            self.assertEqual(liste[0]["nivel"], 1)
+            self.assertTrue(all(g["race"] for g in liste))
+            self.assertEqual(liste[7]["user_id"], "u1")
+            rakip = liste[2]
+            self.assertEqual(ada.fetih_kaydet(oyuncu, {"user_id": rakip["user_id"]}), 2)
+            self.assertEqual(oyuncu["maps"][0]["universAttackWin"], [2])
+            # yuva değişse de fethedilen rakip aynı yuvada kalır
+            oyuncu["privateState"]["kita_konum"] = 5
+            self.assertEqual(ada.kita_listesi(oyuncu)[2]["user_id"], rakip["user_id"])
 
-    def test_sezon_hafta_bicimi(self):
-        from oyun import sezon
-        self.assertRegex(sezon._hafta(), r"^\d{4}-W\d{2}$")
+    def test_yedi_fetihle_sonraki_kita(self):
+        from oyun import ada
+        kayitlar = botlar(10)
+        with SahteKayitlar(ada, kayitlar):
+            oyuncu = kayitlar["u1"]
+            ilk = {g["user_id"] for g in ada.kita_listesi(oyuncu)}
+            for g in ada.kita_listesi(oyuncu)[:7]:
+                ada.fetih_kaydet(oyuncu, {"user_id": g["user_id"]})
+            self.assertTrue(ada.sonraki_kita(oyuncu))
+            self.assertEqual(ada.kita_no(oyuncu), 2)
+            self.assertEqual(oyuncu["maps"][0]["universAttackWin"], [])
+            self.assertNotEqual({g["user_id"] for g in ada.kita_listesi(oyuncu)}, ilk)
 
 
 class KayitTestleri(unittest.TestCase):

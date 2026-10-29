@@ -1,96 +1,115 @@
-# -*- coding: utf-8 -*-
-"""Ada fetih sistemi: her adada 7 bölge, her bölgede bir bot köyü.
+"""Dünya haritası (kıtalar) ve fetih.
 
-Oyuncu bir bölgedeki botu yendiğinde bölge fethedilir. 7/7 olunca ada
-tamamlanır; ödül verilir ve bir sonraki adaya geçilir.
+İstemci haritayı `get_continent_ranking.php` ile yükler: her kıtada 8 yuva
+vardır; biri oyuncunun, diğer 7'si fethedilecek rakiplerdir (bot köyleri).
+Fethedilen yuvaların numaraları `maps[0].universAttackWin` listesinde durur;
+7/7 olunca istemci `worldChange=1` ile sonraki kıtayı ister.
 
-Fetihler `ada:posicion` anahtarıyla saklanır; böylece bot listesi değişse
-bile aynı adadaki aynı bölge kastedilir.
+Kayıtta: privateState.kita (kıta no, 1'den), privateState.kita_konum (oyuncunun
+yuvası), privateState.kita_karisim (yer değiştirince rakipler değişir).
 """
-
-import hashlib
 
 from oyun.kayit import all_saves_userid, session
 
+YUVA = 8
+VARSAYILAN_RESIM = "/img/profile/1025.png"
 
-def _botlar():
+
+def _bot_kayitlari():
     botlar = []
     for uid in all_saves_userid():
         kayit = session(uid)
-        if not kayit:
-            continue
-        pi = kayit.get("playerInfo", {})
-        if pi.get("bot"):
-            botlar.append((str(uid), pi.get("name", "Bot"),
-                           int(kayit["maps"][0].get("level", 1)),
-                           pi.get("pic") or "/img/profile/1025.png"))
-    botlar.sort(key=lambda x: x[0])
-    return botlar
+        if kayit and kayit.get("playerInfo", {}).get("bot"):
+            botlar.append((int(kayit["maps"][0].get("level", 1)), str(uid), kayit))
+    botlar.sort(key=lambda b: (b[0], b[1]))  # kolaydan zora
+    return [(uid, kayit) for _, uid, kayit in botlar]
 
 
-def _sayisal(uid):
-    return int(hashlib.sha256(str(uid).encode("utf-8")).hexdigest()[:8], 16)
+def kita_no(kayit):
+    return max(1, int(kayit["privateState"].get("kita", 1) or 1))
 
 
-def _ada_no(kayit):
-    return int(kayit.get("privateState", {}).get("ada", 99) or 99)
+def kendi_konumu(kayit):
+    return int(kayit["privateState"].get("kita_konum", YUVA - 1)) % YUVA
 
 
-def ada_slotlari(kayit):
-    """Oyuncunun bulunduğu adadaki 7 bölgeyi döndürür."""
-    botlar = _botlar()
-    if len(botlar) < 7:
+def fetihler(kayit):
+    liste = kayit["maps"][0].get("universAttackWin")
+    if not isinstance(liste, list):
+        liste = kayit["maps"][0]["universAttackWin"] = []
+    return liste
+
+
+def _rakipler(kita, karisim, adet):
+    """Kıtanın rakip botları: kıta ilerledikçe daha güçlü botlar gelir."""
+    botlar = _bot_kayitlari()
+    if not botlar:
         return []
-    ada = _ada_no(kayit)
-    ps = kayit.get("privateState", {})
-    fetih = set(str(x) for x in ps.get("ada_fetih", []))
-    baslangic = ((ada - 99) * 7) % len(botlar)
-    slotlar = []
-    for i in range(7):
-        uid, ad, seviye, pic = botlar[(baslangic + i) % len(botlar)]
-        anahtar = f"{ada}:{uid}"
-        conquered = anahtar in fetih or uid in fetih or f"{ada}:{i}" in fetih
-        slotlar.append({
-            "posicion": i, "pos": i, "position": i,
-            "key": anahtar,
-            "user_id": _sayisal(uid), "id": _sayisal(uid), "uid": uid, "saveId": _sayisal(uid),
-            "name": ad,
-            "nivel": seviye, "level": seviye,
-            "pic": pic,
-            "conquered": 1 if conquered else 0,
-            "isConquered": 1 if conquered else 0,
-            "state": 1 if conquered else 0,
-        })
-    return slotlar
+    baslangic = ((kita - 1) * (YUVA - 1) + karisim * 3) % len(botlar)
+    return [botlar[(baslangic + i) % len(botlar)] for i in range(min(adet, len(botlar)))]
 
 
-def ada_durumu(kayit):
-    slotlar = ada_slotlari(kayit)
-    fetih = sum(1 for s in slotlar if s["conquered"])
+def _giris(konum, uid, kayit):
+    pi = kayit.get("playerInfo", {})
+    harita = kayit["maps"][0]
     return {
-        "ada": _ada_no(kayit),
-        "fetih": fetih,
-        "toplam": len(slotlar),
-        "slotlar": slotlar,
+        "posicion": konum,
+        "user_id": str(uid),
+        "name": pi.get("name") or "Oyuncu",
+        "level": int(harita.get("level", 1)),
+        "race": harita.get("race") or "h",
+        "pic": pi.get("pic") or VARSAYILAN_RESIM,
     }
 
 
-def fetih_kaydet(kayit, kurban_id):
-    """Kurban adadaki bölgelerden birindeyse fethedildi olarak işaretler."""
-    slotlar = ada_slotlari(kayit)
-    hedef = next((s for s in slotlar if str(s.get("uid")) == str(kurban_id) or str(s.get("user_id")) == str(kurban_id)), None)
-    if not hedef:
-        return None
-    ps = kayit.setdefault("privateState", {})
-    fetih = ps.setdefault("ada_fetih", [])
-    anahtar = hedef["key"]
-    if anahtar not in fetih:
-        fetih.append(anahtar)
-    durum = ada_durumu(kayit)
-    if durum["toplam"] and durum["fetih"] >= durum["toplam"]:
-        ps["ada"] = durum["ada"] + 1
-        ps["ada_fetih"] = []
-        ps["ada_odulu"] = int(ps.get("ada_odulu", 0) or 0) + 1
-        ps["trophies"] = int(ps.get("trophies", 0) or 0) + 50
-        kayit.setdefault("playerInfo", {})["cash"] = int(kayit.get("playerInfo", {}).get("cash", 0) or 0) + 1
-    return durum
+def kita_listesi(kayit, kita=None):
+    """get_continent_ranking'in `continent` dizisi. [0].nivel kıta numarasıdır."""
+    karisim = int(kayit["privateState"].get("kita_karisim", 0) or 0)
+    kendi = kita is None or kita == kita_no(kayit)
+    kita = kita_no(kayit) if kita is None else max(1, kita)
+    if kendi:
+        # Rakip k her zaman k. yuvada; oyuncu bir yuvaya geçerse o yuvanın
+        # rakibi oyuncunun boşalttığı son yuvaya (7) taşınır. Böylece kayıtlı
+        # fetih numaraları kaymaz.
+        konum = kendi_konumu(kayit)
+        rakipler = _rakipler(kita, karisim, YUVA - 1)
+        liste = [_giris(YUVA - 1 if k == konum else k, *r) for k, r in enumerate(rakipler)]
+        liste.append(_giris(konum, kayit["playerInfo"]["pid"], kayit))
+        liste.sort(key=lambda g: g["posicion"])
+    else:
+        liste = [_giris(i, *r) for i, r in enumerate(_rakipler(kita, karisim, YUVA))]
+    if liste:
+        liste[0]["nivel"] = kita
+    return liste
+
+
+def dunya_kimligi(kayit):
+    return (kita_no(kayit) - 1) * YUVA + kendi_konumu(kayit) + 1
+
+
+def sonraki_kita(kayit):
+    """7 yuva fethedilince (istemci worldChange=1 gönderir) sonraki kıtaya geç."""
+    if len(fetihler(kayit)) >= YUVA - 1:
+        kayit["privateState"]["kita"] = kita_no(kayit) + 1
+        kayit["maps"][0]["universAttackWin"] = []
+        return True
+    return False
+
+
+def yer_degistir(kayit):
+    """Oyuncu kıtasını değiştirmek istedi (relocate): rakipler yenilenir."""
+    ps = kayit["privateState"]
+    ps["kita_karisim"] = int(ps.get("kita_karisim", 0) or 0) + 1
+    kayit["maps"][0]["universAttackWin"] = []
+
+
+def fetih_kaydet(kayit, kurban):
+    """Kazanılan saldırının hedefi bu kıtadaysa yuvası fethedilmiş sayılır."""
+    kurban_id = str((kurban or {}).get("user_id", ""))
+    for giris in kita_listesi(kayit):
+        if giris["user_id"] == kurban_id and giris["user_id"] != str(kayit["playerInfo"]["pid"]):
+            liste = fetihler(kayit)
+            if giris["posicion"] not in liste:
+                liste.append(giris["posicion"])
+            return giris["posicion"]
+    return None

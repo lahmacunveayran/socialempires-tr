@@ -169,12 +169,10 @@ from oyun import hile, istemci, varliklar  # noqa: E402,F401
 
 
 def calistir():
-    from oyun import sezon
     from oyun.dunya import Dunya
     from oyun.yedek import baslat as yedekleri_baslat
     try:
         yedekleri_baslat()
-        sezon.kontrol()
         Dunya().baslat()
         print(f" [+] Sunucu hazir: http://{HOST}:{PORT}/")
         # threaded: Flash aynı anda onlarca varlık istiyor.

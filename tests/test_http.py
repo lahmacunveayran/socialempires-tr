@@ -90,12 +90,17 @@ class HttpDumanTestleri(unittest.TestCase):
             with open(yol, "rb") as f:
                 self.assertIn(f.read(3), (b"CWS", b"FWS", b"ZWS"))
 
-    def test_ada_yedi_bolge(self):
-        cevap = self.istemci.get(f"{BASE}/get_continent.php?USERID={UID}&map=99&worldChange=0&user_key=1")
-        self.assertEqual(cevap.status_code, 200)
+    def test_dunya_haritasi(self):
+        cevap = self.istemci.get(f"{BASE}/get_continent_ranking.php?USERID={UID}&map=0&worldChange=0&user_key=1")
         veri = cevap.get_json()
-        self.assertEqual(len(veri["continent"]), 7)
-        self.assertIn("arCurrentConquered", veri)
+        self.assertEqual(len(veri["continent"]), 8)
+        self.assertEqual(veri["continent"][0]["nivel"], 1)
+        self.assertIn(UID, [g["user_id"] for g in veri["continent"]])
+
+    def test_oyuncu_profili(self):
+        veri = self.istemci.get(f"{BASE}/get_public_player_info.php?USERID={UID}&user_key=1").get_json()
+        self.assertEqual(veri["pid"], UID)
+        self.assertIn("map_names", veri)
 
     def test_turnuva_odasi(self):
         cevap = self.istemci.post(

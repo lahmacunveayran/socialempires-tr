@@ -1,6 +1,5 @@
 """İstemcinin oyun sunucusuna yaptığı istekler (dynamicUrl altındaki uçlar)."""
 
-import hashlib
 import json
 import os
 import traceback
@@ -8,10 +7,9 @@ import traceback
 from flask import jsonify, redirect, request
 
 from oyun import ada as Ada
-from oyun import sezon as Sezon
 from oyun import turnuva as Turnuva
 from oyun.config import get_client_game_config
-from oyun.kayit import (all_saves_userid, gecerli_uid, neighbor_session, save_lock,
+from oyun.kayit import (gecerli_uid, neighbor_session, save_lock, save_session,
                         session as kayit_oturumu)
 from oyun.komutlar import command
 from oyun.oyuncu import get_neighbor_info, get_player_info, get_quest_map
@@ -19,18 +17,6 @@ from oyun.sunucu import OYUN_DILI, app
 from oyun.yollar import SAVES_DIR
 
 DINAMIK = "/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires"
-
-
-def _sayisal_kimlik(uid):
-    """Ada haritası sayısal user_id beklediği için UUID'den sabit sayı üretir."""
-    return str(int(hashlib.sha256(str(uid).encode("utf-8")).hexdigest()[:8], 16))
-
-
-def _kimlikten_uid(kimlik):
-    for uid in all_saves_userid():
-        if _sayisal_kimlik(uid) == str(kimlik):
-            return uid
-    return None
 
 
 @app.route(DINAMIK + "/track_game_status.php", methods=["POST"])
@@ -57,8 +43,6 @@ def get_player_info_response():
     harita_no = int(request.values.get("map", 0) or 0)
     if kullanici is None:
         return (get_player_info(uid, harita_no), 200)
-    if kullanici.isdigit():  # ada haritası sayısal kimlik gönderir
-        kullanici = _kimlikten_uid(kullanici) or kullanici
     if neighbor_session(kullanici) is None and kullanici.startswith("100000"):
         return get_quest_map(kullanici)  # görev (quest) haritası
     return (get_neighbor_info(kullanici, harita_no), 200)
@@ -107,164 +91,48 @@ def command_response():
 
 @app.route(DINAMIK + "/get_continent_ranking.php", methods=["GET", "POST"])
 def get_continent_ranking_response():
-    # Kayıtlı oyuncuları XP'ye göre sırala; istemci ilk 8 sırayı gösteriyor.
-    oyuncular = []
-    for uid in all_saves_userid():
-        kayit = kayit_oturumu(uid)
-        if not kayit:
-            continue
-        harita = kayit["maps"][0]
-        oyuncular.append({
-            "user_id": _sayisal_kimlik(uid),
-            "uid": str(uid),
-            "name": kayit["playerInfo"].get("name", ""),
-            "pic": kayit["playerInfo"].get("pic") or "/img/profile/1025.png",
-            "nivel": harita.get("level", 1),
-            "level": harita.get("level", 1),
-            "xp": harita.get("xp", 0),
-            "trophies": int(kayit.get("privateState", {}).get("trophies", 0)),
-        })
-    oyuncular.sort(key=lambda o: o["xp"], reverse=True)
-
-    continent = [
-        {"posicion": i, "nivel": o["nivel"], "level": o["level"],
-         "user_id": o["user_id"], "id": o["user_id"], "uid": o["uid"],
-         "name": o["name"], "pic": o["pic"], "trophies": o["trophies"]}
-        for i, o in enumerate(oyuncular[:8])
-    ]
-    for i in range(len(continent), 8):
-        continent.append({"posicion": i, "nivel": 0})
-
-    return {"world_id": 0, "continent": continent, "season": Sezon.bilgi()}
-
-
-########
-# DÜNYA GEZGİNİ (ada / kıta)
-########
-
-def _ada_slotlari():
-    """Adadaki 7 bölgeyi oyunculardan doldurur."""
-    oyuncular = []
-    for uid in all_saves_userid():
-        kayit = kayit_oturumu(uid)
-        if not kayit:
-            continue
-        harita = kayit["maps"][0]
-        pi = kayit.get("playerInfo", {})
-        oyuncular.append({
-            "user_id": str(uid),
-            "name": pi.get("name", "Oyuncu"),
-            "pic": pi.get("pic", ""),
-            "nivel": int(harita.get("level", 1)),
-            "conquered": 0,
-        })
-    slotlar = []
-    for i in range(7):
-        if i < len(oyuncular):
-            slot = dict(oyuncular[i])
-            slot.update({
-                "posicion": i, "pos": i, "position": i,
-                "id": slot["user_id"], "userId": slot["user_id"], "saveId": slot["user_id"],
-                "level": slot["nivel"], "state": 0, "isConquered": 0,
-            })
-        else:
-            slot = {"posicion": i, "pos": i, "position": i, "nivel": 0, "level": 0}
-        slotlar.append(slot)
-    return slotlar
-
-
-@app.route(DINAMIK + "/get_continent.php", methods=["GET", "POST"])
-def get_continent_response():
+    """Dünya haritası: [{posicion, user_id, name, level, race, pic}, ...], [0].nivel = kıta no."""
     uid = request.values.get("USERID", "")
-    kayit = kayit_oturumu(uid) if uid else None
-    durum = Ada.ada_durumu(kayit) if kayit else {"ada": 99, "fetih": 0, "toplam": 7, "slotlar": []}
-    slotlar = durum["slotlar"]
-    fetih_pozisyonlari = [s["posicion"] for s in slotlar if s["conquered"]]
-    print(f"[ADA] get_continent: {dict(request.values)} -> {len(slotlar)} bolge")
-    ada = {
-        "id": durum["ada"], "number": durum["ada"], "continentId": durum["ada"], "continentNumber": durum["ada"],
-        "saveId": durum["ada"], "continentSaveId": durum["ada"], "world_id": 0,
-        "users": slotlar, "territories": slotlar, "players": slotlar,
-        "islands": [{"id": durum["ada"], "number": durum["ada"], "users": slotlar}],
-        "ada": durum["ada"],
-        "conquered": durum["fetih"],
-        "progress": {"done": durum["fetih"], "total": durum["toplam"]},
-        "island": durum["ada"],
-        "arCurrentConquered": fetih_pozisyonlari,
-    }
-    return {
-        "result": "ok",
-        "success": True,
-        "world_id": 0,
-        "continent": slotlar,
-        "continentNumber": durum["ada"],
-        "continentId": durum["ada"],
-        "continentSaveId": durum["ada"],
-        "myContinentId": durum["ada"],
-        "continentData": ada,
-        "users": slotlar,
-        "territories": slotlar,
-        "players": slotlar,
-        "islands": [{"id": durum["ada"], "number": durum["ada"], "users": slotlar}],
-        "ada": durum["ada"],
-        "island": durum["ada"],
-        "conquered": durum["fetih"],
-        "arCurrentConquered": fetih_pozisyonlari,
-        "progress": {"done": durum["fetih"], "total": durum["toplam"]},
-    }
+    kayit = kayit_oturumu(uid)
+    if kayit is None:
+        return {"continent": []}
+    with save_lock:
+        if request.values.get("worldChange") == "1":
+            Ada.sonraki_kita(kayit)
+        if request.values.get("relocate") == "1":
+            Ada.yer_degistir(kayit)
+        save_session(uid)
+    kita = int(request.values.get("level_id") or 0) or None
+    return {"world_id": Ada.dunya_kimligi(kayit), "continent": Ada.kita_listesi(kayit, kita)}
 
 
 @app.route(DINAMIK + "/get_public_player_info.php", methods=["GET", "POST"])
 def get_public_player_info_response():
-    kimlik = (request.values.get("user_id") or request.values.get("user")
-              or request.values.get("USERID") or "")
-    uid = _kimlikten_uid(kimlik)
-    if uid is None and str(kimlik) in all_saves_userid():
-        uid = str(kimlik)
-    if not uid or not gecerli_uid(str(uid)):
-        return ({"result": "error"}, 404)
-    kayit = kayit_oturumu(uid) if uid else None
-    if not kayit:
-        return ({"result": "error"}, 404)
-    harita = kayit["maps"][0]
-    pi = kayit.get("playerInfo", {})
-    return jsonify({
-        "result": "ok",
-        "user_id": _sayisal_kimlik(uid),
-        "id": _sayisal_kimlik(uid),
-        "uid": str(uid),
-        "playerInfo": {
-            "pid": str(uid),
-            "user_id": _sayisal_kimlik(uid),
-            "name": pi.get("name", ""),
-            "pic": pi.get("pic") or "/img/profile/1025.png",
-            "level": int(harita.get("level", 1)),
-            "nivel": int(harita.get("level", 1)),
-            "xp": int(harita.get("xp", 0)),
-            "trophies": int(kayit.get("privateState", {}).get("trophies", 0)),
-            "world_id": int(pi.get("world_id") or 0),
-        },
-    })
+    """Oyuncu profili penceresi; USERID burada bakılan oyuncudur."""
+    kayit = neighbor_session(request.values.get("USERID", ""))
+    if kayit is None:
+        return {}
+    pi = kayit["playerInfo"]
+    raporlar = [r for r in kayit["privateState"].get("attacksSent") or [] if isinstance(r, dict)]
+    kazanilan = sum(1 for r in raporlar if (r.get("description") or {}).get("win") in (1, "1"))
+    return {
+        "pid": str(pi.get("pid", "")),
+        "name": pi.get("name", ""),
+        "level": int(kayit["maps"][0].get("level", 1)),
+        "map_names": pi.get("map_names") or [pi.get("name", "")],
+        "honor_points": int(pi.get("honor_points", 0) or 0),
+        "country": pi.get("country", "TR"),
+        "last_logged_in": int(pi.get("last_logged_in", 0) or 0),
+        "attacks_won": kazanilan,
+        "attacks_lost": len(raporlar) - kazanilan,
+    }
 
 
 @app.route(DINAMIK + "/get_user_world.php", methods=["GET", "POST"])
 def get_user_world_response():
-    print(f"[ADA] get_user_world: {dict(request.values)}")
-    uid = request.values.get("USERID", "")
-    kayit = kayit_oturumu(uid) if uid else None
-    durum = Ada.ada_durumu(kayit) if kayit else {"ada": 99, "fetih": 0, "toplam": 7}
-    return {
-        "result": "ok", "success": True, "world_id": 0,
-        "continentId": durum["ada"], "continentNumber": durum["ada"], "myContinentId": durum["ada"],
-        "island": durum["ada"], "islandId": durum["ada"],
-        "conquered": durum["fetih"], "progress": {"done": durum["fetih"], "total": durum["toplam"]},
-        "islands": [{"id": durum["ada"], "number": durum["ada"]}],
-    }
+    kayit = kayit_oturumu(request.values.get("USERID", ""))
+    return {"result": {"world_id": Ada.dunya_kimligi(kayit) if kayit else 0}}
 
-
-########
-# TURNUVALAR
-########
 
 def _istek_uid():
     uid = request.values.get("USERID", "")

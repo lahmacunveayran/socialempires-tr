@@ -42,7 +42,7 @@ def patch_game_config():
 
     # Apply patches
 
-    for patch_file in os.listdir(CONFIG_PATCH_DIR):
+    for patch_file in sorted(os.listdir(CONFIG_PATCH_DIR)):  # her sistemde aynı sıra
         if patch_file.endswith(".json"):
             f = os.path.join(CONFIG_PATCH_DIR, patch_file)
             apply_config_patch(f)
@@ -68,6 +68,23 @@ def patch_game_config():
                     print(" * Mod applied:", mod)
 
     remove_duplicate_items()
+    tema_setlerini_ac()
+
+
+def tema_setlerini_ac():
+    """config/tema_setleri.json'daki etkinlik setlerini mağazaya açar."""
+    from oyun import ayarlar
+    yol = os.path.join(CONFIG_DIR, "tema_setleri.json")
+    if not ayarlar.oku().get("magaza_tema_setleri", True) or not os.path.exists(yol):
+        return
+    with open(yol, encoding="utf-8") as f:
+        kimlikler = {str(i) for ids in json.load(f)["setler"].values() for i in ids}
+    acilan = 0
+    for esya in __game_config["items"]:
+        if esya["id"] in kimlikler and esya.get("in_store") != "1":
+            esya["in_store"] = "1"
+            acilan += 1
+    print(f" * Tema setleri magazaya acildi: {acilan} esya")
 
 print (" [+] Applying config patches and mods...")
 patch_game_config()

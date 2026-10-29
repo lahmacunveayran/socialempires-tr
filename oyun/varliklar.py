@@ -94,13 +94,21 @@ def statik_varlik(path):
     return send_from_directory(os.path.dirname(yol), os.path.basename(yol))
 
 
+def _oyun_swf_mi(dosya):
+    """SocialEmpires<sürüm>.swf biçiminde mi? (Düzenli ifade yok: uzun ve
+    kötü niyetli adlarda yavaşlamasın.)"""
+    surum = dosya[len("SocialEmpires"):-len(".swf")]
+    return (dosya.startswith("SocialEmpires") and dosya.endswith(".swf")
+            and surum.isascii() and surum.isalnum())
+
+
 @app.route(STATIK + "/flash/<dosya>")
 def oyun_swf(dosya):
     """Oyun SWF'sini sabit arayüz yazıları Türkçeleştirilmiş olarak sunar."""
     kaynak = varlik_yolu(f"flash/{dosya}")
     if kaynak is None:
         return ("", 404)
-    if OYUN_DILI == "tr" and re.fullmatch(r"SocialEmpires\w+\.swf", dosya):
+    if OYUN_DILI == "tr" and _oyun_swf_mi(dosya):
         try:
             kaynak = swf_yama.onbellekli_turkcelestir(kaynak, os.path.join(INDIRILEN_DIR, "tr"))
         except Exception:

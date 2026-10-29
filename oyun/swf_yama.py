@@ -21,7 +21,7 @@ import zlib
 
 from oyun import swf_font
 from oyun.yollar import ASSETS_DIR, CEVIRI_DIR
-YAMA_SURUMU = b"4"  # yama mantığı değişince artırın (önbellek yenilensin)
+YAMA_SURUMU = b"5"  # yama mantığı değişince artırın (önbellek yenilensin)
 SOZLUK = os.path.join(CEVIRI_DIR, "arayuz_tr.json")
 
 _ETIKET = re.compile(r"<[^>]+>")
@@ -67,6 +67,13 @@ def _etiketler(govde: bytes):
 
 def _baslik(kod: int, uzunluk: int) -> bytes:
     return struct.pack("<HI", (kod << 6) | 0x3F, uzunluk)
+
+
+def _font_konumu(t: bytes):
+    """DefineEditText'teki FontID'nin konumu (yoksa None)."""
+    nbit = t[2] >> 3
+    p = 2 + (5 + nbit * 4 + 7) // 8
+    return p + 2 if t[p] & 0x01 else None
 
 
 def _metin_konumu(t: bytes):
@@ -163,6 +170,22 @@ def _fontlari_tamamla(govde, etiketler):
     return degisim, eslemeler, eski_fontlar, yeni_fontlar
 
 
+def _yazi_tipini_uydur(t, metin, fontlar):
+    """Alanın yazı tipinde çevirinin bir harfi yoksa (ör. yalnızca 13 harfli
+    Arial Narrow sayaç etiketleri), harflerin hepsini içeren bir yazı tipine geçer."""
+    konum = _font_konumu(t)
+    if konum is None:
+        return t
+    gerekli = {ord(h) for h in metin if not h.isspace()}
+    mevcut = fontlar.get(struct.unpack_from("<H", t, konum)[0])
+    if mevcut is None or gerekli <= set(mevcut.kodlar):
+        return t
+    for kimlik, font in fontlar.items():
+        if font.adi() == "Arial Rounded MT Bold" and gerekli <= set(font.kodlar):
+            return t[:konum] + struct.pack("<H", kimlik) + t[konum + 2:]
+    return t
+
+
 def turkcelestir(veri: bytes, sozluk=None):
     """SWF baytlarını alır, (yeni_swf_baytları, değişen_alan_sayısı) döndürür."""
     sozluk = _sozluk() if sozluk is None else sozluk
@@ -207,6 +230,7 @@ def turkcelestir(veri: bytes, sozluk=None):
                 if ceviri:
                     yeni_metin = _html_degistir(metin, ceviri) if html_mi else ceviri
                     t = t[:m_bas] + yeni_metin.encode("utf-8") + t[m_son:]
+                    t = _yazi_tipini_uydur(t, ceviri, yeni_fontlar)
                     cikti.append(_baslik(kod, len(t)) + t)
                     degisen += 1
                     continue

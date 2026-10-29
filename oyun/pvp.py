@@ -1,209 +1,186 @@
 """PvP: oyuncuya saldırı (attack_player / end_attack).
 
-Savaş istemcide oynanır; `end_attack` ile gelen sonuç burada iki tarafa
-uygulanır. Ganimet ve kupa kuralları `denge.py` içindedir.
+Savaş istemcide oynanır ama ganimet istemcide uygulanmaz: savaş bitince
+istemci haritayı sunucudan yeniden yükler. Yani saldıranın kazandığı her şey
+burada, `end_attack` ile gelen sonuca göre verilir.
+
+end_attack argümanı (istemcinin Assault.sendAssaultResults'ından):
+    [json] ya da belediye binası olmayan köyde [json, true]
+    {attacker: {user_id, map, ...}, victim: {user_id, level, ...},
+     resources: {g, x}, resources_victim: {g},
+     attacker_units: [[id, baslangic, olen, kurtarilan], ...],
+     victim_units:   [[id, baslangic, olen, kurtarilan], ...],
+     win, duration, voluntary_end, townhall_gold, honor}
+
+Kurallar istemcinin Config sabitleriyle aynıdır; kurala uymayan sonuçlar
+reddedilmez (savaş zaten oynandı), yalnızca ganimeti sıfırlanır.
 """
 
 import json
+import math
 
-from oyun import denge
 from oyun.ada import fetih_kaydet
+from oyun.config import get_game_config, get_item_from_id
 from oyun.ekonomi import timestamp_now
 from oyun.kayit import all_saves_userid, neighbor_session, save_session
 
+SALDIRI_HAKKI = 3                 # Config.ATTACKS_MAX
+SALDIRI_PERIYODU = 6 * 3600       # Config.ATTACKS_PERIOD_HOURS
+AYNI_HEDEF_SURESI = 4 * 3600      # Config.ATTACKS_SAME_PLAYER_HOURS
+BIRIM_BASINA_ALTIN = 200          # Config.MAX_GOLD_FROM_ASSAULT
+SAVUNMA_BIRIM_ODULU = 20          # birim değerinin %10'u, en çok 20
+GALIBIYET_ASGARI_ALTIN = 25
+XP_PAYI = 150                     # duvar vb. 1 XP'lik yıkımlar için pay
 
-def _tam(deger):
-    """Değeri int'e çevirir; olmuyorsa None döner."""
-    if isinstance(deger, bool):
-        return int(deger)
-    if isinstance(deger, int):
-        return deger
-    if isinstance(deger, float):
-        return int(deger)
+
+def _tam(deger, varsayilan=0):
     try:
-        metin = str(deger).strip()
-        if metin.lstrip("-").isdigit():
-            return int(metin)
-        return int(float(metin))
+        return int(float(deger))
     except (TypeError, ValueError):
-        return None
+        return varsayilan
 
 
-
-def _json_veri(args):
-    """Argümanların içinde JSON nesnesi/dizisi varsa çözer."""
-    for a in args:
-        if isinstance(a, (dict, list)):
-            return a
-        if isinstance(a, str) and a.strip()[:1] in ("{", "["):
-            try:
-                return json.loads(a)
-            except json.JSONDecodeError:
-                continue
-    return None
-
-
-
-KAYNAK_ALANLARI = {"g": "coins", "w": "wood", "s": "stone", "f": "food"}
-
-
-def _liste_al(kap, anahtar):
-    """Kayıtta liste alanı yoksa/None ise boş liste oluşturup döndürür."""
+def _liste(kap, anahtar):
     deger = kap.get(anahtar)
     if not isinstance(deger, list):
-        deger = []
-        kap[anahtar] = deger
+        deger = kap[anahtar] = []
     return deger
 
 
-def _oyuncu_ozeti(kayit):
+def _ozet(kayit):
     pi = kayit.get("playerInfo", {})
     harita = (kayit.get("maps") or [{}])[0]
     return {
         "name": pi.get("name") or "Oyuncu",
         "user_id": str(pi.get("pid") or ""),
-        "world_id": pi.get("world_id", 0),
         "level": harita.get("level", 1),
         "pic": pi.get("pic", ""),
     }
 
 
-def saldiri_baslat(saldiran, args):
-    """attack_player: hedefi doğrular ve saldırıyı başlatır.
+def _olenler(birimler, dahil=None):
+    """[[id, baslangic, olen, kurtarilan], ...] -> {id: kalici_kayip}."""
+    kayip = {}
+    for satir in birimler if isinstance(birimler, list) else []:
+        if not isinstance(satir, list) or len(satir) < 3:
+            continue
+        birim_id = _tam(satir[0])
+        olen = max(0, _tam(satir[2]) - (_tam(satir[3]) if len(satir) > 3 else 0))
+        if olen and (dahil is None or dahil(birim_id)):
+            kayip[birim_id] = kayip.get(birim_id, 0) + olen
+    return kayip
 
-    Asıl sonuç `end_attack` geldiğinde uygulanır; burada yalnızca hedefin
-    gerçekten var olduğunu kontrol ediyoruz.
-    """
-    hedef = str(args[0]) if args else ""
-    if not hedef:
-        print(" ! Saldiri: hedef yok, args =", args)
-        return False
-    kurban = neighbor_session(hedef)
-    if kurban is None:
-        print(" ! Saldiri: hedef bulunamadi:", hedef)
-        return False
-    print(f"Saldiri basladi: {_oyuncu_ozeti(kurban)['name']} ({hedef})")
+
+def _birimleri_sil(harita, kayiplar):
+    """Haritadan yalnızca birimleri (tür 'u') siler; binalara dokunmaz."""
+    for birim_id, adet in kayiplar.items():
+        if (get_item_from_id(birim_id) or {}).get("type") != "u":
+            continue
+        for esya in [e for e in harita.get("items", []) if e[0] == birim_id][:adet]:
+            harita["items"].remove(esya)
+
+
+def saldiri_hakki_var(saldiran, simdi):
+    """İstemcinin Base.processAttacks hesabı: son saldırıdan geriye 6 saat."""
+    ps = saldiran["privateState"]
+    if _tam(ps.get("attacksPack")) > 0:
+        return True
+    sifirlama = _tam(ps.get("tsAttacksReset"))
+    zamanlar = [_tam(a.get("time")) for a in _liste(ps, "attacksSent") if isinstance(a, dict)]
+    if not zamanlar or simdi - max(zamanlar) >= SALDIRI_PERIYODU:
+        return True
+    son = max(zamanlar)
+    sayi = sum(1 for t in zamanlar if son - t < SALDIRI_PERIYODU and t > sifirlama)
+    return sayi < SALDIRI_HAKKI
+
+
+def saldiri_baslat(saldiran, args):
+    """attack_player [kurban_id]: istemci yanıtı kullanmaz; yalnızca günlük."""
+    print("Saldiri basladi:", args[0] if args else "?")
     return True
 
 
 def saldiri_bitir(saldiran, args):
-    """end_attack: istemcinin gönderdiği savaş sonucunu iki tarafa uygular.
-
-    Beklenen JSON: victim_id, map, win, duration, townhall_gold,
-    resources {x,g...}, resources_victim {g,w,s,f}, attacker_units,
-    victim_units, voluntary_end.
-    """
-    veri = _json_veri(args)
-    if not isinstance(veri, dict):
-        print(" ! end_attack: JSON veri yok, args =", args)
+    """end_attack: savaş sonucunu iki tarafa uygular."""
+    try:
+        veri = args[0] if isinstance(args[0], dict) else json.loads(args[0])
+    except (IndexError, TypeError, ValueError):
+        print(" ! end_attack: JSON yok:", args)
         return False
-
-    kurban_id = str(veri.get("victim_id") or veri.get("defender_id") or veri.get("rival_id") or "")
-    if not kurban_id:
-        print(" ! end_attack: victim_id yok:", veri)
+    kurban_id = str((veri.get("victim") or {}).get("user_id") or "")
+    kendi_id = str(saldiran["playerInfo"].get("pid", ""))
+    if not kurban_id or kurban_id == kendi_id:
+        print(" ! end_attack: gecersiz hedef", kurban_id)
         return False
-
     kurban = neighbor_session(kurban_id)
-    if kurban is None:
-        print(" ! end_attack: kurban kaydi bulunamadi:", kurban_id)
-        return False
-
-    kendi_id = str(saldiran.get("playerInfo", {}).get("pid", ""))
-    if kurban_id == kendi_id:
-        print(" ! end_attack: kendine saldiri yok sayildi")
-        return False
-
-    if int(kurban.get("privateState", {}).get("shield_until", 0) or 0) > timestamp_now():
-        print(" ! end_attack: hedefin kalkani aktif, saldiri reddedildi")
-        return False
-
-    # Orijinal kural: 6 saatte en fazla 3 saldırı ve aynı hedefe tekrar saldırı yok.
-    # Ancak hedef son 24 saatte sana saldırdıysa intikam saldırısına izin verilir.
-    simdi_once = timestamp_now()
-    intikam = False
-    for eski_rapor in (_liste_al(saldiran.get("privateState", {}), "attacksReceived")[-30:]):
-        if str(eski_rapor.get("attacker_id")) == kurban_id:
-            try:
-                if simdi_once - int(eski_rapor.get("time", 0)) < 24 * 3600:
-                    intikam = True
-                    break
-            except (TypeError, ValueError):
-                pass
-
-    onceki_saldirilar = [
-        a for a in _liste_al(saldiran.setdefault("privateState", {}), "attacksSent")
-        if _tam(a.get("time")) and simdi_once - _tam(a.get("time")) < denge.SALDIRI_PERIYODU
-    ]
-    if len(onceki_saldirilar) >= denge.SALDIRI_HAKKI:
-        print(" ! end_attack: 6 saatlik saldiri hakki doldu, reddedildi")
-        return False
-    if any(str(a.get("victim_id")) == kurban_id for a in onceki_saldirilar) and not intikam:
-        print(" ! end_attack: ayni hedefe 6 saat icinde ikinci saldiri, reddedildi")
-        return False
-
-    town_id = _tam(veri.get("map")) or 0
-    if not (0 <= town_id < len(saldiran.get("maps", []))):
-        town_id = 0
-    harita = saldiran["maps"][town_id]
-
-    kurban_harita = kurban["maps"][0]
-    kazanc = veri.get("resources") if isinstance(veri.get("resources"), dict) else {}
-    kayip = veri.get("resources_victim") if isinstance(veri.get("resources_victim"), dict) else {}
-    # Sunucu tek miktar üretir; aynı miktar saldırana eklenir, kurbandan düşer.
-    for anahtar in KAYNAK_ALANLARI:
-        istenen = max(_tam(kazanc.get(anahtar)) or 0, _tam(kayip.get(anahtar)) or 0)
-        if istenen <= 0:
-            continue
-        alan = KAYNAK_ALANLARI[anahtar]
-        alinan = min(istenen, denge.GANIMET_TAVANI,
-                     int(int(kurban_harita.get(alan, 0)) * denge.GANIMET_ORANI))
-        alinan = max(0, min(alinan, int(kurban_harita.get(alan, 0))))
-        if alinan:
-            harita[alan] = int(harita.get(alan, 0)) + alinan
-            kurban_harita[alan] = int(kurban_harita.get(alan, 0)) - alinan
-    # XP istemciden gelir ama hedef seviyeyle sınırlıdır.
-    hedef_seviye = max(1, int(kurban_harita.get("level", 1)))
-    xp_istenen = max(0, _tam(kazanc.get("x")) or 0)
-    if xp_istenen:
-        harita["xp"] = int(harita.get("xp", 0)) + min(xp_istenen, hedef_seviye * 2)
 
     simdi = timestamp_now()
-    saldiran_ps = saldiran.setdefault("privateState", {})
-    kurban_ps = kurban.setdefault("privateState", {})
-
-    _liste_al(saldiran_ps, "attacksSent").append({
-        "victim_id": kurban_id,
-        "time": str(simdi),
-    })
-
-    rapor = dict(veri)
-    rapor["oponent"] = _oyuncu_ozeti(saldiran)
-    rapor["time"] = simdi
+    ps = saldiran["privateState"]
+    belediye_yok = len(args) > 1 and bool(args[1])
     kazandi = _tam(veri.get("win")) == 1
-    kupa = denge.KUPA_KAZAN if kazandi else -denge.KUPA_KAYIP
-    saldiran_ps["trophies"] = max(0, int(saldiran_ps.get("trophies", 0)) + kupa)
-    kurban_ps["trophies"] = max(0, int(kurban_ps.get("trophies", 0)) - int(kupa / 2))
+    gonderilen = _liste(ps, "attacksSent")
 
-    raporlar = _liste_al(kurban_ps, "attacksReceived")
-    raporlar.append({
-        "time": simdi,
-        "attacker_id": str(saldiran.get("playerInfo", {}).get("pid", "")),
-        "description": rapor,
-    })
-    if len(raporlar) > 50:
-        del raporlar[:-50]
+    # Kurala uymayan saldırı (hak bitti / aynı hedef 4 saat içinde) ganimetsiz kaydedilir.
+    kurala_uygun = saldiri_hakki_var(saldiran, simdi) and not any(
+        isinstance(a, dict) and str(a.get("victim_id")) == kurban_id
+        and simdi - _tam(a.get("time")) < AYNI_HEDEF_SURESI for a in gonderilen)
+    if _tam(ps.get("attacksPack")) > 0:
+        ps["attacksPack"] = _tam(ps["attacksPack"]) - 1
+
+    harita_no = _tam((veri.get("attacker") or {}).get("map"))
+    haritalar = saldiran["maps"]
+    harita = haritalar[harita_no] if 0 <= harita_no < len(haritalar) else haritalar[0]
+    kaynaklar = veri.get("resources") or {}
+    kurban_seviye = _tam((veri.get("victim") or {}).get("level"), 1)
+    if kurban:
+        kurban_seviye = _tam(kurban["maps"][0].get("level"), kurban_seviye)
+
+    altin = xp = 0
+    if kurala_uygun and not belediye_yok:
+        yikilan = sum(_olenler(veri.get("victim_units")).values())
+        altin_tavani = min(int(get_game_config()["globals"].get("MAX_GOLD_ASSAULT", 20000)),
+                           BIRIM_BASINA_ALTIN * yikilan + kurban_seviye * 100 + GALIBIYET_ASGARI_ALTIN)
+        altin = max(0, min(_tam(kaynaklar.get("g")), altin_tavani))
+        xp = max(0, min(_tam(kaynaklar.get("x")), math.ceil(0.05 * altin) + yikilan + XP_PAYI))
+    harita["coins"] = int(harita.get("coins", 0)) + altin
+    harita["xp"] = int(harita.get("xp", 0)) + xp
+
+    onur = 0 if belediye_yok else max(0, min(10, _tam(veri.get("honor"))))
+    ps["honor"] = _tam(ps.get("honor")) + onur
+    saldiran["playerInfo"]["honor_points"] = _tam(saldiran["playerInfo"].get("honor_points")) + onur
+
+    _birimleri_sil(harita, _olenler(veri.get("attacker_units")))
+
+    aciklama = dict(veri)
+    aciklama["resources"] = {"g": altin, "x": xp}
+    gonderilen.append({"time": simdi, "victim_id": kurban_id,
+                       "description": dict(aciklama, oponent=(_ozet(kurban) if kurban else veri.get("victim")))})
+    del gonderilen[:-50]
+
+    if kurban is None:
+        return True
+    kps = kurban["privateState"]
+    savunma_odulu = 0
+    if not kazandi:
+        olduren = sum(_olenler(veri.get("attacker_units")).values())
+        savunma_odulu = max(0, min(_tam((veri.get("resources_victim") or {}).get("g")),
+                                   SAVUNMA_BIRIM_ODULU * olduren))
+        kurban["maps"][0]["coins"] = int(kurban["maps"][0].get("coins", 0)) + savunma_odulu
+    _birimleri_sil(kurban["maps"][0], _olenler(veri.get("victim_units")))
+
+    aciklama["resources_victim"] = {"g": savunma_odulu}
+    alinan = _liste(kps, "attacksReceived")
+    alinan.append({"time": simdi, "attacker_id": kendi_id, "viewPending": 1,
+                   "description": dict(aciklama, oponent=_ozet(saldiran))})
+    del alinan[:-50]
 
     if kazandi:
         try:
-            fetih_kaydet(saldiran, kurban_id)
+            fetih_kaydet(saldiran, veri.get("victim"))
         except Exception as hata:
-            print(" ! Ada fetih kaydi hatasi:", hata)
-
-    # Kurbanın kaydı da diske yazılsın (komut sonunda saldıran yazılıyor).
-    # Statik komşular (Arthur, AcidCaos...) kayıtlı oyuncu değil; onlar için yazma yok.
+            print(" ! Fetih kaydi hatasi:", hata)
     if kurban_id in all_saves_userid():
         save_session(kurban_id)
-
-    sonuc = "kazandi" if _tam(veri.get("win")) == 1 else "kaybetti"
-    print(f"Saldiri bitti: {_oyuncu_ozeti(kurban)['name']} - {sonuc}")
+    print(f"Saldiri bitti: {_ozet(kurban)['name']} - {'kazandi' if kazandi else 'kaybetti'}"
+          f" ({altin} altin, {xp} XP{'' if kurala_uygun else ', kural disi: ganimet yok'})")
     return True

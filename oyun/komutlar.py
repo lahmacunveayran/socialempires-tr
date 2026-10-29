@@ -217,7 +217,7 @@ def _gunluge_yaz(USERID, komutlar):
 # ---------------------------------------------------------------------------
 
 @komut("game_status", "ping", "system_set_count_hack", "perform_city_quest",
-       "spy_player", "modify_position_univers", "reset_position_univers",
+       "spy_player", "reset_position_univers",
        "rt_publish_achievement_unit", "start_quest", "gold_statue_conversion",
        # Yalnızca istemcideki geliştirici panelinden gelenler:
        "fast_forward", "load_map", "save_map", "reset", "clear_tiles_area", "set_variables")
@@ -1333,6 +1333,12 @@ def set_attack_team(save, a):
     takimlar[a.metin(0)] = a.json(1, [])
 
 
+@komut("modify_position_univers")
+def modify_position_univers(save, a):
+    """[yeni_yuva, eski_yuva] - oyuncunun dünya haritasındaki yuvası."""
+    save["privateState"]["kita_konum"] = a.tam(0) % 8
+
+
 @komut("attack_player")
 def attack_player(save, a):
     pvp.saldiri_baslat(save, a.liste)
@@ -1345,11 +1351,7 @@ def end_attack(save, a):
 
 @komut("clean_attacks")
 def clean_attacks(save, a):
-    """[(adet)] - savunma raporlarını temizler."""
-    raporlar = save["privateState"].get("attacksReceived")
-    if not isinstance(raporlar, list):
-        save["privateState"]["attacksReceived"] = []
-    elif a.tam(0) > 0:
-        del raporlar[:a.tam(0)]
-    else:
-        raporlar.clear()
+    """[] - savunma raporları görüldü: geçmiş kalır, yalnızca işaret kalkar."""
+    for rapor in save["privateState"].get("attacksReceived") or []:
+        if isinstance(rapor, dict):
+            rapor.pop("viewPending", None)

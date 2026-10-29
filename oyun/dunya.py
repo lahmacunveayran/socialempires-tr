@@ -14,7 +14,7 @@ import random
 import threading
 import time
 
-from oyun import ayarlar, denge, sezon
+from oyun import ayarlar, denge
 from oyun.config import get_game_config
 from oyun.kayit import all_saves_userid, save_lock, save_session, session
 from oyun.zaman import zaman_olcegi
@@ -142,8 +142,10 @@ def rapor_ekle(hedef, saldiran, veri):
     liste.append({
         "time": veri["time"],
         "attacker_id": str(saldiran.get("playerInfo", {}).get("pid", "")),
+        "viewPending": 1,  # istemci açılışta saldırı penceresini gösterir
         "description": veri,
     })
+    del liste[:-50]
 
 
 # ---------------------------------------------------------------------------
@@ -224,11 +226,6 @@ class Dunya:
                         degisen.add(hedef)
 
             self._dunya_olayi(simdi)
-            if self.tick % 30 == 0:
-                try:
-                    sezon.kontrol()
-                except Exception as hata:
-                    print(" ! Sezon kontrol hatasi:", hata)
             lonca = self._lonca(simdi)
             if lonca:
                 degisen.add(lonca)
@@ -515,9 +512,8 @@ class Dunya:
                           "g": ganimet.get("coins", 0)},
             "attacker_units": [[i, n, 0, 0] for i, n in giden.items()],
             "victim_units": [[i, n, 0, 0] for i, n in savunan_birimler.items()],
-            "resources_victim": {k[0]: v for k, v in
-                                  (("g", ganimet.get("coins", 0)), ("w", ganimet.get("wood", 0)),
-                                   ("s", ganimet.get("stone", 0)), ("f", ganimet.get("food", 0))) if v},
+            # İstemci bunu savunanın kazancı olarak gösterir; çalınan ganimet değil.
+            "resources_victim": {"g": 0},
             "voluntary_end": 0,
             "oponent": {
                 "name": saldiran.get("playerInfo", {}).get("name", "Bot"),
@@ -530,19 +526,12 @@ class Dunya:
         }
         rapor_ekle(hedef, saldiran, rapor)
         saldiran.setdefault("privateState", {}).setdefault("attacksSent", []).append(
-            {"victim_id": str(hedef_id), "time": str(simdi)}
+            {"victim_id": str(hedef_id), "time": simdi}
         )
         # Hafıza: saldırılan, saldırana öfkelenir; kaybeden saldıran da öfkelenir.
         self._ofke_artir(hedef, saldiran_id)
         if not kazandi:
             self._ofke_artir(saldiran, hedef_id)
-        if kazandi:
-            saldiran.setdefault("privateState", {})["trophies"] = int(saldiran.get("privateState", {}).get("trophies", 0)) + denge.KUPA_KAZAN
-            hedef.setdefault("privateState", {})["trophies"] = max(0, int(hedef.get("privateState", {}).get("trophies", 0)) - denge.KUPA_KAYIP)
-        else:
-            saldiran.setdefault("privateState", {})["trophies"] = max(0, int(saldiran.get("privateState", {}).get("trophies", 0)) - denge.KUPA_KAYIP)
-            hedef.setdefault("privateState", {})["trophies"] = int(hedef.get("privateState", {}).get("trophies", 0)) + denge.KUPA_KAZAN
-
         hafiza = saldiran.setdefault("privateState", {}).setdefault("bot_hafiza", {})
         hafiza["son_hedef"] = {"id": str(hedef_id), "zaman": simdi}
 

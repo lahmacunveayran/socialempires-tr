@@ -1,6 +1,7 @@
 import copy
 import json
 import os
+import time
 import jsonpatch
 from oyun.yollar import MODS_DIR, CONFIG_DIR, CONFIG_PATCH_DIR
 from oyun.zaman import zaman_olcegi
@@ -42,7 +43,7 @@ def patch_game_config():
 
     # Apply patches
 
-    for patch_file in os.listdir(CONFIG_PATCH_DIR):
+    for patch_file in sorted(os.listdir(CONFIG_PATCH_DIR)):  # her sistemde aynı sıra
         if patch_file.endswith(".json"):
             f = os.path.join(CONFIG_PATCH_DIR, patch_file)
             apply_config_patch(f)
@@ -68,6 +69,23 @@ def patch_game_config():
                     print(" * Mod applied:", mod)
 
     remove_duplicate_items()
+    tema_setlerini_ac()
+
+
+def tema_setlerini_ac():
+    """config/tema_setleri.json'daki etkinlik setlerini mağazaya açar."""
+    from oyun import ayarlar
+    yol = os.path.join(CONFIG_DIR, "tema_setleri.json")
+    if not ayarlar.oku().get("magaza_tema_setleri", True) or not os.path.exists(yol):
+        return
+    with open(yol, encoding="utf-8") as f:
+        kimlikler = {str(i) for ids in json.load(f)["setler"].values() for i in ids}
+    acilan = 0
+    for esya in __game_config["items"]:
+        if esya["id"] in kimlikler and esya.get("in_store") != "1":
+            esya["in_store"] = "1"
+            acilan += 1
+    print(f" * Tema setleri magazaya acildi: {acilan} esya")
 
 print (" [+] Applying config patches and mods...")
 patch_game_config()
@@ -83,6 +101,25 @@ __istemci_config_onbellegi = {}
 SURE_ALANLARI = ("activation", "expiration", "training_time", "sm_training_time")
 
 
+KOMPU_DONEMI = 30 * 86400
+
+
+def kompu_teklifi(simdi=None):
+    """Büyücü iksirleri teklifi: her 30 günlük dönem yeni bir teklif (id = dönem no).
+
+    Dönem dolunca oyuncu yeniden baştan iksir toplayabilir.
+    """
+    teklifler = __game_config.get("kompu_offers") or []
+    if not teklifler:
+        return None
+    simdi = int(time.time()) if simdi is None else simdi
+    teklif = dict(teklifler[0])
+    teklif["id"] = simdi // KOMPU_DONEMI
+    teklif["starts_at"] = teklif["id"] * KOMPU_DONEMI
+    teklif["duration"] = KOMPU_DONEMI
+    return teklif
+
+
 def get_client_game_config(dil: str = "en", ascii_mode: bool = False) -> dict:
     """İstemciye gönderilecek config'i döndürür.
 
@@ -92,7 +129,8 @@ def get_client_game_config(dil: str = "en", ascii_mode: bool = False) -> dict:
     """
     olcek = zaman_olcegi()
     dil = (dil or "en").lower()[:2]
-    anahtar = (dil, olcek, bool(ascii_mode))
+    teklif = kompu_teklifi()
+    anahtar = (dil, olcek, bool(ascii_mode), teklif and teklif["id"])
     if anahtar in __istemci_config_onbellegi:
         return __istemci_config_onbellegi[anahtar]
 
@@ -100,10 +138,10 @@ def get_client_game_config(dil: str = "en", ascii_mode: bool = False) -> dict:
         kopya = turkce_uygula(__game_config)
         if ascii_mode:
             kopya = ascii_uygula(kopya)
-    elif olcek == 1.0:
-        return __game_config
     else:
         kopya = copy.deepcopy(__game_config)
+    if teklif:
+        kopya["kompu_offers"] = [teklif]
 
     if olcek != 1.0:
         for esya in kopya.get("items", []):

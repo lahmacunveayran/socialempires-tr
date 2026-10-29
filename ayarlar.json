@@ -2,6 +2,8 @@
   "_aciklama": "Sunucu ayarlari. Degistirdikten sonra sunucuyu yeniden baslatin.",
   "zaman_olcegi": 3.0,
   "_zaman_olcegi": "Oyun hizi carpani: 3.0 = uretim/insaat sureleri 3 kat kisalir, 1.0 = normal.",
+  "magaza_tema_setleri": true,
+  "_magaza_tema_setleri": "true: eski etkinliklerin tema setleri (Çin, Viking, Mısır, Cadılar Bayramı...) ve Harikalar mağazada satılır.",
   "dunya": {
     "aktif": true,
     "tick_saniye": 60,

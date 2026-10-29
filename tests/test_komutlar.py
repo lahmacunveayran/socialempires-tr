@@ -4,6 +4,7 @@
 """
 
 import json
+import math
 import unittest
 
 from ortak import KomutTesti, bos_kayit
@@ -310,51 +311,82 @@ class KomsuKomutlari(KomutTesti):
 
 
 class PvpKomutlari(KomutTesti):
+    """end_attack: istemcinin Assault.sendAssaultResults biçimi."""
+
     def setUp(self):
         super().setUp()
         self.kurban = bos_kayit("rakip")
         self.kurban["playerInfo"]["name"] = "Rakip"
+        self.kurban["maps"][0]["level"] = 5
         self.kayitlar["rakip"] = self.kurban
 
-    def saldir(self, **ek):
-        veri = {"victim_id": "rakip", "map": 0, "win": 1,
-                "resources": {"g": 0}, "resources_victim": {"g": 10}}
+    def saldir(self, *ek_arg, **ek):
+        veri = {"attacker": {"user_id": "test", "map": 0}, "victim": {"user_id": "rakip", "level": 5},
+                "resources": {"g": 500, "x": 30}, "resources_victim": {"g": 0},
+                "attacker_units": [[512, 4, 2, 1]], "victim_units": [[512, 3, 2, 0]],
+                "win": 1, "duration": 30, "voluntary_end": 0, "townhall_gold": 500, "honor": 4}
         veri.update(ek)
-        self.komut("end_attack", json.dumps(veri))
+        self.komut("end_attack", json.dumps(veri), *ek_arg)
 
-    def test_saldiri_sonucu_iki_tarafa_uygulanir(self):
-        self.saldir(resources={"x": 5, "g": 25}, resources_victim={"g": 100})
-        self.assertEqual(self.harita["coins"], 50100)
-        self.assertEqual(self.harita["xp"], 5)
-        self.assertEqual(self.kurban["maps"][0]["coins"], 50000 - 100)
+    def test_ganimet_saldirana_kurbandan_dusulmez(self):
+        self.saldir()
+        self.assertEqual(self.harita["coins"], 50500)
+        self.assertEqual(self.harita["xp"], 30)
+        self.assertEqual(self.kurban["maps"][0]["coins"], 50000)
+        self.assertEqual(self.ps["honor"], 4)
         rapor = self.kurban["privateState"]["attacksReceived"][0]
         self.assertEqual(rapor["attacker_id"], "test")
-        self.assertEqual(self.ps["attacksSent"][0]["victim_id"], "rakip")
+        self.assertEqual(rapor["viewPending"], 1)
+        self.assertEqual(rapor["description"]["oponent"]["name"], "Test")
+        self.assertEqual(self.ps["attacksSent"][0]["description"]["oponent"]["name"], "Rakip")
 
-    def test_ayni_hedefe_ikinci_saldiri_reddedilir(self):
+    def test_ganimet_istemci_formuluyle_sinirli(self):
+        # 2 birim yıkıldı, kurban seviye 5: en çok 200*2 + 500 + 25 = 925
+        self.saldir(resources={"g": 999999, "x": 999999})
+        self.assertEqual(self.harita["coins"], 50000 + 925)
+        self.assertEqual(self.harita["xp"], math.ceil(0.05 * 925) + 2 + 150)
+
+    def test_belediye_binasi_yoksa_ganimet_yok(self):
+        self.saldir(True)
+        self.assertEqual(self.harita["coins"], 50000)
+
+    def test_ayni_hedefe_dort_saatte_ikinci_saldiri_ganimetsiz(self):
         self.saldir()
-        ilk = self.kurban["maps"][0]["coins"]
         self.saldir()
-        self.assertEqual(self.kurban["maps"][0]["coins"], ilk)
+        self.assertEqual(self.harita["coins"], 50500)
+        self.assertEqual(len(self.ps["attacksSent"]), 2)
 
-    def test_kalkanli_hedefe_saldiri_reddedilir(self):
-        self.kurban["privateState"]["shield_until"] = 2 ** 40
+    def test_dorduncu_saldiri_ganimetsiz_paket_varsa_serbest(self):
+        from oyun.ekonomi import timestamp_now
+        simdi = timestamp_now()
+        self.ps["attacksSent"] = [{"time": simdi - 60, "victim_id": f"x{i}"} for i in range(3)]
         self.saldir()
-        self.assertEqual(self.kurban["maps"][0]["coins"], 50000)
+        self.assertEqual(self.harita["coins"], 50000)
+        self.ps["attacksPack"] = 5
+        self.kurban["privateState"]["attacksReceived"] = []
+        self.ps["attacksSent"] = [{"time": simdi - 60, "victim_id": f"x{i}"} for i in range(3)]
+        self.saldir()
+        self.assertEqual(self.harita["coins"], 50500)
+        self.assertEqual(self.ps["attacksPack"], 4)
 
-    def test_kupa_kazanilir_ve_istemciden_alinmaz(self):
-        self.saldir(trophies=100000)
-        self.assertEqual(self.ps["trophies"], 8)
+    def test_kaybedince_savunan_odullenir(self):
+        self.saldir(win=0, resources={"g": 0, "x": 0}, resources_victim={"g": 9999})
+        # saldıranın 1 birimi kalıcı öldü -> en çok 20 altın
+        self.assertEqual(self.kurban["maps"][0]["coins"], 50020)
 
-    def test_ganimet_kurbanin_yuzde_onu(self):
-        self.kurban["maps"][0]["coins"] = 30
-        self.saldir(resources_victim={"g": 100})
-        self.assertEqual(self.kurban["maps"][0]["coins"], 27)
+    def test_kalici_kayiplar_haritadan_silinir(self):
+        self.harita["items"] += [[512, 1, 1, 0, 0, 0], [512, 2, 2, 0, 0, 0]]
+        self.saldir()
+        self.assertEqual(sum(1 for e in self.harita["items"] if e[0] == 512), 1)
 
-    def test_saldiri_raporlari_temizlenir(self):
-        self.ps["attacksReceived"] = [{"time": 1}, {"time": 2}]
+    def test_kendine_saldiri_yok(self):
+        self.saldir(victim={"user_id": "test"})
+        self.assertNotIn("attacksSent", self.ps)
+
+    def test_raporlar_gorulunce_gecmis_kalir(self):
+        self.ps["attacksReceived"] = [{"time": 1, "viewPending": 1}, {"time": 2}]
         self.komut("clean_attacks")
-        self.assertEqual(self.ps["attacksReceived"], [])
+        self.assertEqual(self.ps["attacksReceived"], [{"time": 1}, {"time": 2}])
 
 
 if __name__ == "__main__":

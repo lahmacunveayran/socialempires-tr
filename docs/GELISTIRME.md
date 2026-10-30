@@ -1,5 +1,8 @@
 # Geliştirme Notları
 
+> İşlerin kaydı ve denetimi için görev kitabı: `docs/gorev/00-CEKIRDEK.md` (bulgular `docs/gorev/BULGULAR.json`,
+> kapılar `docs/gorev/KAPILAR.md`, oturum notları `docs/devlog/`).
+
 Bu depo, [AcidCaos/socialemperors](https://github.com/AcidCaos/socialemperors)
 koruma projesinin (GPLv3) Türkçeleştirilmiş ve geliştirilmiş bir çatalıdır.
 

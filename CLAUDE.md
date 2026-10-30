@@ -23,3 +23,14 @@ Gerekirse en fazla **oyunun kendi görselleri** kullanılır: oyun varlıkları
 - Testler: `python -m unittest discover -s tests`
 - Tarayıcı JS testleri: `node --test tests/js/*.test.js`
 - Ayrıntılar: `docs/GELISTIRME.md`, yol haritası durumu: `docs/YOL_HARITASI_DURUM.md`
+
+## Görev kitabı ve devir notu
+
+İşler sonradan denetlenebilsin diye kitap gibi tutulur (`lahmacunveayran/Lyraska` ile aynı yöntem):
+
+- Her oturumun başında `docs/gorev/00-CEKIRDEK.md`, `docs/gorev/BULGULAR.json` (`devam_noktasi`) ve son
+  `docs/devlog/` notu okunur.
+- Bulunan, düzeltilen, çürütülen ya da karara bağlanan her şey `BULGULAR.json`'a kanıtı ve işaretiyle
+  (✔ çalıştırıldı, ◐ dolaylı, ? doğrulanmadı) yazılır; maddeler silinmez. `tests/test_gorev.py` şemayı denetler.
+- Her PR o günün devir notundaki "Durum" ve "Sıradaki adım"ı günceller; oturum sonunda
+  `docs/devlog/YYYY-AA-GG.md` yazılır (aynı gün ikinci oturumsa `-2`).

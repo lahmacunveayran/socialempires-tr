@@ -734,3 +734,25 @@ img { -webkit-user-drag: none; }
   .ust-dugme img { height: 16px; }
   .arma { display: none; }
 }
+
+/* ================= Oyun modu (tam ekran) =================
+   Oyun ekranın tamamını alır; başlık ve paneller gizlenir. Oran 760:600 kalır (oyun EXACT_FIT ile esner),
+   kalan kenarlar koyu ahşap. Android uygulamasında varsayılan açıktır. */
+.tam-ekran-dugme { cursor: pointer; font: inherit; }
+.tam-cik[hidden] { display: none; }
+body.oyun-modu { background: #1a0f07; overflow: hidden; }
+body.oyun-modu > :not(.yerlesim):not(.tam-cik):not(script) { display: none; }
+body.oyun-modu .yerlesim { display: block; max-width: none; padding: 0; }
+body.oyun-modu .yerlesim > :not(.oyun-alani) { display: none; }
+body.oyun-modu .oyun-alani { padding: 0; height: 100vh; height: 100dvh; align-items: center; }
+body.oyun-modu .cerceve { padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+body.oyun-modu .arma { display: none; }
+body.oyun-modu .oyun-kutusu {
+  width: min(100vw, 100vh * 760 / 600); width: min(100vw, 100dvh * 760 / 600);
+  border-radius: 0; box-shadow: none;
+}
+.tam-cik {
+  position: fixed; z-index: 50; top: 8px; left: 8px; padding: 4px 12px 3px; font-size: 13px; cursor: pointer;
+  opacity: .55; transition: opacity .2s;
+}
+.tam-cik:hover, .tam-cik:focus-visible { opacity: 1; }

@@ -62,10 +62,15 @@ function konsoluYaz() {
       cerceve: (() => { const k = document.getElementById("oyun-kutusu").getBoundingClientRect();
         return `${Math.round(k.width)}×${Math.round(k.height)}`; })(),
       pencere: `${innerWidth}×${innerHeight}`,
+      // Uygulamada oyun modu (tam ekran) açık gelir: oyun pencerenin genişliğini ya da yüksekliğini doldurur
+      oyunModu: document.body.classList.contains("oyun-modu"),
+      dolu: (() => { const k = document.getElementById("oyun-kutusu").getBoundingClientRect();
+        return Math.abs(k.width - innerWidth) <= 2 || Math.abs(k.height - innerHeight) <= 2; })(),
     };
   });
   console.log(`[${sure()}] ${JSON.stringify(durum)}`);
   if (!durum.swf) throw new Error("Ruffle SWF bilgisini vermedi");
+  if (!durum.oyunModu || !durum.dolu) throw new Error("Oyun tam ekran açılmadı (oyun modu)");
 
   // Oyunun kendisi sunucuya aşamalarını bildirir (oyun/istemci.py track_game_status)
   let asamalar = [];

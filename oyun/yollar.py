@@ -4,6 +4,7 @@ Paketlenmiş (PyInstaller) sürümde veri dosyaları geçici klasöre açılır;
 kayıtlar ve modlar ise her zaman programın yanında durur.
 """
 
+import json
 import os
 import sys
 
@@ -28,3 +29,9 @@ MODS_DIR = os.path.join(BASE_DIR, "mods")
 SAVES_DIR = os.environ.get("SE_KAYIT_DIZINI") or os.path.join(BASE_DIR, "saves")
 INDIRILEN_DIR = os.path.join(BASE_DIR, "download_assets")
 AYARLAR = os.path.join(BASE_DIR, "ayarlar.json")
+
+
+def json_oku(yol):
+    """JSON dosyasını okur ve kapatır (açık kalan dosyalar Android günlüğünü ResourceWarning ile doldurur)."""
+    with open(yol, encoding="utf-8") as f:
+        return json.load(f)

@@ -149,6 +149,19 @@ class Proje(unittest.TestCase):
         # brotli isteğe bağlı (yalnızca Ruffle'ı önceden sıkıştırır); Android'de gzip yeter
         self.assertEqual(kurulan, gerekli - {"brotli"})
 
+    def test_tam_ekran(self):
+        java = self.oku("app", "src", "main", "java", "io", "github", "lahmacunveayran", "socialempirestr",
+                        "MainActivity.java")
+        # Sayfa uygulamada olduğunu kullanıcı ajanındaki işaretten anlar ve oyun modunu açar
+        isaret = re.search(r'AJAN_ISARETI = " ([\w-]+)"', java).group(1)
+        with open(os.path.join(KOK, "templates", "js", "oyun.js"), encoding="utf-8") as f:
+            self.assertIn(f"/{isaret}/.test(navigator.userAgent)", f.read())
+        # Android 11+ çubukları güncel yöntemle gizler; oyunun (Ruffle'ın) tam ekran isteği karşılanır
+        for parca in ("WindowInsetsController", "systemBars()", "onShowCustomView", "onHideCustomView",
+                      "setTextZoom(100)", "LAYOUT_IN_DISPLAY_CUTOUT_MODE"):
+            self.assertIn(parca, java)
+        self.assertIn('android:screenOrientation="sensorLandscape"', self.oku("app", "src", "main", "AndroidManifest.xml"))
+
 
 if __name__ == "__main__":
     unittest.main()

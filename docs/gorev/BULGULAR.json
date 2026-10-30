@@ -3,8 +3,8 @@
   "guncelleme": "2026-10-30",
   "devam_noktasi": {
     "faz": "Tablet özellikleri; sonra bot dünyası, imparatorluk günlüğü, çeviri taraması",
-    "madde": "OYN-05",
-    "sonraki_adim": "Sahibi APK ile tablette dener (profil resmi galeriden seçimi dahil); v0.1.0 sürümü sahibinin onayını bekliyor"
+    "madde": "DAG-12",
+    "sonraki_adim": "CI APK ve emülatör sınaması yeşil olunca sahibi tablette tam ekranı dener"
   },
   "maddeler": [
     {
@@ -591,6 +591,19 @@
       "pr": null,
       "onay": "Sahibi, 30 Ekim 2026",
       "notlar": "Android'de galeri seçimi gerçek tablette doğrulanacak (?)."
+    },
+    {
+      "id": "DAG-12",
+      "baslik": "Android'de oyun tam ekran olmuyordu; Android kalite denetimi",
+      "sinif": "hata",
+      "onem": "Yüksek",
+      "durum": "ci_bekliyor",
+      "isaret": "◐",
+      "kanit": "Sahibi: 'Androidde tam ekran olmuyordu' (30 Ekim 2026). Kodda bulunanlar: (1) oyun sayfasında tam ekran yoktu; oyun başlık ve panellerle bir çerçevede duruyordu (tablet 1280×800'de 793×626); (2) MainActivity çubukları Android 11'den beri eskimiş SYSTEM_UI_FLAG_* ile gizliyordu, uygulama Android 15'i hedefliyor; (3) WebChromeClient onShowCustomView yoktu, oyunun/Ruffle'ın tam ekran isteği WebView'da hiçbir şey yapmıyordu. Düzeltme: sayfada oyun modu (başlık/paneller gizli, oyun 760:600 oranla ekranı doldurur, sol üstte Çık, başlıkta Tam Ekran; seçim hatırlanır, uygulamada varsayılan açık, kullanıcı ajanındaki SocialEmpiresTR-Android işaretiyle); Android 11+ WindowInsetsController ile çubuklar, kamera çentiği kaplanır; onShowCustomView/onHideCustomView. Tarayıcıda Android ajanıyla 1280×800'de ölçüldü: oyun 1013×800 (önce 793×626, %63 büyük), Çık sonrası eski düzen, yeniden yüklemede kapalı kalır, dikey 800×1280'de 800×632 taşmadan; normal tarayıcıda varsayılan kapalı, düğme gerçek tam ekranı da ister. Aynı denetimde: Android yazı boyutu WebView'ı büyütüyordu (setTextZoom 100); geri tuşu oyundan giriş sayfasına dönüyordu (oyunda iki basış, uygulama arka plana); arka planda zamanlayıcılar ve müzik sürüyordu (pauseTimers/resumeTimers); uygulama yatay kilitlendi (sensorLandscape); sunucu açılışta kayıt dosyalarını kapatmıyordu (Android günlüğünde her kayıtta ResourceWarning; yollar.json_oku). Emülatör sınaması artık oyun modunun açık olduğunu ve oyunun pencereyi doldurduğunu da denetler. Java burada derlenemedi (Android SDK yok): CI derler.",
+      "test": "tests/test_android.py (Proje.test_tam_ekran), android/sinama_oyun.js",
+      "pr": null,
+      "onay": null,
+      "notlar": "Gerçek tablette doğrulanacak (?): çubukların gizlenmesi, Çık/Tam Ekran, geri tuşu, arka planda müziğin durması. Ruffle'ın İngilizce 'hardware acceleration is disabled' uyarısı yalnızca GPU'suz ortamda (başsız tarayıcı) görüldü."
     }
   ]
 }

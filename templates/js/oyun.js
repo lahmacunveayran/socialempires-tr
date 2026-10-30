@@ -425,4 +425,34 @@
       })
       .catch(function () { alert("Yedek yüklenemedi."); });
   });
+
+  // --- Oyun modu (tam ekran): oyun ekranın tamamını alır, başlık ve paneller gizlenir.
+  // Android uygulamasında (kullanıcı ajanında "SocialEmpiresTR-Android") varsayılan açıktır; seçim hatırlanır.
+  // Tarayıcıda ayrıca gerçek tam ekran istenir; Esc ile çıkılınca oyun modu da kapanır.
+  var UYGULAMA = /SocialEmpiresTR-Android/.test(navigator.userAgent);
+  var MOD_ANAHTARI = "oyun-modu";
+  var tamCik = document.getElementById("tam-cik");
+  var sayfaTamEkranda = false;
+  function oyunModu(acik, kaydet) {
+    document.body.classList.toggle("oyun-modu", acik);
+    tamCik.hidden = !acik;
+    if (kaydet) {
+      try { localStorage.setItem(MOD_ANAHTARI, acik ? "1" : "0"); } catch (e) {}
+    }
+    if (UYGULAMA || !document.documentElement.requestFullscreen) return;
+    if (acik && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(function () {});
+    else if (!acik && document.fullscreenElement === document.documentElement) document.exitFullscreen().catch(function () {});
+  }
+  document.getElementById("tam-ekran").addEventListener("click", function () { oyunModu(true, true); });
+  tamCik.addEventListener("click", function () { oyunModu(false, true); });
+  document.addEventListener("fullscreenchange", function () {
+    var simdi = document.fullscreenElement === document.documentElement;
+    if (sayfaTamEkranda && !simdi && document.body.classList.contains("oyun-modu")) oyunModu(false, true);
+    sayfaTamEkranda = simdi;
+  });
+  if (UYGULAMA) {
+    var kayitli = null;
+    try { kayitli = localStorage.getItem(MOD_ANAHTARI); } catch (e) {}
+    if (kayitli !== "0") oyunModu(true, false);
+  }
 })();

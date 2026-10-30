@@ -12,6 +12,8 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.webkit.CookieManager;
 import android.webkit.URLUtil;
@@ -46,6 +48,9 @@ public class MainActivity extends Activity {
     private static final long HAZIR_SURESI_MS = 240_000;
     private static final int DOSYA_SEC = 1;
     private static final int DOSYA_KAYDET = 2;
+    // Sayfa bu işaretle uygulamada olduğunu anlar ve oyun modunu (tam ekran) varsayılan açar (oyun.js)
+    private static final String AJAN_ISARETI = " SocialEmpiresTR-Android";
+    private static final long CIKIS_ARALIGI_MS = 2000;
 
     // Sunucu süreç boyunca bir kez açılır; ekran yeniden kurulsa da çalışmaya devam eder
     private static boolean sunucuAcildi = false;
@@ -57,11 +62,23 @@ public class MainActivity extends Activity {
     private TextView durum;
     private ValueCallback<Uri[]> dosyaGeriCagrisi;
     private byte[] kaydedilecek;
+    // Oyunun (Ruffle'ın) tam ekran isteği: WebView tam ekran öğesini ayrı bir görünüm olarak verir
+    private View tamEkranGorunumu;
+    private WebChromeClient.CustomViewCallback tamEkranGeriCagrisi;
+    private long sonGeri;
 
     @Override
     protected void onCreate(Bundle kayitliDurum) {
         super.onCreate(kayitliDurum);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        // Kamera çentiği/deliği olan ekranlarda oyun o bölgeyi de kullanır
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            getWindow().getAttributes().layoutInDisplayCutoutMode =
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            getWindow().getAttributes().layoutInDisplayCutoutMode =
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        }
         // Yalnızca CI sınaması (android/sinama.sh) açar: WebView'a adb üzerinden DevTools ile bağlanılabilir
         if (getIntent().getBooleanExtra("sinama", false)) {
             WebView.setWebContentsDebuggingEnabled(true);
@@ -90,6 +107,11 @@ public class MainActivity extends Activity {
         ayar.setDomStorageEnabled(true);
         ayar.setMediaPlaybackRequiresUserGesture(false);
         ayar.setAllowFileAccess(false);
+        // Android'in yazı boyutu ayarı (Samsung'da sık büyütülür) sayfa düzenini bozmasın; oyun kendi boyutunu kullanır
+        ayar.setTextZoom(100);
+        if (!ayar.getUserAgentString().contains(AJAN_ISARETI)) {
+            ayar.setUserAgentString(ayar.getUserAgentString() + AJAN_ISARETI);
+        }
         web.setVisibility(View.INVISIBLE);
 
         web.setWebViewClient(new WebViewClient() {
@@ -127,6 +149,24 @@ public class MainActivity extends Activity {
 
         // "Yedekten yükle": dosya seçici
         web.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onShowCustomView(View gorunum, CustomViewCallback geriCagri) {
+                if (tamEkranGorunumu != null) {
+                    geriCagri.onCustomViewHidden();
+                    return;
+                }
+                tamEkranGorunumu = gorunum;
+                tamEkranGeriCagrisi = geriCagri;
+                kok.addView(gorunum, new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+                sistemCubuklariniGizle();
+            }
+
+            @Override
+            public void onHideCustomView() {
+                tamEkrandanCik();
+            }
+
             @Override
             public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> geriCagri, FileChooserParams secenek) {
                 if (dosyaGeriCagrisi != null) {
@@ -279,7 +319,21 @@ public class MainActivity extends Activity {
     public void onWindowFocusChanged(boolean odakta) {
         super.onWindowFocusChanged(odakta);
         if (odakta) {
-            // Tam ekran: sistem çubukları kenardan kaydırınca görünür, sonra yine gizlenir
+            sistemCubuklariniGizle();
+        }
+    }
+
+    /** Tam ekran: sistem çubukları gizlenir, kenardan kaydırınca bir süre görünüp yine gizlenir. */
+    private void sistemCubuklariniGizle() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Android 11+: eski SYSTEM_UI_FLAG_* bayrakları Android 15'i hedefleyen uygulamada güvenilir değil
+            getWindow().setDecorFitsSystemWindows(false);
+            WindowInsetsController denetci = getWindow().getInsetsController();
+            if (denetci != null) {
+                denetci.hide(WindowInsets.Type.systemBars());
+                denetci.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            }
+        } else {
             getWindow().getDecorView().setSystemUiVisibility(
                     View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                             | View.SYSTEM_UI_FLAG_FULLSCREEN
@@ -290,19 +344,48 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void tamEkrandanCik() {
+        if (tamEkranGorunumu == null) {
+            return;
+        }
+        kok.removeView(tamEkranGorunumu);
+        tamEkranGorunumu = null;
+        if (tamEkranGeriCagrisi != null) {
+            tamEkranGeriCagrisi.onCustomViewHidden();
+            tamEkranGeriCagrisi = null;
+        }
+        sistemCubuklariniGizle();
+    }
+
     @Override
     public void onBackPressed() {
-        if (web.canGoBack()) {
-            web.goBack();
-        } else {
-            super.onBackPressed();
+        if (tamEkranGorunumu != null) {
+            tamEkrandanCik();
+            return;
         }
+        String adres = web.getUrl();
+        String yol = adres == null ? null : Uri.parse(adres).getPath();
+        // Oyundayken (ya da gidecek önceki sayfa yokken) yanlışlıkla basılan geri oyunu kapatmasın: ikinci basışta
+        // uygulama arka plana alınır, sunucu ve kayıt çalışmayı sürdürür
+        if (yol == null || yol.startsWith("/play") || !web.canGoBack()) {
+            long simdi = System.currentTimeMillis();
+            if (simdi - sonGeri < CIKIS_ARALIGI_MS) {
+                moveTaskToBack(true);
+            } else {
+                sonGeri = simdi;
+                Toast.makeText(this, R.string.cikmak_icin_tekrar, Toast.LENGTH_SHORT).show();
+            }
+            return;
+        }
+        web.goBack();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         web.onPause();
+        // Arka plandayken oyun döngüsü ve müzik dursun (pil); sunucu ve bot dünyası çalışmayı sürdürür
+        web.pauseTimers();
         CookieManager.getInstance().flush();
     }
 
@@ -310,5 +393,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         web.onResume();
+        web.resumeTimers();
+        sistemCubuklariniGizle();
     }
 }

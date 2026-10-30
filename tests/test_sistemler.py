@@ -292,6 +292,14 @@ class CeviriTestleri(unittest.TestCase):
         adlar = {i["id"]: i["name"] for i in tr["items"]}
         self.assertEqual(adlar["1"], "Ev I")
 
+    def test_buyu_onur_ve_turnuva_adlari_turkce(self):
+        from oyun.config import get_client_game_config, get_game_config
+        tr, en = get_client_game_config("tr"), get_game_config()
+        for bolum, alan in (("magics", "name"), ("honor_levels", "rank")):
+            self.assertTrue(tr[bolum], bolum)
+            self.assertNotEqual([m.get(alan) for m in tr[bolum]], [m.get(alan) for m in en[bolum]], bolum)
+        self.assertIn("ÇAYLAKLAR", {t.get("name") for t in tr["tournament_type"].values()})
+
     def test_yerellestirme_kayitlari_nesne(self):
         from oyun.config import get_game_config
         self.assertTrue(all(isinstance(e, dict) for e in get_game_config()["localization_strings"]))

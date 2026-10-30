@@ -3,8 +3,8 @@
   "guncelleme": "2026-10-30",
   "devam_noktasi": {
     "faz": "Tablet özellikleri; sonra bot dünyası, imparatorluk günlüğü, çeviri taraması",
-    "madde": "DAG-09",
-    "sonraki_adim": "Emülatör sınaması yeşil olunca sahibi tablette dener; ardından KAR/oyun içi işler (sahibinin 30 Ekim listesi)"
+    "madde": "REG-03",
+    "sonraki_adim": "Emülatör sınaması swangle_indirect ile yeşil olunca sahibi tablette dener; günlük ödül penceresinin boş başlığı (OYN-03 notu) incelenir"
   },
   "maddeler": [
     {
@@ -539,6 +539,32 @@
       "pr": null,
       "onay": "Sahibi, 30 Ekim 2026",
       "notlar": "Bot akınlarının eski 'gönderilen' kayıtlarında açıklama yok: sonuç '—'."
+    },
+    {
+      "id": "REG-03",
+      "baslik": "Emülatör, oyunun WebGL çizimi sırasında kapanıyor (swiftshader_indirect)",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "ci_bekliyor",
+      "isaret": "◐",
+      "kanit": "PR #15, 13. android çalıştırması (adae314): uygulama kendi sayfasını yükledi, sınama /new.html'e giderken sayfa kapandı, ardından adb 'waiting for device' ve emülatörün 5554 portu reddedildi; emülatör sürecinin kendisi düştü. REG-02'deki iki çöküş de grafik katmanındaydı. Google hata kaydı 410512342: swiftshader_indirect ile emülatör segfault. Emülatör ANGLE üzerinden yazılım çizimine (-gpu swangle_indirect) alındı; sinama.sh emülatör kapanınca bunu açıkça yazar.",
+      "test": ".github/workflows/android.yml (sinama)",
+      "pr": "#15",
+      "onay": null,
+      "notlar": "Gerçek tabletlerde emülatör grafik katmanı yok; bu yalnızca CI ortamı sorunu. Düzelme bir sonraki CI çalıştırmasıyla doğrulanacak."
+    },
+    {
+      "id": "OYN-03",
+      "baslik": "Çeviri taraması: oyun baştan oynanıp İngilizce kalan metinler bulundu",
+      "sinif": "ozellik",
+      "onem": "Düşük",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "Oyun yerelde Chromium + Ruffle ile oynandı (köy, inşa, dünya, hedefler, ayarlar, hediye, küre, günlük ödül); ekran görüntüleri tek tek okundu. Eklenen: büyüler (magics, 10. bölüm), onur rütbeleri (honor_levels), turnuva türleri (tournament_type) tr.json'a (+53), 20 SWF metin alanı arayuz_tr.json'a (savaş, sınır, müttefik pazarı yardımları, Element Tanrıları anlatısı, casuslar, dalga, kalan birim...). Varsayılan harita adı 'My Empire' -> 'İmparatorluğum' (yeni köy ve eski kayıtlar). SWF yaması 581 alanı değiştiriyor.",
+      "test": "tests/test_sistemler.py (CeviriTestleri, SwfYamaTestleri)",
+      "pr": "#15",
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Kalan İngilizce: 'world' (küre vektör çizimi), BUILD/ADD ALLY (resim), 'Add Cash' (SWF metin alanlarında yok, resim ya da başka parça); resimlerdeki yazılar karar gereği kalır. Açık (?): günlük ödül penceresinin başlık kutusu boş görünüyor ve '250 altın' etiketi kutuya sığmıyor ('250 al'); 2. ve 4. gün ödülü yalnızca '1'. Bunlar istemcinin kendi kodunda kuruluyor; doğrulanmadı."
     }
   ]
 }

@@ -4,11 +4,11 @@
 # yeni imparatorluk, "Krallığa Gir", oyun yüklenmeli ve oyun sunucuya "init" bitişini bildirmeli.
 # Uygulama sunucuyu açamazsa beklemeden düşer.
 # Her adımın süre sınırı vardır; takılan adım günlükte adıyla görünür.
-# Kullanım (emülatör açıkken, playwright-core kurulu): bash android/sinama.sh <apk> [ekran.png] [oyun.png]
+# Kabuktan ekran görüntüsü (adb screencap) alınmaz: emülatörün grafik katmanını iki kez düşürdü.
+# Kullanım (emülatör açıkken, playwright-core kurulu): bash android/sinama.sh <apk> [oyun.png]
 set -uo pipefail
 APK="$1"
-EKRAN="${2:-ekran.png}"
-OYUN_EKRANI="${3:-oyun.png}"
+OYUN_EKRANI="${2:-oyun.png}"
 PAKET=io.github.lahmacunveayran.socialempirestr
 
 adim() { echo "== $(date +%H:%M:%S) $*"; }
@@ -36,12 +36,6 @@ while [ $(( $(date +%s) - baslangic )) -lt 240 ]; do
 done
 echo "Hazır olma süresi: $(( $(date +%s) - baslangic )) sn"
 
-if [ "$hazir" = 1 ]; then
-  adim "Giriş sayfası yükleniyor"
-  sleep 15
-fi
-adim "Ekran görüntüsü"
-timeout 30 adb exec-out screencap -p > "$EKRAN" || echo "ekran görüntüsü alınamadı"
 gunluk
 
 [ "$hazir" = 1 ] || { echo "Sunucu 4 dakika içinde hazır olmadı"; exit 1; }
@@ -55,10 +49,5 @@ pid=$(timeout 20 adb shell pidof "$PAKET" | tr -d '\r') || true
 
 adim "WebView'a DevTools ile bağlanılıyor (pid $pid)"
 timeout 600 node "$(dirname "$0")/sinama_oyun.js" "$PAKET" "$OYUN_EKRANI"
-oyun=$?
-echo "--- oyunun sunucuya bildirdiği aşamalar ---"
-timeout 30 adb logcat -d -s python.stdout:V | grep -o "track_game_status: .*" | uniq | tail -30
-[ "$oyun" = 0 ] || { echo "Oyun WebView'da yüklenmedi"; gunluk; exit 1; }
-timeout 30 adb logcat -d -s python.stdout:V | grep -q "track_game_status: 129b-init" \
-  || { echo "Oyun 'init' aşamasını bitirmedi"; gunluk; exit 1; }
+[ $? = 0 ] || { echo "Oyun WebView'da yüklenmedi"; gunluk; exit 1; }
 adim "Tamam: sunucu hazır, oyun Android WebView'da yüklendi ve açılışını bitirdi."

@@ -20,9 +20,21 @@ Oyun tam ekran açılır.
 2. APK'ya dokunun. Android "bilinmeyen uygulama" izni isterse açın.
    Samsung'da: **Ayarlar → Uygulamalar → ⋮ → Özel erişim → Bilinmeyen uygulamaları yükle →** (Dosyalarım ya da
    Chrome) **→ İzin ver**.
+   Samsung "Otomatik Engelleyici" (Auto Blocker) kurulumu engellerse: **Ayarlar → Güvenlik ve gizlilik →
+   Otomatik Engelleyici → Kapat**; kurulumdan sonra yeniden açabilirsiniz.
 3. Google Play Protect uyarı verirse **Yine de yükle**'ye basın. Uygulama Play Store'da değildir.
 4. **Social Empires** simgesine dokunun. Birkaç saniye "Oyun sunucusu açılıyor…" yazar, sonra imparatorluk
    seçme ekranı gelir.
+
+## İnternetsiz oynamak: çevrimdışı paket
+
+Oyun sayfasının üstündeki **çevrimdışı paket** bağlantısı:
+
+- **Temel paket (~175 MB):** oyun, arayüz, efektler, müzik, mağazadaki bütün bina ve birimler. İnternetsiz
+  oynamaya yeter.
+- **Tam paket (~1,1 GB):** üstüne mağazada olmayan ödül, boss ve bot binalarının çizimleri.
+
+İndirme sürerken oynayabilirsiniz; yarıda kalırsa yeniden basınca kaldığı yerden sürer. Wi-Fi'da indirin.
 
 ## Kayıtlar
 
@@ -31,14 +43,22 @@ Oyun tam ekran açılır.
 - Yeni sürüm, depo sahibinin imza anahtarı GitHub'a eklendiyse (aşağıda "İmza anahtarı") eskisinin üstüne kurulur
   ve kayıtlar korunur. Eklenmediyse her APK geçici bir anahtarla imzalanır; Android "uygulama yüklenmedi" der.
   O durumda: **yedek indir → eski uygulamayı kaldır → yenisini kur → Yedekten Yükle.**
-- Bilgisayardaki imparatorluğu tablete taşımak: bilgisayarda **yedek indir**, dosyayı tablete atın,
-  uygulamada **Yedekten Yükle**. Tersi de aynı.
+- **Bilgisayar ile tablet arasında taşımak (Wi-Fi ile taşı):** iki cihaz aynı Wi-Fi'da olsun.
+  1. İmparatorluğun bulunduğu cihazda **wi-fi ile taşı → Göndermeyi Aç**. Ekranda adres (192.168.x.x) ve 6
+     haneli kod çıkar; 10 dakika açık kalır.
+  2. Öteki cihazda **wi-fi ile taşı**, adresi ve kodu yazıp **Bağlan**, imparatorluğu seçip **Al**.
+  Aynı imparatorluk iki cihazda da varsa gelen kayıt üzerine yazılır, eskisi yedek olarak saklanır. Windows
+  "erişime izin ver" sorarsa **Özel ağlar** için izin verin. Dosyayla da olur: **yedek indir** → **Yedekten Yükle**.
 - Android'in kendi yedeği açıksa (Google hesabı) kayıtlar oraya da girer; indirilen oyun dosyaları girmez.
 
 ## Kullanım
 
 - Oyun fareyle oynanmak için yapıldı; dokunma tıklama gibi çalışır, haritayı parmakla kaydırabilirsiniz.
-  Yakınlaştırma oyunun sağdaki kaydırıcısıyla yapılır.
+- **İki parmakla yakınlaştırma:** parmakları açınca yakınlaşır, kapayınca uzaklaşır (oyunun sağdaki kaydırıcısı
+  da çalışır). İlk parmağın altındaki bina seçilebilir; boş yere dokununca seçim kalkar.
+- Oyun açıkken tablet uzun süre başka uygulamadaysa Android uygulamayı kapatabilir; kayıtlar her hamlede
+  yazıldığı için bir şey kaybolmaz. Hiç kapanmasın isterseniz: **Ayarlar → Pil → Arka plan kullanım sınırları →
+  Asla uyumayan uygulamalar → Social Empires**.
 - Geri tuşu bir önceki sayfaya döner (örneğin hile panelinden oyuna).
 - Discord gibi dış bağlantılar tarayıcıda açılır.
 
@@ -47,7 +67,10 @@ Oyun tam ekran açılır.
 - Sunucu yalnızca cihazın kendisine açıktır (`127.0.0.1:5050`); evdeki başka cihazlar bağlanamaz.
 - Python sunucusu [Chaquopy](https://chaquo.com/chaquopy/) (MIT) ile çalışır; oyun Android WebView'da
   [Ruffle](https://ruffle.rs/) 0.7.1 ile açılır. Ruffle uygulamayla gelir.
-- Her APK yayınlanmadan önce bir Android emülatöründe açılıp sınanır (`.github/workflows/android.yml`).
+- Her APK yayınlanmadan önce bir Android emülatöründe açılıp sınanır (`.github/workflows/android.yml`): yeni
+  imparatorluk kurulur, oyun açılır ve açılışını bitirdiğini sunucuya bildirmelidir.
+- Ruffle, GPU'su sınırlı cihazlarda (köşe uniform sınırı 256) kendi WebGL çizicisiyle açılır; çalışırken çökerse
+  sayfa bir kez bu çiziciyle yeniden açılır. WebView'ın çizim süreci çökerse uygulama onu yeniden kurar.
 
 ## İmza anahtarı (depo sahibi için, bir kez)
 

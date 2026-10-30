@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Çevrimdışı Paket · Social Empires Türkçe</title>
+    <link rel="icon" type="image/gif" href="/img/icon.gif">
+    <link rel="stylesheet" href="/css/oyun.css">
+    <script src="/js/gokyuzu.js" defer></script>
+</head>
+<body>
+    <div class="manzara" aria-hidden="true">
+        <div class="orman orman-uzak"></div>
+        <div class="orman orman-orta"></div>
+        <div class="sis"></div>
+        <div class="orman orman-yakin"></div>
+    </div>
+
+    <main class="giris hile cevrimdisi">
+        <section class="panel" aria-labelledby="cevrimdisi-basligi">
+            <h2><span class="serit-baslik" id="cevrimdisi-basligi">Çevrimdışı Paket</span></h2>
+            <div class="icerik">
+                <p class="hile-alt">Oyunun resimleri, sesleri ve çizimleri bir kerede iner; sonra oyun internetsiz oynanır.
+                    İndirme sürerken oynayabilirsiniz. Yarıda kalırsa kaldığı yerden sürer.</p>
+
+                {% for ad, baslik, aciklama in [("temel", "Temel paket", "Oyun, arayüz, efektler, müzik ve mağazadaki bütün bina ve birimler. İnternetsiz oynamaya yeter."),
+                                                ("tam", "Tam paket", "Temel paketin üstüne mağazada olmayan ödül, boss ve bot binalarının çizimleri.")] %}
+                <div class="paket" data-paket="{{ ad }}">
+                    <h3 class="yazi-oyun">{{ baslik }} <span class="seviye-yazi boyut">…</span></h3>
+                    <p class="paket-aciklama">{{ aciklama }}</p>
+                    <progress max="1" value="0" aria-label="{{ baslik }} ilerlemesi"></progress>
+                    <p class="paket-durum">…</p>
+                    {% if yerel %}<button class="{{ 'yesil-dugme' if ad == 'temel' else 'ust-dugme' }} indir" type="button">{{ baslik }}i indir</button>{% endif %}
+                </div>
+                {% endfor %}
+
+                {% if yerel %}
+                <div class="hile-dugmeler"><button class="ust-dugme" type="button" id="durdur" hidden>Durdur</button></div>
+                {% else %}
+                <p class="hile-alt">İndirme yalnızca oyunun çalıştığı cihazdan başlatılır.</p>
+                {% endif %}
+                <p class="hile-ileti" id="ileti" role="status">Wi-Fi'da indirmeniz önerilir.</p>
+                <div class="giris-dugmeler"><a class="yesil-dugme" href="/play.html">Oyuna Dön</a></div>
+            </div>
+        </section>
+    </main>
+    <script>
+        (function () {
+            var ileti = document.getElementById("ileti");
+            var durdur = document.getElementById("durdur");
+            var SAYI = new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 0 });
+            var HATALAR = { suruyor: "Bir indirme zaten sürüyor.", yer: "Cihazda yeterli boş yer yok.",
+                            yerel: "İndirme yalnızca oyunun çalıştığı cihazdan başlatılır." };
+            var zamanlayici = null;
+            function mb(bayt) { return SAYI.format(bayt / 1e6) + " MB"; }
+
+            function goster(d) {
+                Object.keys(d.paketler).forEach(function (ad) {
+                    var p = d.paketler[ad], kutu = document.querySelector('.paket[data-paket="' + ad + '"]');
+                    var bitti = p.inen_dosya >= p.dosya;
+                    kutu.querySelector(".boyut").textContent = "(" + mb(p.bayt) + ")";
+                    kutu.querySelector("progress").value = p.bayt ? p.inen_bayt / p.bayt : 1;
+                    kutu.querySelector(".paket-durum").textContent = bitti ? "İndi: bu paketle oyun internetsiz oynanır."
+                        : SAYI.format(p.inen_dosya) + " / " + SAYI.format(p.dosya) + " dosya · " + mb(p.inen_bayt) + " / " + mb(p.bayt);
+                    var dugme = kutu.querySelector(".indir");
+                    if (dugme) dugme.disabled = d.calisiyor || bitti;
+                });
+                if (durdur) durdur.hidden = !d.calisiyor;
+                if (d.calisiyor) ileti.textContent = (d.paket === "tam" ? "Tam" : "Temel") + " paket iniyor...";
+                else if (d.hata) ileti.textContent = "İndirme durdu: " + d.hata;
+                else if (d.basarisiz) ileti.textContent = SAYI.format(d.basarisiz) + " dosya inemedi; internet bağlantısını denetleyip yeniden başlatın.";
+                clearTimeout(zamanlayici);
+                if (d.calisiyor) zamanlayici = setTimeout(yokla, 1500);
+            }
+            function yokla() {
+                fetch("/cevrimdisi/durum").then(function (r) { return r.json(); }).then(goster)
+                    .catch(function () { ileti.textContent = "Sunucuya ulaşılamadı."; });
+            }
+            function gonder(adres, veri) {
+                return fetch(adres, { method: "POST", body: veri }).then(function (r) { return r.json(); }).then(function (d) {
+                    if (d.paketler) goster(d);
+                    if (d.hata && HATALAR[d.hata]) ileti.textContent = HATALAR[d.hata];
+                }).catch(function () { ileti.textContent = "Sunucuya ulaşılamadı."; });
+            }
+            document.querySelectorAll(".paket .indir").forEach(function (d) {
+                d.addEventListener("click", function () {
+                    var veri = new FormData();
+                    veri.append("paket", d.closest(".paket").dataset.paket);
+                    gonder("/cevrimdisi/baslat", veri);
+                });
+            });
+            if (durdur) durdur.addEventListener("click", function () { gonder("/cevrimdisi/durdur"); });
+            yokla();
+        })();
+    </script>
+</body>
+</html>

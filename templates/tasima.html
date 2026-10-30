@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Wi-Fi ile Taşı · Social Empires Türkçe</title>
+    <link rel="icon" type="image/gif" href="/img/icon.gif">
+    <link rel="stylesheet" href="/css/oyun.css">
+    <script src="/js/gokyuzu.js" defer></script>
+</head>
+<body>
+    <div class="manzara" aria-hidden="true">
+        <div class="orman orman-uzak"></div>
+        <div class="orman orman-orta"></div>
+        <div class="sis"></div>
+        <div class="orman orman-yakin"></div>
+    </div>
+
+    <main class="giris hile tasima">
+        <section class="panel" aria-labelledby="tasima-basligi">
+            <h2><span class="serit-baslik" id="tasima-basligi">Wi-Fi ile Taşı</span></h2>
+            <div class="icerik">
+                <p class="hile-alt">İmparatorluğunuzu bilgisayar ile tablet arasında dosya taşımadan aktarın.
+                    İki cihaz da aynı Wi-Fi'da olmalı.</p>
+                {% if yerel %}
+                <h3 class="yazi-oyun">1. Bu cihazdan gönder</h3>
+                <p class="paket-aciklama">İmparatorluğun şu an <b>bulunduğu</b> cihazda basın. 10 dakika açık kalır.</p>
+                <div id="gonder-kapali" class="hile-dugmeler"><button class="yesil-dugme" type="button" id="gonder">Göndermeyi Aç</button></div>
+                <div id="gonder-acik" class="tasima-kod" hidden>
+                    <p class="paket-durum">Öteki cihazda bu bilgileri girin:</p>
+                    <p class="tasima-bilgi">Adres <b class="yazi-altin" id="adres">…</b></p>
+                    <p class="tasima-bilgi">Kod <b class="yazi-altin" id="kod">…</b></p>
+                    <p class="paket-durum" id="kalan"></p>
+                    <div class="hile-dugmeler"><button class="ust-dugme" type="button" id="gonder-dur">Kapat</button></div>
+                </div>
+
+                <h3 class="yazi-oyun">2. Başka cihazdan al</h3>
+                <p class="paket-aciklama">İmparatorluğun <b>gideceği</b> cihazda, öteki cihazın ekranındaki adres ve kodu yazın.</p>
+                <form id="al-form" class="tasima-form" autocomplete="off">
+                    <label>Adres <input name="adres" inputmode="decimal" placeholder="192.168.1.20" required></label>
+                    <label>Kod <input name="kod" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="000000" required></label>
+                    <button class="ust-dugme" type="submit">Bağlan</button>
+                </form>
+                <ul class="levha" id="uzak-liste"></ul>
+                {% else %}
+                <p class="hile-alt">Taşıma yalnızca oyunun çalıştığı cihazdan yapılır.</p>
+                {% endif %}
+                <p class="hile-ileti" id="ileti" role="status"></p>
+                <div class="giris-dugmeler"><a class="yesil-dugme" href="/">İmparatorluklar</a></div>
+            </div>
+        </section>
+    </main>
+    {% if yerel %}
+    <script>
+        (function () {
+            var ileti = document.getElementById("ileti");
+            var SAYI = new Intl.NumberFormat("tr-TR");
+            var zamanlayici = null;
+            function json(r) { return r.json().then(function (d) { return [r.ok, d]; }); }
+            function hata() { ileti.textContent = "Sunucuya ulaşılamadı."; }
+
+            function gonderimiGoster(d) {
+                document.getElementById("gonder-kapali").hidden = d.acik;
+                document.getElementById("gonder-acik").hidden = !d.acik;
+                clearTimeout(zamanlayici);
+                if (!d.acik) return;
+                document.getElementById("adres").textContent = d.adres;
+                document.getElementById("kod").textContent = d.kod;
+                document.getElementById("kalan").textContent = Math.ceil(d.kalan / 60) + " dakika açık kalacak" +
+                    (d.gonderilen ? " · " + d.gonderilen + " imparatorluk gönderildi" : "");
+                zamanlayici = setTimeout(function () { fetch("/tasima/gonder").then(json).then(function (s) { gonderimiGoster(s[1]); }); }, 5000);
+            }
+            document.getElementById("gonder").addEventListener("click", function () {
+                fetch("/tasima/gonder", { method: "POST" }).then(json).then(function (s) {
+                    if (!s[0]) { ileti.textContent = s[1].hata || "Gönderme açılamadı."; return; }
+                    gonderimiGoster(s[1]);
+                }).catch(hata);
+            });
+            document.getElementById("gonder-dur").addEventListener("click", function () {
+                fetch("/tasima/gonder/durdur", { method: "POST" }).then(json).then(function (s) { gonderimiGoster(s[1]); }).catch(hata);
+            });
+            fetch("/tasima/gonder").then(json).then(function (s) { gonderimiGoster(s[1]); });
+
+            var form = document.getElementById("al-form");
+            var liste = document.getElementById("uzak-liste");
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+                ileti.textContent = "Bağlanılıyor...";
+                liste.textContent = "";
+                fetch("/tasima/liste", { method: "POST", body: new FormData(form) }).then(json).then(function (s) {
+                    if (!s[0]) { ileti.textContent = s[1].hata; return; }
+                    var imp = s[1].imparatorluklar;
+                    ileti.textContent = imp.length ? "Almak istediğiniz imparatorluğu seçin." : "Gönderen cihazda imparatorluk yok.";
+                    imp.forEach(function (k) {
+                        var li = document.createElement("li");
+                        var ad = document.createElement("span");
+                        ad.className = "ad";
+                        ad.textContent = k.name;
+                        var alt = document.createElement("small");
+                        alt.textContent = "sv " + k.level + " · " + SAYI.format(k.xp) + " XP" +
+                            (k.burada ? " · bu cihazdakinin (sv " + k.burada.level + ") üzerine yazılır" : "");
+                        ad.appendChild(alt);
+                        var dugme = document.createElement("button");
+                        dugme.className = "ust-dugme gir";
+                        dugme.type = "button";
+                        dugme.textContent = "Al";
+                        dugme.addEventListener("click", function () { al(k); });
+                        li.append(ad, dugme);
+                        liste.appendChild(li);
+                    });
+                }).catch(hata);
+            });
+            function al(k) {
+                if (k.burada && !confirm(k.name + " bu cihazda da var (sv " + k.burada.level + "). Gelen kayıt üzerine yazılsın mı? " +
+                                         "Eski hâli yedek olarak saklanır.")) return;
+                var veri = new FormData(form);
+                veri.append("uid", k.userid);
+                ileti.textContent = "Alınıyor...";
+                fetch("/tasima/al", { method: "POST", body: veri }).then(json).then(function (s) {
+                    if (!s[0]) { ileti.textContent = s[1].hata; return; }
+                    ileti.textContent = s[1].imparatorluk.name + " alındı. Oyun açılıyor...";
+                    setTimeout(function () { location.href = "/play.html"; }, 1200);
+                }).catch(hata);
+            }
+        })();
+    </script>
+    {% endif %}
+</body>
+</html>

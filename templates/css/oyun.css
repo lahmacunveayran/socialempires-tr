@@ -658,6 +658,18 @@ img { -webkit-user-drag: none; }
 .hile-miktar { display: block; margin-top: 10px; font: 700 13px var(--metin-yazi); color: var(--murekkep-soluk); }
 .hile-miktar select { margin-left: 6px; padding: 4px 6px; border-radius: 8px; border: 1.5px solid #b49464; background: #fffaf0; font: 700 13px var(--metin-yazi); }
 .hile-dugmeler { display: flex; flex-wrap: wrap; gap: 8px; }
+.cevrimdisi [hidden], .tasima [hidden] { display: none; }
+.tasima-bilgi { margin: 2px 0; font: 800 18px var(--metin-yazi); color: var(--murekkep); }
+.tasima-bilgi b { margin-left: 8px; font: 800 30px/1.1 var(--baslik-yazi); letter-spacing: 2px; }
+.tasima-form { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }
+.tasima-form label { display: flex; flex-direction: column; font: 700 13px var(--metin-yazi); color: var(--murekkep-soluk); }
+.tasima-form input { width: 11em; margin-top: 3px; padding: 6px 8px; border-radius: 8px; border: 1.5px solid #b49464;
+  background: #fffaf0; font: 800 17px var(--metin-yazi); }
+.tasima .levha { margin-top: 12px; }
+.cevrimdisi .paket { margin-top: 14px; padding-top: 4px; border-top: 1.5px dashed #c9ab7a; }
+.cevrimdisi .paket:first-of-type { border-top: 0; }
+.paket-aciklama, .paket-durum { margin: 4px 0 8px; font: 700 13px var(--metin-yazi); color: var(--murekkep-soluk); }
+.paket progress { width: 100%; height: 14px; accent-color: #4f9a1c; }
 .hile-ileti { margin: 16px 0 0; text-align: center; font: 800 14px var(--metin-yazi); color: #2f6a12; min-height: 1.4em; }
 
 /* Veri gelmeden yer ayrılır: paneller dolunca alttakiler kaymasın (CLS). */

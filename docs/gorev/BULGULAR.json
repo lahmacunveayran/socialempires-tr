@@ -2,9 +2,9 @@
   "surum": "0.05a",
   "guncelleme": "2026-10-30",
   "devam_noktasi": {
-    "faz": "Android uygulaması",
-    "madde": "DAG-05",
-    "sonraki_adim": "Sahibi APK'yı Samsung tablette kurar (ANDROID.md); v0.1.0 etiketi sahibinin onayıyla"
+    "faz": "Tablet özellikleri; sonra bot dünyası, imparatorluk günlüğü, çeviri taraması",
+    "madde": "DAG-09",
+    "sonraki_adim": "Emülatör sınaması yeşil olunca sahibi tablette dener; ardından KAR/oyun içi işler (sahibinin 30 Ekim listesi)"
   },
   "maddeler": [
     {
@@ -474,6 +474,45 @@
       "pr": "#15",
       "onay": null,
       "notlar": null
+    },
+    {
+      "id": "DAG-09",
+      "baslik": "Çevrimdışı paket: oyun varlıklarını bir kerede indirme",
+      "sinif": "ozellik",
+      "onem": "Orta",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "Arşiv 4.479 dosya / 1,3 GB; bu sürümde kullanılmayanlar (başka sürümlerin SWF'leri, yapılandırmada geçmeyen çizimler, boş ve ESDEGERLER adlı dosyalar) atılınca 4.408 dosya / 1,07 GB. Temel paket (öncelik 0-1) 174 MB. Yerelde temel paket indirildi (3.081 dosya), sunucu ölü vekille internetsiz açılıp yeni imparatorlukla oyuna girildi: tek eksik 'jinetePerdido.swf' (haritada rastgele beliren kayıp eşya, alt kategori 91) çıktı; kayıp eşyalar temel pakete alındı. Ölçüm: HEAD istekleriyle 4.479 dosyanın boyutu.",
+      "test": "tests/test_onindirme.py",
+      "pr": null,
+      "onay": "Sahibi, 30 Ekim 2026: 'Tablet için (en çok fayda) bunları yap'",
+      "notlar": "Liste: araclar/onindirme_listesi.py -> config/onindirme.tsv. Başlat/durdur yalnızca bu cihazdan; disk boşluğu denetlenir."
+    },
+    {
+      "id": "DAG-10",
+      "baslik": "Wi-Fi ile taşı: imparatorluğu bilgisayar ile tablet arasında aktarma",
+      "sinif": "ozellik",
+      "onem": "Orta",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "Gönderen cihaz 10 dk'lığına ayrı bir sunucu (5051) açar, yalnızca liste ve yedek zarfını 6 haneli kodla verir; 10 yanlış kodda kapanır; asıl sunucu ev ağına açılmaz. Alan cihaz yalnızca özel IPv4 adresine bağlanır; kayıt yedek yüklemedeki denetimlerden geçer, eski hâli .bak. Yerelde aynı makinede ev ağı adresiyle gönderilip alındı; yanlış kod, 127.0.0.1 ve kapattıktan sonraki bağlantı reddedildi (✔).",
+      "test": "tests/test_tasima.py",
+      "pr": null,
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Tek kişilik: aynı kişinin kendi cihazları arasında."
+    },
+    {
+      "id": "DAG-11",
+      "baslik": "Dokunmatik: iki parmakla yakınlaştırma, ikinci parmak ve dokunuş konumu",
+      "sinif": "ozellik",
+      "onem": "Orta",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "Oyun fare tekerleğiyle yakınlaşıyor (masaüstünde tekerlekle doğrulandı). İki parmak hareketi Ruffle tuvaline tekerlek olayı olarak gönderiliyor; CDP dokunma olaylarıyla yakınlaşma ve uzaklaşma görüldü. İkinci parmağın işaretçi olayları Ruffle'a ulaşmıyor; dokunuştan önce aynı noktaya pointermove (ruffle-rs/ruffle#23184). Ruffle 'unreachable' ile çökerse sayfa bir kez WebGL çizicisiyle yeniden açılıyor.",
+      "test": "elle (CDP dokunma benzetimi); gerçek tablet sahibinde",
+      "pr": null,
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Bilinen: ilk parmağın altındaki bina seçilebilir. Kaynak taraması: Android'de Ruffle/WebView/Chaquopy/Samsung (Auto Blocker, uyutma) bulguları ANDROID.md'ye işlendi."
     }
   ]
 }

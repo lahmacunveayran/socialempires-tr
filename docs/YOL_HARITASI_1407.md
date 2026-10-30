@@ -27,6 +27,8 @@ Sahibinin 30 Ekim 2026 kararları:
 | İstemcinin komut sayısı | ✔ 183 (0926: 154, +29 yeni) | KYN-05 |
 | İstemcinin gerçekten gönderdiği komut (çağrı yerinden) | ✔ 158 (0926: 131); 183 = 158 + 25 hiç okunmayan sabit; yeni 28, kalkan 1 | KYN-06, `docs/inceleme/1407-komutlar.md` |
 | Sunucunun işlediği (H), eksik (G ∖ H), imza uyumsuzluğu | ✔ 128, 31, 0 | GEC-01, `araclar/komut_imzalari.py` |
+| Çeviri T: SWF metin alanı / sabit yazı / AS3 / config loc / hedef | ✔ 0,633 / 0,759 / 0 / 0,748 / 0 | GEC-01, `docs/inceleme/ceviri-kapsami.md` |
+| Yamalarımız 1.4.07 config'inde: gider / kalır / çatışır | ✔ 1 / 1 / 11 | KNF-01, `docs/inceleme/1407-config-hatti.md` |
 | Türkçe SWF yamasının 1.4.07'de eşlediği alan | ✔ 521 alan (sözlük anahtarlarının 404/455'i) | KYN-01 |
 | Upstream varlık ağacı `54df29e` ile `f642e0b` | ✔ 4.825 / 4.479 dosya | bu oturum, `git ls-tree` |
 | Ortak 4.478 dosyanın içerik farkı | ✔ **0** (git blob kimlikleri birebir aynı) | bu oturum |

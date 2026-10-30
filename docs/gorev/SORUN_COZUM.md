@@ -56,3 +56,9 @@ Oturum başında göz gezdirilir. Yeni bir sorunla karşılaşınca ya da bir so
 | S-22 | Bağımsız denetimde denetçiye kendi sonucunu verme; her bulguyu kendin yeniden üret | DNT-01 … DNT-04 | ◐ |
 | S-23 | Görsel gerekiyorsa yalnızca oyunun kendi dosyası, olduğu gibi | Sahibi çerçevelerin elle yapıldığını fark etti (OYN-09); 30.10.2026'da kural yeniden ve kesin söylendi | ✔ 30.10.2026 |
 | S-30 | Gizlenmiş bayt kodu doğrusal okunmaz, akışı izlenerek okunur (`araclar/abc_okur.py` `Abc.coz`) | 1.4.07'de atlamayla geçilen anlamsız baytlar geçersiz işlem kodunda okumayı durdurur; akış izleyen okuma onlara hiç uğramaz (GEC-01) | ✔ 31.10.2026 |
+| S-31 | Bir ölçütü kullanmadan önce bildiğin örneklerle sına | Metin alanı "kod üzerine yazıyorsa görünmez" ölçütü (örnek adlarıyla) "Cancel", "OK", "Welcome to Social Empires" gibi görünen yazıları da dışladı; düğme içi yazıları hiç görmedi. Bırakıldı; dolgu tek tek ve kanıtla ayrılacak (GEC-01) | ✔ 31.10.2026 |
+| S-32 | Kaçış karakterli kodu (`"
+| S-33 | Test çıktısını `grep`'le süzüp `&&` ile commit'e bağlama | `unittest ... | grep -E "OK|FAIL" && git commit` zincirinde grep FAIL satırını bulunca başarılı döndü; kırık test (`test_gorev`, PR alanı `#20, #21`) commit'lenip gönderildi. Önce testi kendi çıkış koduyla çalıştır, sonra commit at | ✔ 31.10.2026 |
+| S-34 | Bir dala yeniden göndermeden önce PR'ının birleşip birleşmediğine bak | #20 sahibince birleştirildikten sonra aynı dala ikinci parça gönderildi; birleşmiş PR'ın açıklaması da yanlışlıkla güncellendi. İkinci parça güncel `master`'dan açılan dala alındı (#21), #20'nin açıklaması geri alındı | ✔ 31.10.2026 |
+"`, `b" "`, düzenli ifade) Python ya da kabuk betiğiyle dosyaya yazma | Betiğin dize işlemesi `
+`'yi gerçek satır sonuna, ` `'ı boş bayta çevirdi; üç kez sözdizimi hatası çıktı. Böyle kodu doğrudan dosya düzenleme aracıyla yaz | ✔ 31.10.2026 |

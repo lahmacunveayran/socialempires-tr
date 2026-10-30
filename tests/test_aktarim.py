@@ -44,7 +44,7 @@ class OnbellekTestleri(unittest.TestCase):
         p = aktarim.onbellek_politikasi
         self.assertEqual(p("/ruffle/0.7.1/ruffle.js"), aktarim.DEGISMEZ)
         self.assertEqual(p(aktarim.STATIK + "swf/music/a.mp3"), aktarim.DEGISMEZ)
-        self.assertEqual(p(aktarim.STATIK + "flash/SocialEmpires0926bsec.swf"), aktarim.SORARAK)
+        self.assertEqual(p(aktarim.STATIK + "flash/SocialEmpires1.4.07sec_fixed.swf"), aktarim.SORARAK)
         self.assertEqual(p("/img/logo.png"), aktarim.GUNLUK)
         self.assertEqual(p("/"), aktarim.SORARAK)
         self.assertEqual(p(CONFIG), aktarim.SORARAK)
@@ -123,7 +123,7 @@ class RuffleTestleri(unittest.TestCase):
 
     def test_oyun_sayfasi_sabit_surumu_kullanir(self):
         uid = server.new_village()
-        self.istemci.post("/", data={"USERID": uid, "GAMEVERSION": "SocialEmpires0926bsec.swf"})
+        self.istemci.post("/", data={"USERID": uid, "GAMEVERSION": "SocialEmpires1.4.07sec_fixed.swf"})
         sayfa = self.istemci.get("/ruffle.html").get_data(as_text=True)
         self.assertIn(f"/ruffle/{Ruffle.SURUM}/ruffle.js", sayfa)
         self.assertNotIn("unpkg.com", sayfa)

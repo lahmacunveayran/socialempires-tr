@@ -27,7 +27,7 @@ KOK = os.path.dirname(os.path.abspath(__file__))
 HEDEF = os.path.join(KOK, "assets")
 sys.path.insert(0, KOK)
 
-from oyun.kaynaklar import COMMIT, DEPO, DEPO_URL, HAM_KOK  # noqa: E402
+from oyun.kaynaklar import COMMIT, DEPO, DEPO_URL, HAM_KOK, ISTEMCI_YOLU  # noqa: E402
 
 
 def _kopyala(kaynak_kok):
@@ -108,7 +108,7 @@ if __name__ == "__main__":
     if ruffle.hazirla():
         print(f"[+] Ruffle {ruffle.SURUM} hazir; sikistiriliyor (bir dakika kadar surebilir)...")
         ruffle.brotli_baslat(bekle=True)
-    if not os.path.exists(os.path.join(HEDEF, "flash", "SocialEmpires0926bsec.swf")):
+    if not os.path.exists(os.path.join(HEDEF, *ISTEMCI_YOLU.split("/"))):
         print("UYARI: oyun dosyasi hala eksik; internet baglantinizi kontrol edin.")
         sys.exit(1)
     print("Tamam. Oyun varliklari hazir.")

@@ -18,7 +18,7 @@ class Liste(unittest.TestCase):
         yollar = [y for y, _, _ in satirlar]
         self.assertEqual(len(yollar), len(set(yollar)))
         self.assertEqual(sorted(y for y in yollar if y.startswith("flash/")),
-                         ["flash/SELoader.swf", "flash/SocialEmpires0926bsec.swf"])
+                         ["flash/SELoader.swf", "flash/SocialEmpires1.4.07sec_fixed.swf"])
         self.assertTrue(all(b > 0 for _, b, _ in satirlar))
         self.assertFalse(set(yollar) & set(varliklar.ESDEGERLER))  # sunucu bu adlarla hiç sunmaz
         oncelikler = [o for _, _, o in satirlar]
@@ -46,6 +46,46 @@ class Kaynak(unittest.TestCase):
                 metin = f.read()
             self.assertNotIn("socialemperors/main", metin, yol)
             self.assertNotRegex(metin, r'DAL\s*=\s*"main"', yol)
+
+
+class IstemciOzeti(unittest.TestCase):
+    """1.4.07 istemcisi özetiyle denetlenir; özet uymayan dosya sunulmaz (GEC-02)."""
+
+    def setUp(self):
+        self.klasor = tempfile.mkdtemp()
+        self.yol = os.path.join(self.klasor, "istemci.swf")
+        varliklar._dogrulanan.clear()
+        self.addCleanup(varliklar._dogrulanan.clear)
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.klasor, ignore_errors=True)
+
+    def yaz(self, veri):
+        with open(self.yol, "wb") as f:
+            f.write(veri)
+
+    def test_ozet_uymayan_dosya_reddedilir(self):
+        import hashlib
+        from oyun import kaynaklar
+        self.yaz(b"sahte istemci")
+        self.assertFalse(varliklar.ozet_uyuyor(kaynaklar.ISTEMCI_YOLU, self.yol))
+        with mock.patch.dict(varliklar.OZETLER,
+                             {kaynaklar.ISTEMCI_YOLU: hashlib.sha256(b"sahte istemci").hexdigest()}):
+            self.assertTrue(varliklar.ozet_uyuyor(kaynaklar.ISTEMCI_YOLU, self.yol))
+            self.yaz(b"degisti!")  # aynı ad, başka içerik: önbellek boyut ve zamanla yenilenir
+            os.utime(self.yol, ns=(time.time_ns() + 10**9,) * 2)
+            self.assertFalse(varliklar.ozet_uyuyor(kaynaklar.ISTEMCI_YOLU, self.yol))
+
+    def test_ozeti_olmayan_dosya_denetlenmez(self):
+        self.yaz(b"x")
+        self.assertTrue(varliklar.ozet_uyuyor("images_new/x.png", self.yol))
+
+    def test_oyun_swf_adi(self):
+        self.assertTrue(varliklar._oyun_swf_mi("SocialEmpires1.4.07sec_fixed.swf"))
+        self.assertTrue(varliklar._oyun_swf_mi("SocialEmpires0926bsec.swf"))
+        for ad in ("SocialEmpires.swf", "SocialEmpires../x.swf", "SocialEmpires1-4.swf", "Baska1.swf"):
+            self.assertFalse(varliklar._oyun_swf_mi(ad), ad)
 
 
 class Indirme(unittest.TestCase):

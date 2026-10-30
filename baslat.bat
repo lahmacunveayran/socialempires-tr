@@ -22,7 +22,7 @@ if errorlevel 1 (
     echo [1/2] Python paketleri hazir.
 )
 
-if not exist "assets\flash\SocialEmpires0926bsec.swf" (
+if not exist "assets\flash\SocialEmpires1.4.07sec_fixed.swf" (
     echo NOT: Oyun varliklari yerelde yok; ilk acilista internetten indirilecek.
     echo      Hepsini simdi indirmek icin: python varliklari_indir.py
 )

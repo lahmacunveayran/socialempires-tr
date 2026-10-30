@@ -2,8 +2,8 @@ import random
 
 from oyun.ekonomi import timestamp_now
 
-version_name = "alpha 0.05"
-version_code = "0.05a"
+version_name = "alpha 0.06"
+version_code = "0.06a"
 
 def migrate_loaded_save(save: dict) -> bool:
 
@@ -74,5 +74,11 @@ def migrate_loaded_save(save: dict) -> bool:
                 m["resourcesTraded"] = {}
         save["version"] = "0.05a"
         print("   > migrated to 0.05a")
+
+    # 0.05a -> 0.06a: oyun 1.4.07 istemcisine geçti (GEC-02). Kayıt alanları burada değişmez; 1.4.07'nin yeni
+    # privateState alanlarının göçü GEC-04'te bu adımın ardına eklenir. Göçten önceki kayıt backups/ altında durur.
+    if save["version"] == "0.05a":
+        save["version"] = "0.06a"
+        print("   > migrated to 0.06a")
 
     return True

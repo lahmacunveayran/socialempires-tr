@@ -69,7 +69,27 @@ def patch_game_config():
                     print(" * Mod applied:", mod)
 
     remove_duplicate_items()
+    hedefleri_ekle()
     tema_setlerini_ac()
+
+
+def hedefleri_ekle():
+    """config/goals.json'u 1.4.07'nin okuduğu `goals` listesi yapar (GEC-02).
+
+    Hedeflerin resimleri ve karakterleri config'in `images` listesinde yoksa eklenir ki istemci
+    onları da yüklesin. "none" resim yok demektir.
+    """
+    yol = os.path.join(CONFIG_DIR, "goals.json")
+    if not os.path.exists(yol):
+        return
+    hedefler = json_oku(yol)
+    resimler = __game_config["images"]
+    for hedef in hedefler:
+        for ad in (hedef.get("image"), hedef.get("characters")):
+            if ad and ad != "none" and ad not in resimler:
+                resimler[ad] = ""
+    __game_config["goals"] = hedefler
+    print(f" * Hedefler yuklendi: {len(hedefler)}")
 
 
 def tema_setleri():

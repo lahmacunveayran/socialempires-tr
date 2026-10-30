@@ -6,7 +6,6 @@ onlara karşı sınanır (GEC-01, `docs/YOL_HARITASI_1407.md` §2.1).
 """
 
 import os
-import re
 import struct
 import sys
 import tempfile
@@ -211,8 +210,6 @@ EKSIK_1407 = {
     "reset_dragon", "reset_potions_received", "reset_shield", "reward_viral_offer",
     "set_first_purchase_timestamp", "speed_up_queue", "start_quest_new", "time_ff", "unqueue_unit",
 }
-# Bugünkü 0926 istemcisinin işleyicisi olmayan komutları (KMT-01)
-EKSIK_0926 = {"buy_time_packet", "reset_dragon", "time_ff"}
 
 
 class Kapilar(unittest.TestCase):
@@ -237,24 +234,6 @@ class Kapilar(unittest.TestCase):
         self.assertLessEqual(set(sonuc["eksik"]), EKSIK_1407)
         bitenler = EKSIK_1407 - set(sonuc["eksik"])
         self.assertFalse(bitenler, "işleyicisi yazılan komutları EKSIK_1407'den çıkar: %s" % sorted(bitenler))
-
-    def test_0926(self):
-        veri, sonuc = self.kiyas("0926-komutlar.json")
-        self.assertEqual(sonuc["uyumsuz"], [])
-        self.assertLessEqual(set(sonuc["eksik"]), EKSIK_0926)
-
-    def test_elle_cikarilan_0926_listesi_aracin_bulduklarinin_alt_kumesi(self):
-        """tests/test_komutlar.py'deki elle çıkarılmış liste (128), araçla bulunan 131'in alt kümesi."""
-        with open(os.path.join(KOK, "tests", "test_komutlar.py"), encoding="utf-8") as f:
-            kaynak = f.read()
-        bas = kaynak.index("def test_istemcinin_tum_komutlari_karsilaniyor")
-        kume = kaynak[kaynak.index("istemci = {", bas):kaynak.index("}", kaynak.index("istemci = {", bas))]
-        elle = set(re.findall(r'"([a-z0-9_]+)"', kume))
-        veri, _ = self.kiyas("0926-komutlar.json")
-        G = set(veri["komutlar"])
-        self.assertEqual((len(elle), len(G)), (128, 131))
-        self.assertLessEqual(elle, G)
-        self.assertEqual(G - elle, EKSIK_0926)
 
 
 if __name__ == "__main__":

@@ -14,14 +14,14 @@ class OyunSayfasiTestleri(unittest.TestCase):
     def setUpClass(cls):
         cls.uid = server.new_village()
         cls.istemci = server.app.test_client()
-        cls.istemci.post("/", data={"USERID": cls.uid, "GAMEVERSION": "SocialEmpires0926bsec.swf"})
+        cls.istemci.post("/", data={"USERID": cls.uid, "GAMEVERSION": "SocialEmpires1.4.07sec_fixed.swf"})
 
     def test_oyun_sayfasi_ruffle_ve_giris_dugmesi(self):
         adres = "http://192.168.1.20:5050"
         istemci = server.app.test_client()
         lan = {"REMOTE_ADDR": "192.168.1.30"}  # ev ağındaki tablet
         istemci.post("/", base_url=adres, environ_base=lan,
-                     data={"USERID": self.uid, "GAMEVERSION": "SocialEmpires0926bsec.swf"})
+                     data={"USERID": self.uid, "GAMEVERSION": "SocialEmpires1.4.07sec_fixed.swf"})
         sayfa = istemci.get("/play.html", base_url=adres, environ_base=lan).get_data(as_text=True)
         self.assertIn('id="kralliga-gir"', sayfa)
         # Telefon ev ağından açınca varlıklar da aynı adresten insin.
@@ -57,7 +57,7 @@ class GirisSayfasiTestleri(unittest.TestCase):
     def test_karttan_giris(self):
         uid = server.new_village()
         istemci = server.app.test_client()
-        cevap = istemci.post("/", data={"USERID": uid, "GAMEVERSION": "SocialEmpires0926bsec.swf"})
+        cevap = istemci.post("/", data={"USERID": uid, "GAMEVERSION": "SocialEmpires1.4.07sec_fixed.swf"})
         self.assertEqual(cevap.status_code, 302)
         self.assertEqual(istemci.get("/play.html").status_code, 200)
 
@@ -66,7 +66,7 @@ class KursuTestleri(unittest.TestCase):
     def test_siralama_ve_onbellek(self):
         istemci = server.app.test_client()
         uid = server.new_village()
-        istemci.post("/", data={"USERID": uid, "GAMEVERSION": "SocialEmpires0926bsec.swf"})
+        istemci.post("/", data={"USERID": uid, "GAMEVERSION": "SocialEmpires1.4.07sec_fixed.swf"})
         diyar._kursu["zaman"] = 0
         veri = istemci.get("/dunya/kursu").get_json()
         self.assertLessEqual(len(veri["ilk"]), diyar.KURSU_BOYU)
@@ -126,7 +126,7 @@ class DagitimTestleri(unittest.TestCase):
 class HilePaneliTestleri(unittest.TestCase):
     def test_panel_oyunun_kaynak_resimleriyle(self):
         istemci = server.app.test_client()
-        istemci.post("/", data={"USERID": server.new_village(), "GAMEVERSION": "SocialEmpires0926bsec.swf"})
+        istemci.post("/", data={"USERID": server.new_village(), "GAMEVERSION": "SocialEmpires1.4.07sec_fixed.swf"})
         sayfa = istemci.get("/cheat").get_data(as_text=True)
         self.assertIn("/css/oyun.css", sayfa)
         for resim in ("collect_g0.jpg", "collect_w0.jpg", "collect_s0.jpg", "collect_f0.jpg"):

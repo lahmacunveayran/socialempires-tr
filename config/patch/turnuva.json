@@ -1,0 +1,3 @@
+[
+ {"op": "add", "path": "/globals/TOURNAMENT_ACTIVATED", "value": 1}
+]

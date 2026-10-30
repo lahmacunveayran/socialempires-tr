@@ -53,7 +53,9 @@ const bekle = (ms) => new Promise((r) => setTimeout(r, ms));
     form: { USERID: uid, GAMEVERSION: "SocialEmpires0926bsec.swf" },
     maxRedirects: 0,
   });
-  await sayfa.goto(`${ADRES}/ruffle.html`);
+  await sayfa.goto(`${ADRES}/play.html`);
+  // Oyun sayfası Ruffle'ı "Krallığa Gir"e basılınca kurar.
+  await sayfa.click("#kralliga-gir", { force: true }); // düğme nabız gibi atıyor
   const oyuncu = sayfa.locator("ruffle-player");
   await oyuncu.waitFor({ timeout: 60000 });
 

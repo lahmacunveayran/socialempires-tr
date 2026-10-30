@@ -95,7 +95,7 @@ def etkinlikler(gun=None, ileri=60):
             baslangic, bitis = aralik  # bitis dahil değil
             if bitis <= gun or (baslangic - gun).days > ileri:
                 continue
-            sonuc.append({"ad": etkinlik["ad"], "simge": etkinlik.get("simge", "📜"), "setler": list(etkinlik.get("setler", [])),
+            sonuc.append({"ad": etkinlik["ad"], "setler": list(etkinlik.get("setler", [])),
                           "baslangic": baslangic.isoformat(), "bitis": bitis.isoformat(),
                           "son_gun": (bitis - timedelta(days=1)).isoformat(),
                           "aktif": baslangic <= gun < bitis})

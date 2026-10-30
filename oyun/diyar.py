@@ -98,7 +98,23 @@ def hafta_ucu():
             "reyting": round(float(reyting)), "hafta": elo.hafta(elo.turkiye_saati())}
 
 
+RESIMLER = "/default01.static.socialpointgames.com/static/socialempires/buildingthumbs/"
+
+
+def set_resmi(set_adi):
+    """Tema setinin ilk eşyasının oyundaki küçük resmi (sayfada yalnızca oyunun görselleri)."""
+    from oyun.config import get_item_from_id, tema_setleri
+    for esya_id in tema_setleri().get(set_adi, []):
+        ad = (get_item_from_id(esya_id) or {}).get("img_name")
+        if ad:
+            return f"{RESIMLER}{ad}.jpg"
+    return ""
+
+
 @app.route("/dunya/takvim")
 def takvim_ucu():
     from oyun import takvim
-    return {"etkinlikler": takvim.etkinlikler(), "acik_setler": takvim.acik_setler()}
+    etkinlikler = takvim.etkinlikler()
+    for e in etkinlikler:
+        e["resim"] = next((r for r in map(set_resmi, e["setler"]) if r), "")
+    return {"etkinlikler": etkinlikler, "acik_setler": takvim.acik_setler()}

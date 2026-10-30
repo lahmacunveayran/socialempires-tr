@@ -36,8 +36,8 @@ indirmek için gerekir.
   `ayarlar.json`'da `"magaza_tema_setleri": true`.
 - **Oyun sayfası**: Güneş'in gerçek konumuna göre boyanan gökyüzü, ekrana
   göre ölçeklenen oyun çerçevesi, Diyar Haberleri şeridi, Şeref Kürsüsü,
-  haftalık turnuva tablosu (Elo; hafta bitince ilk 10'a ödül), 7 günlük
-  hediye sandığı ve tek tıkla kayıt yedeği indirme/yükleme.
+  haftalık turnuva tablosu (Elo; hafta bitince ilk 10'a ödül) ve tek tıkla
+  kayıt yedeği indirme/yükleme. Günlük ödül oyunun kendi ödülüdür.
 - **Büyücünün İksirleri**: iksir kaynatıp nadir yaratıklar kazanılan şans
   oyunu; her 30 günde yenilenir.
 - **İstemciyle birebir uyumlu komutlar**: sunucu, istemcinin gönderdiği

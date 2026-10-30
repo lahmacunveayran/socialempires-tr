@@ -1,4 +1,4 @@
-"""Faz 3: etkinlik takvimi, haftalık turnuva (Elo), günlük hediye, kayıt yedeği."""
+"""Faz 3: etkinlik takvimi, haftalık turnuva (Elo), kayıt yedeği."""
 
 import io
 import json
@@ -8,7 +8,7 @@ from datetime import date, datetime, timedelta
 
 from ortak import KOK, bos_kayit  # noqa: F401
 
-from oyun import config, elo, hediye, kayit_yedek, takvim
+from oyun import config, elo, kayit_yedek, takvim
 from oyun import sunucu as server
 from oyun.yollar import SAVES_DIR
 
@@ -102,26 +102,6 @@ class HaftalikTurnuvaTestleri(unittest.TestCase):
         self.assertEqual(len(odenen), 1)
 
 
-class HediyeTestleri(unittest.TestCase):
-    def test_seri_ve_kacirilan_gun(self):
-        kayit = bos_kayit()
-        gun = date(2026, 11, 2)
-        self.assertEqual(hediye.al(kayit, gun)[0], 0)
-        self.assertIsNone(hediye.al(kayit, gun))  # aynı gün ikinci kez yok
-        self.assertEqual(hediye.al(kayit, gun + timedelta(days=1))[0], 1)
-        self.assertEqual(hediye.al(kayit, gun + timedelta(days=2))[0], 2)
-        # Bir gün kaçırıldı: sıfıra değil bir adım geri (3 yerine 2)
-        self.assertEqual(hediye.al(kayit, gun + timedelta(days=4))[0], 2)
-        esya, adet = hediye.ODULLER[0]
-        self.assertGreaterEqual(kayit["privateState"]["gifts"][esya], adet)
-
-    def test_yedinci_gunden_sonra_basa_doner(self):
-        kayit = bos_kayit()
-        gun = date(2026, 11, 2)
-        sira = [hediye.al(kayit, gun + timedelta(days=i))[0] for i in range(8)]
-        self.assertEqual(sira, [0, 1, 2, 3, 4, 5, 6, 0])
-
-
 class YedekTestleri(unittest.TestCase):
     def setUp(self):
         self.uid = server.new_village()
@@ -167,14 +147,12 @@ class YedekTestleri(unittest.TestCase):
 
 
 class SayfaUclariTestleri(unittest.TestCase):
-    def test_hediye_hafta_takvim_uclari(self):
+    def test_hafta_ve_takvim_uclari(self):
         istemci = server.app.test_client()
         istemci.post("/", data={"USERID": server.new_village(), "GAMEVERSION": "SocialEmpires0926bsec.swf"})
-        durum = istemci.get("/hediye").get_json()
-        self.assertTrue(durum["alinabilir"])
-        self.assertEqual(len(durum["oduller"]), 7)
-        self.assertEqual(istemci.post("/hediye/al").status_code, 200)
-        self.assertEqual(istemci.post("/hediye/al").status_code, 409)
+        # Günlük ödül yalnızca oyunun kendi ödülü: sayfada ayrı bir sandık yok.
+        self.assertEqual(istemci.get("/hediye").status_code, 404)
+        self.assertNotIn("hediye", istemci.get("/play.html").get_data(as_text=True))
         hafta = istemci.get("/dunya/hafta").get_json()
         self.assertLessEqual(len(hafta["ilk"]), elo.ODULLU_SIRA)
         self.assertEqual(hafta["reyting"], 1500)

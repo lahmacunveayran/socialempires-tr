@@ -42,7 +42,7 @@ her kapının nasıl sınandığı ve sonucu yazılı.
 - Bot ekonomisinden turda bir haber eklendi. `python araclar/haber_olcumu.py 30`:
   30 dakikada 49 olay, **Λ = 1,63 olay/dk**, boş dakika olasılığı %20 (önce %68).
 - `GET /dunya/kursu`: ilk 10 ve rütbe adları, 60 sn önbellek; yanıt 2-4 ms.
-- "Nakit Al" Hazine sayfasına gider; "Ücretsiz Hediyeler" Faz 3'teki sandığı açar.
+- "Nakit Al" Hazine sayfasına gider. "Ücretsiz Hediyeler" düğmesi kaldırıldı (aşağıdaki kararlara bakın).
 
 ## Faz 3: Oyun içeriği
 
@@ -53,8 +53,6 @@ her kapının nasıl sınandığı ve sonucu yazılı.
   3 maç; hafta pazartesi 00.00 (TSİ) kapanır, ödül sonraki istekte yalnızca
   ilk 10'daki oyunculara (1. Yanardağ Ejderhası). Mevcut 4 kişilik odalar
   korunuyor; odalardaki maçlar haftalık tabloya ve reytinge işleniyor.
-- Günlük hediye (`oyun/hediye.py`): 7 günlük sandık, kaçırılan gün bir adım geri.
-  Hediyeler depoya yazılır; oyun açıksa bir sonraki açılışta görünür.
 - Kayıt yedeği (`oyun/kayit_yedek.py`): indir/yükle, SHA-256, şema ve kimlik
   denetimi, `.bak`.
 
@@ -76,6 +74,17 @@ Yapılmayanlar: Arthur'un etkinliğe özel hedefleri; 2030 sonrası için
   "uygulama olarak yükle").
 - Dokunmatik: Faz 0 deneyinde Playwright dokunuşu Ruffle'da tıklama gibi işledi.
 
+## Kararlar (30 Ekim 2026)
+
+Yol haritasının açık soruları yanıtlandı:
+
+- **İngilizce yazılı oyun görselleri** (BUILD, TRAIN, ADD ALLY, haber
+  afişleri, ipuçları) yeniden çizilmeyecek; olduğu gibi kalır.
+- **Sunucu tek kişilik ve çevrimdışı.** Haftalık turnuva yalnızca botlara
+  karşıdır; çok oyunculu haftalık düzen ve Tailscale ile HTTPS gerekmez.
+- **Günlük ödül yalnızca oyunun kendi ödülüdür.** Sayfadaki 7 günlük hediye
+  sandığı ve "Ücretsiz Hediyeler" düğmesi kaldırıldı.
+
 ## Açık işler
 
 - `fx/p.miniFireball2.swf` arşivde yok (404); karşılığı bulunup
@@ -92,8 +101,7 @@ Sayfadaki çizimler oyunun kendi görselleridir; oyun varlıklarıyla aynı yold
 (`/default01.static.socialpointgames.com/...`) iner, depoya konmaz:
 çam ağaçları ve giriş manzarası (`externalized/PopupLevelUp/`), iki nöbetçi,
 kılıçlı arma ve bayraklar, parşömen ve başlık şeridi, günlük ödül
-parşömeni, hazine sandığı, hediyeli köylü kız, Kral Arthur, haftalık turnuva
-afişi ve hediye günlerindeki birim resimleri (`buildingthumbs/`). Yalnızca
+parşömeni, Kral Arthur ve haftalık turnuva afişi. Yalnızca
 gökyüzü (Güneş, Ay, bulutlar, yıldızlar) CSS ile çizilir, çünkü Güneş'in
 gerçek konumuna göre değişir.
 

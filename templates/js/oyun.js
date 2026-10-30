@@ -47,22 +47,6 @@
     panel.style.setProperty("--my", (o.clientY - k.top) + "px");
   });
 
-  // Başlığın çevresinde ışıltılar (SparklesText)
-  var isiltili = document.getElementById("isiltili");
-  if (isiltili && !HAREKETSIZ) {
-    for (var n = 0; n < 7; n++) {
-      var y = el("i", "isilti");
-      var yerlestir = function (y) {
-        y.style.left = (Math.random() * 100) + "%";
-        y.style.top = (Math.random() * 100) + "%";
-        y.style.animationDuration = (1.2 + Math.random() * 1.2) + "s";
-      };
-      yerlestir(y);
-      y.style.animationDelay = (Math.random() * 1.5) + "s";
-      y.addEventListener("animationiteration", yerlestir.bind(null, y));
-      isiltili.appendChild(y);
-    }
-  }
   var GEN = 760, YUK = 600, EN_BUYUK_OLCEK = 1.5;
 
   // --- Çerçeve ölçeği: oyun EXACT_FIT ile kutuya esner, oran tam 760:600 kalmalı.
@@ -163,7 +147,9 @@
     var t = new Date(zaman * 1000);
     return t.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Istanbul" });
   }
-  var HABER_SIMGELERI = { savas: "⚔️", seviye: "⭐", ekonomi: "🛡️", lonca: "🔨", dunya: "🌍" };
+  // Simgeler oyunun kendi armalarıdır (images_new/b_*.png).
+  var ARMA = AYAR.varlik + "images_new/";
+  var HABER_SIMGELERI = { savas: "b_4.png", seviye: "b_14.png", ekonomi: "b_5.png", lonca: "b_1.png", dunya: "b_9.png" };
   var HABER_TURLERI = { savas: "Savaş", seviye: "Seviye", ekonomi: "Ordu", lonca: "Lonca", dunya: "Dünya" };
   function satirEkle(olay, yeni) {
     var bos = liste.querySelector(".bos-haber");
@@ -177,7 +163,10 @@
     zaman.dataset.zaman = olay.zaman;
     ust.append(el("span", "tur", HABER_TURLERI[olay.tur] || "Haber"), zaman);
     govde.append(ust, el("p", "", olay.metin));
-    li.append(el("span", "ikon", HABER_SIMGELERI[olay.tur] || "📜"), govde);
+    var ikon = el("img", "ikon");
+    ikon.src = ARMA + (HABER_SIMGELERI[olay.tur] || "b_7.png");
+    ikon.alt = "";
+    li.append(ikon, govde);
     liste.insertBefore(li, liste.firstChild);
     while (liste.children.length > EN_COK_SATIR) liste.removeChild(liste.lastChild);
     ozet.textContent = "Son haber: " + olay.metin;
@@ -241,7 +230,12 @@
           var b = el("div", "basamak b" + (i + 1));
           var p = el("div", "portre");
           p.appendChild(portre(o));
-          if (i === 0) p.appendChild(el("span", "tac", "👑"));
+          if (i === 0) {
+            var tac = el("img", "tac");
+            tac.src = ARMA + "weekly_tournament_bot3.png";
+            tac.alt = "";
+            p.appendChild(tac);
+          }
           var blok = el("div", "blok");
           blok.append(el("span", "no yazi-oyun", i + 1), el("span", "ad", o.ad), el("span", "sv", "sv. " + o.seviye));
           b.append(p, blok, el("span", "rt", o.rutbe));
@@ -336,96 +330,18 @@
       var tarih = function (s) { return new Date(s + "T12:00:00+03:00").toLocaleDateString("tr-TR", { day: "numeric", month: "long", timeZone: "Europe/Istanbul" }); };
       var aktif = v.etkinlikler.filter(function (e) { return e.aktif; });
       var yakin = v.etkinlikler.filter(function (e) { return !e.aktif; })[0];
-      var olay = function (simge, icerik) { return "<div class='olay'><span class='simge'>" + simge + "</span>" + icerik + "</div>"; };
+      var olay = function (e, icerik) {
+        var resim = e.resim ? "<img class='simge' src='" + e.resim + "' alt=''>" : "";
+        return "<div class='olay'>" + resim + icerik + "</div>";
+      };
       var parcalar = aktif.map(function (e) {
-        return olay(e.simge, "<b class='yazi-oyun'>" + e.ad + "</b>" + e.setler.join(", ") +
+        return olay(e, "<b class='yazi-oyun'>" + e.ad + "</b>" + e.setler.join(", ") +
           " setleri mağazada.<small>" + tarih(e.son_gun) + " gün sonuna dek</small>");
       });
-      if (yakin) parcalar.push(olay(yakin.simge, "Sıradaki şenlik: " + yakin.ad + "<small>" + tarih(yakin.baslangic) + "</small>"));
+      if (yakin) parcalar.push(olay(yakin, "Sıradaki şenlik: " + yakin.ad + "<small>" + tarih(yakin.baslangic) + "</small>"));
       if (parcalar.length) { etkinlik.innerHTML = parcalar.join(""); etkinlik.hidden = false; }
     })
     .catch(function () {});
-
-  // --- Ücretsiz Hediyeler: 7 günlük sandık (oyunun sandığı ve birim resimleri)
-  var pencere = document.getElementById("hediye-penceresi");
-  var gunler = document.getElementById("hediye-gunleri");
-  var ileti = document.getElementById("hediye-ileti");
-  var alDugmesi = document.getElementById("hediye-al");
-  var hediyeDugmesi = document.getElementById("hediye-ac");
-  var hediyeRozet = document.getElementById("hediye-rozet");
-  var cofre = document.getElementById("cofre");
-  var kazanc = document.getElementById("kazanc");
-  var altinlar = document.getElementById("altinlar");
-  function hediyeDurumu() {
-    return fetch("/hediye", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (v) {
-      hediyeDugmesi.classList.toggle("hazir", !!v.alinabilir);
-      hediyeRozet.hidden = !v.alinabilir;
-      return v;
-    });
-  }
-  function hediyeGoster() {
-    return hediyeDurumu().then(function (v) {
-      gunler.textContent = "";
-      var alinan = v.alinabilir ? v.sira : v.sira + 1;
-      gunler.style.setProperty("--ilerleme", String(alinan / (v.oduller.length - 1 || 1)));
-      v.oduller.forEach(function (o, i) {
-        var li = document.createElement("li");
-        li.style.setProperty("--i", i);
-        if (i === v.oduller.length - 1) li.classList.add("efsane");
-        if (i < alinan) li.classList.add("alindi");
-        if (v.alinabilir && i === v.sira) li.classList.add("bugun");
-        var gun = el("span", "gun yazi-oyun", o.gun + ". Gün");
-        var resim = document.createElement("img"); resim.src = o.resim; resim.alt = ""; resim.loading = "lazy";
-        var ad = document.createElement("span"); ad.className = "adi"; ad.textContent = o.adet + " × " + o.ad;
-        li.append(gun, resim, ad);
-        gunler.appendChild(li);
-      });
-      var seri = document.getElementById("seri");
-      seri.hidden = alinan < 2;
-      seri.textContent = "🔥 " + alinan + " günlük seri";
-      alDugmesi.disabled = !v.alinabilir;
-      alDugmesi.textContent = v.alinabilir ? "Sandığı Aç" : "Yarın yine gel";
-      if (!v.alinabilir) ileti.textContent = "Bugünün hediyesini aldın. Sandık yarın yeniden dolacak!";
-    });
-  }
-  function altinSac() {
-    altinlar.textContent = "";
-    for (var i = 0; i < 36; i++) {
-      var a = document.createElement("i");
-      a.className = "altin";
-      var aci = Math.random() * Math.PI * 2, uzak = 140 + Math.random() * 260;
-      a.style.setProperty("--dx", Math.round(Math.cos(aci) * uzak) + "px");
-      a.style.setProperty("--dy", Math.round(Math.sin(aci) * uzak * 0.8 + 120) + "px");
-      a.style.animationDelay = (Math.random() * 0.25) + "s";
-      altinlar.appendChild(a);
-    }
-  }
-  hediyeDugmesi.addEventListener("click", function () {
-    ileti.textContent = "";
-    kazanc.hidden = true;
-    cofre.className = "cofre";
-    hediyeGoster().then(function () { pencere.showModal(); }).catch(function () {});
-  });
-  document.getElementById("hediye-kapat").addEventListener("click", function () { pencere.close(); });
-  kazanc.addEventListener("click", function () { kazanc.hidden = true; });
-  alDugmesi.addEventListener("click", function () {
-    alDugmesi.disabled = true;
-    cofre.className = "cofre aciliyor";
-    var istek = fetch("/hediye/al", { method: "POST" }).then(function (r) { return r.json(); });
-    setTimeout(function () {
-      istek.then(function (v) {
-        if (v.durum !== "ok") { ileti.textContent = v.hata; cofre.className = "cofre"; return; }
-        cofre.className = "cofre acildi";
-        altinSac();
-        document.getElementById("kazanc-resim").src = v.resim;
-        document.getElementById("kazanc-ad").textContent = v.adet + " × " + v.ad;
-        kazanc.hidden = false;
-        ileti.textContent = v.ileti;
-        hediyeGoster();
-      }).catch(function () { cofre.className = "cofre"; });
-    }, 700);
-  });
-  hediyeDurumu().catch(function () {});
 
   // --- Kayıt yedeği: başka bilgisayardan alınan yedeği yükle
   document.getElementById("yedek-dosyasi").addEventListener("change", function (e) {

@@ -43,7 +43,9 @@ function konsoluYaz() {
   console.log(`WebView: ${await sayfa.evaluate(() => navigator.userAgent)}`);
   await sayfa.goto(`${ADRES}/new.html`, { timeout: 120000 });
   await sayfa.waitForSelector("#kralliga-gir", { timeout: 60000 });
-  console.log(`[${sure()}] Oyun sayfası açık: ${sayfa.url()}`);
+  // Pencere boyutu ve görünürlük: uygulama arka plana düşerse ya da WebView küçülürse burada görünür
+  const boyut = () => sayfa.evaluate(() => `pencere ${innerWidth}×${innerHeight}, ${document.visibilityState}`).catch((h) => h.message);
+  console.log(`[${sure()}] Oyun sayfası açık: ${sayfa.url()} ${await boyut()}`);
 
   // Dar ekranda düğme bazen görünür alanın dışında kalıyor; tıklama olayı doğrudan gönderilir
   await sayfa.locator("#kralliga-gir").dispatchEvent("click");
@@ -51,7 +53,7 @@ function konsoluYaz() {
   console.log(`[${sure()}] Ruffle oluşturuldu`);
   // İlk açılışta oyun varlıkları (~60 MB) GitHub'dan iner
   await sayfa.waitForSelector("#yukleme[hidden]", { state: "attached", timeout: 420000 });
-  console.log(`[${sure()}] Oyun yüklendi (yükleme perdesi kalktı)`);
+  console.log(`[${sure()}] Oyun yüklendi (yükleme perdesi kalktı) ${await boyut()}`);
   await sayfa.waitForTimeout(20000);
 
   const durum = await sayfa.evaluate(() => {

@@ -155,6 +155,7 @@ public class MainActivity extends Activity {
                     geriCagri.onCustomViewHidden();
                     return;
                 }
+                Log.i(TAG, "Tam ekran istendi (onShowCustomView)");
                 tamEkranGorunumu = gorunum;
                 tamEkranGeriCagrisi = geriCagri;
                 kok.addView(gorunum, new FrameLayout.LayoutParams(
@@ -316,8 +317,21 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    public void onConfigurationChanged(android.content.res.Configuration yeni) {
+        super.onConfigurationChanged(yeni);
+        Log.i(TAG, "Yapilandirma degisti: yon " + yeni.orientation + ", " + yeni.screenWidthDp + "x" + yeni.screenHeightDp + " dp");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.i(TAG, "onStop");
+    }
+
+    @Override
     public void onWindowFocusChanged(boolean odakta) {
         super.onWindowFocusChanged(odakta);
+        Log.i(TAG, "Pencere odagi: " + odakta);
         if (odakta) {
             sistemCubuklariniGizle();
         }
@@ -383,6 +397,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+        Log.i(TAG, "onPause");
         web.onPause();
         // Arka plandayken oyun döngüsü ve müzik dursun (pil); sunucu ve bot dünyası çalışmayı sürdürür
         web.pauseTimers();
@@ -392,6 +407,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        Log.i(TAG, "onResume");
         web.onResume();
         web.resumeTimers();
         sistemCubuklariniGizle();

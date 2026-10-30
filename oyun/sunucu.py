@@ -19,7 +19,7 @@ import traceback
 print(" [+] Oyun ayarlari yukleniyor...")
 from flask import Flask, redirect, render_template, request, send_from_directory, session
 
-from oyun import aktarim, ayarlar, ruffle as Ruffle
+from oyun import aktarim, ayarlar, ruffle as Ruffle, takvim
 from oyun.dunya import rutbe
 from oyun.ekonomi import timestamp_now
 from oyun.kayit import (all_saves_info, all_saves_userid, fb_friends_str, load_saved_villages,
@@ -251,7 +251,7 @@ def _oyun_sayfasi(sablon, ruffle_js=None):
                            GAMEVERSION=surum, SERVERIP=HOST, ruffle_js=ruffle_js,
                            statik=kok + STATIK_YOL, dinamik=kok + DINAMIK_YOL,
                            rutbe=rutbe(bilgi.get("level", 0)), varlik=STATIK_YOL,
-                           xp=_xp_araligi(bilgi))
+                           xp=_xp_araligi(bilgi), milli_bayram=takvim.milli_bayram())
 
 
 @app.route("/play.html")

@@ -38,15 +38,6 @@
     return GORELI.format(Math.round(fark / 86400), "day");
   }
 
-  // Fareyi izleyen ışık (MagicCard)
-  document.addEventListener("pointermove", function (o) {
-    var panel = o.target.closest && o.target.closest(".panel");
-    if (!panel) return;
-    var k = panel.getBoundingClientRect();
-    panel.style.setProperty("--mx", (o.clientX - k.left) + "px");
-    panel.style.setProperty("--my", (o.clientY - k.top) + "px");
-  });
-
 
   // --- Çerçeve ölçeği: oyun EXACT_FIT ile kutuya esner, oran tam 760:600 kalmalı.
   var kutu = document.getElementById("oyun-kutusu");

@@ -4,6 +4,7 @@ import io
 import json
 import os
 import unittest
+from unittest import mock
 from datetime import date, datetime, timedelta
 
 from ortak import KOK, bos_kayit  # noqa: F401
@@ -34,6 +35,18 @@ class TakvimTestleri(unittest.TestCase):
         yaklasan = takvim.etkinlikler(date(2026, 7, 10))
         self.assertEqual(yaklasan[0]["ad"], "Zafer Bayramı")
         self.assertFalse(yaklasan[0]["aktif"])
+
+    def test_milli_bayramda_turk_bayragi(self):
+        # Oyunun Türk bayrağı süsü (öğe 174) milli bayramlarda; Cadılar Bayramı'nda değil
+        self.assertTrue(takvim.milli_bayram(date(2026, 10, 29)))
+        self.assertTrue(takvim.milli_bayram(date(2026, 4, 23)))
+        self.assertFalse(takvim.milli_bayram(date(2026, 11, 1)))
+        from oyun import diyar
+        with mock.patch.object(takvim, "bugun", lambda: date(2026, 10, 29)):
+            cevap = server.app.test_client().get("/dunya/takvim").get_json()
+        cumhuriyet = next(e for e in cevap["etkinlikler"] if e["ad"] == "Cumhuriyet Bayramı")
+        self.assertEqual(cumhuriyet["resim"], diyar.TURK_BAYRAGI)
+        self.assertTrue(os.path.exists(os.path.join(KOK, "templates", diyar.TURK_BAYRAGI.lstrip("/"))))
 
     def test_takvim_kipinde_magaza(self):
         eski = config.tema_seti_kipi

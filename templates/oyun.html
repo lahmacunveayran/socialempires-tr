@@ -13,14 +13,12 @@
     <link rel="preload" href="/fonts/nunito-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="/css/oyun.css">
     <link rel="preload" as="image" fetchpriority="high" href="{{ V }}externalized/PopupLevelUp/background.png">
-    <script src="/js/gokyuzu.js" defer></script>
 </head>
 <body>
     <!-- Manzara: gökyüzünün rengi Güneş'in konumuna göre değişir; ağaçlar oyunun kendi çizimleri -->
     <div class="manzara" aria-hidden="true">
         <div class="orman orman-uzak"></div>
         <div class="orman orman-orta"></div>
-        <div class="sis"></div>
         <div class="orman orman-yakin"></div>
     </div>
 
@@ -68,9 +66,9 @@
         <section class="oyun-alani" aria-label="Oyun">
             <div class="cerceve">
                 <div class="arma" aria-hidden="true">
-                    <img class="bayrak sol" fetchpriority="low" decoding="async" src="{{ V }}images_new/flag.png" alt="">
+                    <img class="bayrak sol{% if milli_bayram %} turk{% endif %}" fetchpriority="low" decoding="async" src="{% if milli_bayram %}/img/oyun/bayrak-tr.png{% else %}{{ V }}images_new/flag.png{% endif %}" alt="">
                     <img class="kalkan" fetchpriority="low" decoding="async" src="{{ V }}externalized/popup_elements/popup_pvp/red_shield.png" alt="">
-                    <img class="bayrak sag" fetchpriority="low" decoding="async" src="{{ V }}images_new/flag.png" alt="">
+                    <img class="bayrak sag{% if milli_bayram %} turk{% endif %}" fetchpriority="low" decoding="async" src="{% if milli_bayram %}/img/oyun/bayrak-tr.png{% else %}{{ V }}images_new/flag.png{% endif %}" alt="">
                 </div>
                 <div class="oyun-kutusu" id="oyun-kutusu">
                     <div class="giris-perdesi" id="giris-perdesi">

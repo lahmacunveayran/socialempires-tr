@@ -24,7 +24,6 @@ class OyunSayfasiTestleri(unittest.TestCase):
                      data={"USERID": self.uid, "GAMEVERSION": "SocialEmpires0926bsec.swf"})
         sayfa = istemci.get("/play.html", base_url=adres, environ_base=lan).get_data(as_text=True)
         self.assertIn('id="kralliga-gir"', sayfa)
-        self.assertIn("/js/gokyuzu.js", sayfa)
         # Telefon ev ağından açınca varlıklar da aynı adresten insin.
         self.assertIn("http://192.168.1.20:5050/default01.static.socialpointgames.com", sayfa)
         self.assertNotIn("unpkg.com", sayfa)
@@ -34,7 +33,7 @@ class OyunSayfasiTestleri(unittest.TestCase):
         self.assertIn("application/x-shockwave-flash", sayfa)
 
     def test_statik_dosyalar(self):
-        for yol in ("/js/oyun.js", "/js/gokyuzu.js", "/css/oyun.css", "/hazine",
+        for yol in ("/js/oyun.js", "/css/oyun.css", "/hazine",
                     "/fonts/baloo-2-latin-800-normal.woff2"):
             cevap = self.istemci.get(yol)
             self.assertEqual(cevap.status_code, 200, yol)

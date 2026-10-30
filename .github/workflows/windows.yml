@@ -39,7 +39,7 @@ jobs:
         run: python -c "import sys; sys.path.insert(0, '.'); from oyun import ruffle; assert ruffle.hazirla(); ruffle.brotli_baslat(bekle=True)"
       - name: Paket
         run: python araclar/windows_paketi.py --ad "${{ steps.ad.outputs.ad }}" --cikti dist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: windows-paketi
           path: dist/
@@ -50,7 +50,7 @@ jobs:
     needs: paket
     runs-on: windows-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: windows-paketi
           path: dist
@@ -99,7 +99,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: windows-paketi
           path: dist

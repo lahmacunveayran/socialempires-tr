@@ -21,4 +21,5 @@ Gerekirse en fazla **oyunun kendi görselleri** kullanılır: oyun varlıkları
 ## Geliştirme
 
 - Testler: `python -m unittest discover -s tests`
+- Tarayıcı JS testleri: `node --test tests/js/*.test.js`
 - Ayrıntılar: `docs/GELISTIRME.md`, yol haritası durumu: `docs/YOL_HARITASI_DURUM.md`

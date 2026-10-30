@@ -3,8 +3,8 @@
   "guncelleme": "2026-10-30",
   "devam_noktasi": {
     "faz": "Tablet özellikleri; sonra bot dünyası, imparatorluk günlüğü, çeviri taraması",
-    "madde": "OYN-03",
-    "sonraki_adim": "Sahibi APK ile tablette dener; bot adları ve portreleri için sahibinin seçimi beklenir (öneri: oyunun birim unvanları ve birim resimleri); günlük ödül penceresinin boş başlığı incelenir"
+    "madde": "OYN-04",
+    "sonraki_adim": "Oyuncunun kendi profil fotoğrafını yüklemesi (sahibinin isteği)"
   },
   "maddeler": [
     {
@@ -565,6 +565,19 @@
       "pr": "#15",
       "onay": "Sahibi, 30 Ekim 2026",
       "notlar": "Kalan İngilizce: 'world' (küre vektör çizimi), BUILD/ADD ALLY (resim), 'Add Cash' (SWF metin alanlarında yok, resim ya da başka parça); resimlerdeki yazılar karar gereği kalır. Açık (?): günlük ödül penceresinin başlık kutusu boş görünüyor ve '250 altın' etiketi kutuya sığmıyor ('250 al'); 2. ve 4. gün ödülü yalnızca '1'. Bunlar istemcinin kendi kodunda kuruluyor; doğrulanmadı."
+    },
+    {
+      "id": "OYN-04",
+      "baslik": "Bot adları ve portreleri oyunun birimlerinden; seviye atladıkça portre üst birime geçer",
+      "sinif": "ozellik",
+      "onem": "Düşük",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "Sahibi tarihî komutan adlarının saygısızlık olabileceğini söyledi ve Öneri 1'i seçti (30 Ekim 2026). 50 bot 13 birim ailesinden unvan taşıyor (Kara Şövalye, Gezgin Büyücü, Fırtına Kanadı...); portre ailenin buildingthumbs resmi, 12/24/36/48. seviyelerde üst birime geçer (oyun/bot_kimlik.py; dunya.py seviye atlamada tazeler). Bütün resimler çevrimdışı temel pakette. Eski tarihî adlı kayıtlar ve raporlardaki adlar açılışta aynı sıradaki yeni ada geçer: yerel 53 kayıtlık kopyada 50 kayıt güncellendi, ikinci açılışta 0. Sıfırdan üretimde 50 yeni ad. Gerçek kişi fotoğrafları (templates/img/profile/bot_*.jpg, pp_*.jpg; 2 yaşayan kişi, kostümlü kişi ×4, paralar, yazıtlar, 6 kopya) depodan kaldırıldı. Tarayıcıda denendi: Şeref Kürsüsü, Haftalık Turnuva ve oyun içi komşu şeridinde yeni ad ve birim resimleri. Aynı denemede kürsü hatası bulundu: basamak yüksekliği sabit olduğundan ad satırı sıkışıp kayboluyordu (3. sıra adsız, 2. sıra 'Şafak B'); basamak içeriğe göre uzar, ad iki satıra iner.",
+      "test": "tests/test_sistemler.py (BotKimlikTestleri)",
+      "pr": null,
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Sahibinin önce istediği ünlü adları ve internetten fotoğrafları (Ata Demirer, Cem Yılmaz, Manifest, DJ Dikkat) sahibi sonra bıraktı ('uğraşmayalım'); depoya girmedi. Kuşatma makineleri ailesi yüz olmadığı için dışarıda."
     }
   ]
 }

@@ -15,7 +15,7 @@ import random
 import threading
 import time
 
-from oyun import ayarlar, denge
+from oyun import ayarlar, bot_kimlik, denge
 from oyun.config import get_game_config
 from oyun.kayit import all_saves_userid, save_lock, save_session, session
 from oyun.turkce import cevirileri_yukle
@@ -519,6 +519,8 @@ class Dunya:
             yeni += 1
         if yeni != seviye:
             harita["level"] = yeni
+            if kayit["playerInfo"].get("name") in bot_kimlik.ISIMLER:  # portre ailesinin üst birimine geçer
+                kayit["playerInfo"]["pic"] = bot_kimlik.portre(kayit["playerInfo"]["name"], yeni)
             self.olay("seviye", f"{kayit['playerInfo'].get('name', uid)} seviye {yeni} oldu")
             degisti = True
         return degisti

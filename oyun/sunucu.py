@@ -52,6 +52,7 @@ def bot_mu(uid):
 def _botlari_hazirla():
     """Hiç bot köyü yoksa (ilk çalıştırma) PvP/ada/turnuva için üretir."""
     if any(bot_mu(uid) for uid in all_saves_userid()):
+        _bot_adlarini_yenile()
         return
     print(" [+] Bot koyleri bulunamadi; ilk calistirma icin uretiliyor...")
     try:
@@ -63,6 +64,17 @@ def _botlari_hazirla():
         print(" ! Bot koyleri uretilemedi; elle: python araclar/bot_koy_uret.py")
         return
     load_saved_villages()
+
+
+def _bot_adlarini_yenile():
+    """Eski tarihî adlı botları ve portrelerini oyunun birimlerine geçirir (oyun/bot_kimlik.py)."""
+    from oyun.bot_kimlik import adlari_yenile
+    with save_lock:
+        degisen = adlari_yenile({uid: kayit_oturumu(uid) for uid in all_saves_userid()})
+        for uid in degisen:
+            save_session(uid)
+    if degisen:
+        print(f" [+] Bot adlari/portreleri guncellendi: {len(degisen)} kayit")
 
 
 _botlari_hazirla()

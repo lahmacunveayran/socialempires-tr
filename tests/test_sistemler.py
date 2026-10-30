@@ -321,6 +321,62 @@ class CeviriTestleri(unittest.TestCase):
         self.assertEqual(adlar.get("9001"), "Büyük Ev")
 
 
+
+class BotKimlikTestleri(unittest.TestCase):
+    """Bot adları ve portreleri oyunun birimlerinden; eski tarihî adlı kayıtlar yenilerine geçer."""
+
+    def setUp(self):
+        from oyun import bot_kimlik
+        self.b = bot_kimlik
+
+    def _bot(self, ad, seviye):
+        return {"playerInfo": {"bot": True, "name": ad, "pic": "/img/profile/bot_eski.jpg",
+                               "map_names": [f"{ad} Kalesi"]}, "maps": [{"level": seviye}], "privateState": {}}
+
+    def test_elli_ayri_ad_gercek_kisi_yok(self):
+        self.assertEqual(len(set(self.b.ISIMLER)), 50)
+        self.assertEqual(len(self.b.ESKI_ISIMLER), 50)
+        self.assertFalse(set(self.b.ESKI_ISIMLER) & set(self.b.ISIMLER))
+
+    def test_portreler_oyunun_kendi_resmi_ve_temel_pakette(self):
+        temel = set()
+        with open(os.path.join(KOK, "config", "onindirme.tsv"), encoding="utf-8") as f:
+            for satir in f:
+                p = satir.rstrip("\n").split("\t")
+                if len(p) >= 3 and not satir.startswith("#") and int(p[2]) <= 1:
+                    temel.add(p[0])
+        for aile in self.b.AILELER.values():
+            self.assertEqual(len(aile), len(self.b.KADEMELER) + 1)
+            for resim in aile:
+                self.assertIn(f"buildingthumbs/{resim}.jpg", temel)
+
+    def test_seviye_atladikca_ust_birim(self):
+        resimler = [self.b.portre("Kara Şövalye", s) for s in (1, 11, 12, 30, 48, 99)]
+        self.assertEqual([r.rsplit("/", 1)[1] for r in resimler],
+                         ["caballo1.jpg", "caballo1.jpg", "caballo2.jpg", "caballo3.jpg", "caballo5.jpg", "caballo5.jpg"])
+        self.assertEqual(self.b.portre("Bilinmeyen", 30), self.b.VARSAYILAN_PORTRE)
+
+    def test_eski_adli_bot_ve_raporlar_yenilenir(self):
+        oyuncu = {"playerInfo": {"name": "Attila"}, "maps": [{"level": 5}], "privateState": {"attacksSent": [
+            {"description": {"oponent": {"name": "Cengiz Han", "level": 31, "pic": "/img/profile/bot_cengiz_han.jpg"}}}]}}
+        kayitlar = {"b": self._bot("Kara Han", 40), "o": oyuncu}
+        self.assertEqual(self.b.adlari_yenile(kayitlar), {"b", "o"})
+        pi = kayitlar["b"]["playerInfo"]
+        self.assertEqual((pi["name"], pi["map_names"]), ("Kara Şövalye", ["Kara Şövalye Kalesi"]))
+        self.assertEqual(pi["pic"], self.b.portre("Kara Şövalye", 40))
+        rakip = oyuncu["privateState"]["attacksSent"][0]["description"]["oponent"]
+        yeni = self.b.ISIMLER[self.b.ESKI_ISIMLER.index("Cengiz Han")]
+        self.assertEqual((rakip["name"], rakip["pic"]), (yeni, self.b.portre(yeni, 31)))
+        self.assertEqual(oyuncu["playerInfo"]["name"], "Attila")  # bot olmayan kayıt adı değişmez
+        self.assertEqual(self.b.adlari_yenile(kayitlar), set())  # ikinci açılışta yazacak bir şey yok
+
+    def test_diyar_portresi_birim_resmini_kabul_eder(self):
+        from oyun.diyar import portre
+        resim = self.b.portre("Gezgin Büyücü", 20)
+        self.assertEqual(portre({"playerInfo": {"pic": resim}}), resim)
+        self.assertEqual(portre({"playerInfo": {"pic": "https://ornek.com/x.jpg"}}), self.b.VARSAYILAN_PORTRE)
+
+
 class ZamanOlcegiTestleri(unittest.TestCase):
     def test_istemci_config_sureleri_bolunur(self):
         from oyun.config import get_client_game_config, get_game_config

@@ -13,7 +13,6 @@ import copy
 import json
 import os
 import random
-import re
 import sys
 import time
 import uuid
@@ -23,34 +22,7 @@ sys.path.insert(0, KOK)
 
 from oyun.yollar import SAVES_DIR, VILLAGES_DIR  # noqa: E402
 from oyun.surum import version_code  # noqa: E402
-PP_KLASOR = os.path.join(KOK, "templates", "img", "profile")
-
-
-def _slug(ad: str) -> str:
-    tablo = str.maketrans("ıİşŞğĞüÜöÖçÇ", "iIsSgGuUoOcC")
-    return re.sub(r"[^a-z0-9]+", "_", ad.translate(tablo).lower()).strip("_")
-
-
-def mevcut_pp(ad):
-    """templates/img/profile/bot_<ad>.jpg|png varsa web yolunu döndürür."""
-    for uzanti in (".jpg", ".png"):
-        if os.path.exists(os.path.join(PP_KLASOR, f"bot_{_slug(ad)}{uzanti}")):
-            return f"/img/profile/bot_{_slug(ad)}{uzanti}"
-    return None
-
-# 50 farklı isim
-ISIMLER = [
-    "Kara Han", "Bozkurt Bey", "Demir Yay", "Gökbörü", "Alp Er Tunga",
-    "Kül Tigin", "Bilge Kağan", "Tomris Hatun", "Modu Han", "Attila",
-    "Balamir", "İlteriş", "Kapgan", "Suyab", "Tardu",
-    "Bayan Kağan", "İstemi Yabgu", "Bilge Hatun", "Kür Şad", "Tonyukuk",
-    "Vezir Nizam", "Şahin Bey", "Korkut Ata", "Dede Korkut", "Manas",
-    "Cengiz Han", "Kubilay", "Timur", "Babür", "Alparslan",
-    "Tuğrul Bey", "Melikşah", "Sultan Sencer", "Harzemşah", "Celaleddin",
-    "Ertuğrul", "Osman Bey", "Orhan Bey", "Murat Bey", "Yıldırım",
-    "Fatih", "Yavuz", "Kanuni", "Sokullu", "Kılıç Arslan",
-    "Nurettin", "Selahaddin", "Baybars", "Kutuz", "Berke Han",
-]
+from oyun.bot_kimlik import ISIMLER, portre  # noqa: E402
 
 KISILIKLER = ["agresif", "savunmaci", "tuccar", "dengeli"]
 
@@ -206,7 +178,7 @@ def bot_uret(adet=50):
         pi.update({
             "pid": pid,
             "name": isim,
-            "pic": mevcut_pp(isim) or "/img/profile/1025.png",
+            "pic": portre(isim, seviye),
             "cash": 0,
             "completed_tutorial": 1,
             "default_map": 0,

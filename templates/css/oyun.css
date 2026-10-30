@@ -502,11 +502,13 @@ img { -webkit-user-drag: none; }
   padding: 14px 4px 6px; border-radius: 12px 12px 6px 6px; color: #fff;
   background: linear-gradient(#e6e9ee, #9aa3af); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .7), 0 4px 0 #5f6670;
 }
-.b1 .blok { height: 98px; background: linear-gradient(#ffe58a, #e3a020); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .8), 0 4px 0 #8a5a08; }
-.b2 .blok { height: 78px; }
-.b3 .blok { height: 64px; background: linear-gradient(#f2b483, #b5672a); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .6), 0 4px 0 #6a3610; }
+.b1 .blok { min-height: 98px; background: linear-gradient(#ffe58a, #e3a020); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .8), 0 4px 0 #8a5a08; }
+.b2 .blok { min-height: 78px; }
+.b3 .blok { min-height: 64px; background: linear-gradient(#f2b483, #b5672a); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .6), 0 4px 0 #6a3610; }
 .blok .no { font-size: 30px; line-height: 1; }
-.basamak .ad { display: block; margin-top: 2px; font: 900 13px/1.1 var(--metin-yazi); color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .55); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 3px; }
+.basamak .ad { display: block; margin-top: 2px; font: 900 13px/1.1 var(--metin-yazi); color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .55); max-width: 100%; padding: 0 3px; flex-shrink: 0;
+  /* uzun ad iki satıra iner; sabit yükseklikte sıkışıp kaybolmaz */
+  overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; }
 .basamak .sv { font: 800 11px var(--metin-yazi); color: #fff; opacity: .95; text-shadow: 0 1px 1px rgba(0, 0, 0, .5); }
 .basamak .rt { display: block; margin-top: 12px; font: 800 11.5px var(--metin-yazi); color: var(--muhur); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 

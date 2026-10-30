@@ -3,8 +3,8 @@
   "guncelleme": "2026-10-30",
   "devam_noktasi": {
     "faz": "Tablet özellikleri; sonra bot dünyası, imparatorluk günlüğü, çeviri taraması",
-    "madde": "OYN-06",
-    "sonraki_adim": "PR #16 yeşil olunca sahibi APK ile tablette dener: tam ekran, Çık/Tam Ekran, geri tuşu, arka plan, profil resmi"
+    "madde": "DNT-04",
+    "sonraki_adim": "PR (denetim düzeltmeleri) CI yeşil olunca APK tablette denenir; DNT-04 kararları sahibinden"
   },
   "maddeler": [
     {
@@ -617,6 +617,58 @@
       "pr": "#16",
       "onay": "Sahibi, 30 Ekim 2026",
       "notlar": "Yalnızca oyunun kendi resmi kullanıldı (CLAUDE.md görsel kuralı)."
+    },
+    {
+      "id": "DNT-01",
+      "baslik": "Denetim (cihazdaki sunucu): bozuk kayıt açılışı durduruyordu; CSRF, DNS yeniden bağlama; kayıt ve kaynak sorunları",
+      "sinif": "hata",
+      "onem": "Yüksek",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "Sahibinin isteği: 'Tamamen bağımsız ve üst seviye profesyonel denetle' (30 Ekim 2026). Üç bağımsız denetçi (benim bulgularımı bilmeden, yalnızca kod ve kurallarla) ayrı alanları okudu; her bulgu burada yeniden üretildi ya da kodda doğrulandı, sonra düzeltildi. Yeniden üretildi: sürümsüz bir kayıt 'import oyun.sunucu'yu KeyError ile düşürdü (Android'de 'açılıyor'da kalır). Düzeltme: okunamayan kayıt .bozuk olarak kenara alınır, .bak okunuyorsa yerine konur; yedekten/Wi-Fi'dan gelen kayıt bir kopyada göç+özetle denenir (kayit.kaydi_dogrula). .bak artık kopyalanır, tek os.replace (önce iki taşıma arasında kayıt yok olabiliyordu). Başka siteden POST ve GET /new.html reddedilir (Origin/Sec-Fetch-Site); yerel istek yerel Host taşımalı (DNS yeniden bağlama ile hile paneli, kayıt indirme ve taşıma kodu okunabiliyordu). Oturum anahtarı sabit 'SECRET_KEY' idi, artık rastgele (.oturum_anahtari); MAX_CONTENT_LENGTH 40 MB. Wi-Fi gönderici her açıp kapatmada 3 iş parçacığı bırakıyordu (ölçüldü: 5->14; şimdi sabit), alan taraf yönlendirme izliyordu, yanlış kod sayacı kilitsizdi. Bot dünyası dakikada ~48 kaydı girintili yazıyordu (~2,4 MB/dk): girintisiz yazım (~5 kat küçük), bot kayıtları 5 turda bir, giriş sayfasında yeniden okumadan önce yazılır. Başarısız varlık indirmesi her istekte 2×30 sn deneniyordu: 10 dk beklenir, zaman aşımı 15 sn. Android ilk açılış kopyası geçici adla, tek adımda. Açılış hatasında input() Android'de EOFError verip asıl hatayı gizliyordu.",
+      "test": "tests/test_denetim.py, tests/test_tasima.py (TasimaKaynaklari), tests/test_diyar.py",
+      "pr": null,
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Karar bekleyenler DNT-04'te."
+    },
+    {
+      "id": "DNT-02",
+      "baslik": "Denetim (Android kabuğu ve dağıtım): yedek kotası, klavye, sunucu hatasında takılma, sızıntılar, CI yolları",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "ci_bekliyor",
+      "isaret": "◐",
+      "kanit": "Sahibinin isteği: 'Tamamen bağımsız ve üst seviye profesyonel denetle' (30 Ekim 2026). Üç bağımsız denetçi (benim bulgularımı bilmeden, yalnızca kod ve kurallarla) ayrı alanları okudu; her bulgu burada yeniden üretildi ya da kodda doğrulandı, sonra düzeltildi. Yüksek bulgu yok. Düzeltilenler: 14 günlük kopyalar Android'in 25 MB bulut yedeği sınırını ~1 haftada aşıp bütün yedeği düşürecekti (gunluk_yedek dışarıda); tam ekranda ekran klavyesi Wi-Fi taşıma alanlarını örtüyordu (Android 11+ IME boşluğu); sunucu açılamazsa ekran takılı kalıyordu ve yeniden denenemiyordu (dokununca yeniden dener); onDestroy yoktu (WebView sızıntısı), yazı boyutu/dil değişince etkinlik yeniden kuruluyordu (configChanges); çizim süreci çökünce ölü tam ekran görünümü kalıyordu, çökme döngüsü sınırsızdı; seçici açıkken uygulama kapanırsa ya da yazma başarısızsa boş yedek dosyası kalıyordu, yazma ana iş parçacığındaydı; file:/intent: bağlantıları uygulamayı düşürebilirdi; pauseTimers Android 7-9 bölünmüş ekranda görünür oyunu durduruyordu (onStop'a taşındı); CI yol süzgeci config/, villages/, ceviri/, mods/, araclar/, ayarlar.json değişikliklerinde emülatör sınamasını çalıştırmıyordu; sınama Ruffle sürümünü sabit yazıyordu, node süresi 600 sn'den kısa kalabiliyordu.",
+      "test": "tests/test_android.py (Proje.test_denetim_duzeltmeleri), android/sinama.sh",
+      "pr": null,
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Java bu ortamda derlenemiyor; APK ve emülatör sınaması CI'da. Klavye ve yedek davranışı tablette doğrulanacak (?)."
+    },
+    {
+      "id": "DNT-03",
+      "baslik": "Denetim (tablet arayüzü): oyunun tam ekranı oyun modunu bozuyordu, Çık 4:3'te oyunun üstündeydi, taşıma listesi, yoklamalar",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "Sahibinin isteği: 'Tamamen bağımsız ve üst seviye profesyonel denetle' (30 Ekim 2026). Üç bağımsız denetçi (benim bulgularımı bilmeden, yalnızca kod ve kurallarla) ayrı alanları okudu; her bulgu burada yeniden üretildi ya da kodda doğrulandı, sonra düzeltildi. Tarayıcıda yeniden üretilip düzeltildi: oyunun kendi tam ekranı (Ruffle, oyun kutusundaki öğe) masaüstünde oyun modunu kapatıp '0' kaydediyordu -> yalnızca tam ekran bütünüyle bitince kapanır (ölçüm: öğe tam ekranken ve çıkınca mod açık kaldı); 1024×768'de Çık 28×32 px oyunun altın sayacının üstündeydi -> dar yatay ekranlarda oyun Çık kadar daralır, Çık 56×44 px (1024×768: çakışma yok; 1280×800 değişmedi 1013×800); Wi-Fi taşıma listesinde ad 24 px sütuna sıkışıp 'İ…' oluyordu -> 547 px; oyun modunda/arka planda 6 zamanlayıcı yoklamaya devam ediyordu -> 16 sn'de 0 istek, görünür olunca tazelenir; haber yoklaması üst üste binip aynı haberi iki kez kuyruğa koyabiliyordu; taşıma durum yoklaması hata alınca kalıcı duruyordu; profil sayfası JSON olmayan hatada ham ayrıştırma hatası gösteriyordu, aynı fotoğraf ikinci kez seçilemiyordu, önizleme bellekte kalıyordu; IP alanı inputmode=decimal (Türkçe klavyede nokta yok) -> url; dokunmatik bağlantılar 16 px yüksekti -> 36 px; küçük yazılarda kontrast 2,97-4,35:1 -> 4,5:1 üstü; Tam Ekran/Çık sonrası odak oyuna döner.",
+      "test": "tarayıcı ölçümü (scratchpad/ui_dogrula.js), tests/js",
+      "pr": null,
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Kalan küçükler (karar gerekmez, sıradaki işe): üst bilgi oyun içinde seviye atlayınca yenilenmiyor; /hazine sayfası diğerleri gibi biçimlenmemiş; 'yedek yükle' etiketleri klavyeyle odaklanmıyor; 1024×768 tarayıcıda (uygulama değil) üst bilgi kutusunun üst kenarı kırpılıyor."
+    },
+    {
+      "id": "DNT-04",
+      "baslik": "Denetim: sahibinin kararını bekleyen bulgular",
+      "sinif": "karar",
+      "onem": "Orta",
+      "durum": "acik",
+      "isaret": "?",
+      "kanit": "(1) CSS ile çizilmiş figürler proje kuralına aykırı olabilir: giriş perdesindeki kıvılcım noktaları (.kivilcimlar), ışık hüzmeleri (.huzme, kürsüdeki .b1::before), mühür düğmeleri (.muhur-dugme, .muhur-seviye), kalkan rozeti (.kalkan-rozet), canlı noktası (.canli i); kalsın mı, oyunun kendi resimleriyle mi değişsin? (2) PR derlemeleri sahibinin imza anahtarıyla imzalanıyor (sırlar tanımlıysa): incelenmemiş kod gerçek anahtarla imzalanır; kaldırılırsa PR APK'ları sürüm APK'sının üstüne kurulamaz. (3) ev_agi açıkken ev ağındaki her cihaz bütün kayıtları okuyup değiştirebilir; ayarlar.json yalnızca hile panelinin yerel kaldığını söylüyor. (4) Android'de aynı cihazdaki başka uygulamalar 127.0.0.1:5050'ye ulaşabilir; çözüm her açılışta Java'nın ürettiği bir jeton (çerez). (5) 'sinama' niyet ekiyle her uygulama WebView hata ayıklamasını açabilir; kullanmak için yetkili adb gerekir. (6) Giriş sayfası her açılışta kayıtları diskten yeniden okuyor; aynı anda süren bir yazımın değişikliği kaybolabilir (düşük olasılık). (7) stub/crossdomain.xml domain='*' (yalnızca gerçek Flash Player ile /flash.html'de anlamlı).",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "Sahibine soruldu."
     }
   ]
 }

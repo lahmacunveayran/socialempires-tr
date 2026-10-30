@@ -9,10 +9,18 @@ on:
     tags: ["v*"]
   pull_request:
     paths:
+      # APK'ya giren ve ilk açılışta çalışan her şey (bot üretici, ayarlar, modlar, çeviriler...)
       - android/**
-      - araclar/android_paketi.py
+      - araclar/**
       - oyun/**
       - templates/**
+      - config/**
+      - villages/**
+      - ceviri/**
+      - stub/**
+      - mods/**
+      - assets/fonts/**
+      - ayarlar.json
       - requirements.txt
       - .github/workflows/android.yml
   workflow_dispatch:

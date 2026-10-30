@@ -6,5 +6,7 @@
     <string name="yedek_kaydedildi">Yedek kaydedildi.</string>
     <string name="yedek_kaydedilemedi">Yedek kaydedilemedi.</string>
     <string name="cikmak_icin_tekrar">Çıkmak için geri tuşuna tekrar basın.</string>
+    <string name="yeniden_dene">Yeniden denemek için ekrana dokunun.</string>
+    <string name="ekran_cokuyor">Oyun ekranı art arda kapandı (cihazın belleği yetmiyor olabilir). Diğer uygulamaları kapatıp yeniden denemek için ekrana dokunun.</string>
     <string name="yeniden_yukleniyor">Oyun ekranı kapandı; yeniden yükleniyor.</string>
 </resources>

@@ -681,7 +681,7 @@
       "test": "tarayıcı (seçim kaydı ve Ruffle config.quality)",
       "pr": "#18",
       "onay": "Sahibi, 30 Ekim 2026",
-      "notlar": "Doğrulanmadı (?): izlerin yüksek kalitede kaybolduğu tablette görülmeli; kaybolmazsa sebep başka (Ruffle'ın dokunma/çizim kırıntısı) ve ayrı incelenir."
+      "notlar": "Doğrulanmadı (?): izlerin yüksek kalitede kaybolduğu tablette görülmeli; kaybolmazsa sebep başka (Ruffle'ın dokunma/çizim kırıntısı) ve ayrı incelenir. PR #18 CI: emülatörde (SwiftShader, -gpu swangle_indirect) yüksek kalitede WebGL 'GL_INVALID_FRAMEBUFFER_OPERATION: framebuffer incomplete' uyarıları çıkıyor; 9f0e404'te oyun yüklendikten hemen sonra emülatör kapandı, aynı ayarlarla b4e2e26'da sınama geçti. Emülatörün yazılım GPU'suna özgü görünüyor; tablette yüksek kalitede bir sorun olursa ilk bakılacak yer burası."
     },
     {
       "id": "OYN-08",

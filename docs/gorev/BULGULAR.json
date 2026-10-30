@@ -181,13 +181,13 @@
       "baslik": "Kısa ekranlarda (dizüstü, telefon yatay) oyun çerçevesi küçük kalıyor",
       "sinif": "hata",
       "onem": "Orta",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "StatCounter Türkiye masaüstü (Temmuz 2026): 1536×864 %10,55, 1366×768 %7,86. Tarayıcı çubukları düşünce pencere 657/744 px; çerçeve ~441 px idi. Kısa ekran düzeniyle (yükseklik ≤ 820 px başlık 76 px, ≤ 500 px başlık 44 px şerit) araclar/cihaz_denemesi.js: 1366×657'de 612×483, 1536×744'te 722×570, telefon yatayda ekran yüksekliğini dolduruyor; 9 cihazda sığıyor, oran 1,2667.",
       "test": "araclar/cihaz_denemesi.js (elle)",
       "pr": "#13",
       "onay": "Sahibi kararı geliştiriciye bıraktı (30 Ekim 2026)",
-      "notlar": "Karar: kısa ekranlarda alan oyuna verilir; başlık sıkışık düzene geçer."
+      "notlar": "Karar: kısa ekranlarda alan oyuna verilir; başlık sıkışık düzene geçer. PR #13 birleşti, CI yeşil (30 Ekim 2026)."
     },
     {
       "id": "TAS-01",

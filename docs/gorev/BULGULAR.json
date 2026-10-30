@@ -2,9 +2,9 @@
   "surum": "0.05a",
   "guncelleme": "2026-10-30",
   "devam_noktasi": {
-    "faz": "Upstream karşılaştırması ve yol seçimi",
-    "madde": "KYN-01",
-    "sonraki_adim": "Sahibi 0926'da kalma / 1.4.07'ye geçme kararını verir; geçiş düşünülürse önce 1.4.07'nin Ruffle'da açılış sınaması (izin gerekiyor)"
+    "faz": "1.4.07'ye geçiş kararı",
+    "madde": "KYN-05",
+    "sonraki_adim": "Sahibi aşamalı geçişi onaylarsa Aşama 0 (istemci seçimi, config hattı, varlık sabitleme) ayrı PR'la"
   },
   "maddeler": [
     {
@@ -786,6 +786,19 @@
       "pr": null,
       "onay": null,
       "notlar": "Temizlik işi; davranış değiştirmez."
+    },
+    {
+      "id": "KYN-05",
+      "baslik": "1.4.07 deneyi: yamalı istemci bizim sunucuyla Ruffle 0.7.1'de açılıyor, eski kayıt ve Türkçe yama çalışıyor",
+      "sinif": "karar",
+      "onem": "Yüksek",
+      "durum": "onay_bekliyor",
+      "isaret": "✔",
+      "kanit": "Sahibi: '1.4.07 muhakkak bir yolu vardır, hesapla, bir yolunu bul'. Yalıtılmış kopyada (gerçek depo değişmedi; upstream kodu çalıştırılmadı): OYUN_SWF=SocialEmpires1.4.07sec_fixed.swf, upstream'in üç veri yaması (0-language_en, 1-mega_patch, 2-unit_patch) ve goals.json (206). Sonuç: yeni imparatorluk 8 sn'de, sv 59 bot kaydı 6 sn'de açıldı; kaynak/seviye/nüfus yerinde; istemci hedef 1, 7, 12'yi kendisi tamamladı (complete_mission/reward_mission sırası bizim işleyicilerle aynı); yeni günlük ödül penceresi açıldı; Türkçe SWF yaması 521 metin alanını çevirdi ve oyun açıldı. Bilinmeyen komut ya da sunucu hatası yok. Eksik: yeni PvP havuz adresi 404, yeni metinler İngilizce. 1.4.07'nin 29 yeni komutu, upstream'de sürüme bağlı 11 nokta. Plan ve kıyas tabloları: docs/inceleme/2026-10-30-1407-gecis-plani.md.",
+      "test": "tarayıcı (oturum çalışma klasörü: deney107_ac.js, deney107_bot.js, deney107_bot2.js)",
+      "pr": null,
+      "onay": null,
+      "notlar": "Bulunan iki küçük şey: reward_mission ödülü config['missions']'tan okuyor (1.4.07'de goals); varliklar._oyun_swf_mi nokta/alt çizgili sürüm adını kabul etmiyor. Emek tahmini ~13-22 iş günü (?). Karar sahibinde: çift istemcili aşamalı geçiş."
     }
   ]
 }

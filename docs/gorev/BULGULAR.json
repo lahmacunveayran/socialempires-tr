@@ -3,8 +3,8 @@
   "guncelleme": "2026-10-30",
   "devam_noktasi": {
     "faz": "Tablet özellikleri; sonra bot dünyası, imparatorluk günlüğü, çeviri taraması",
-    "madde": "REG-03",
-    "sonraki_adim": "Emülatör sınaması swangle_indirect ile yeşil olunca sahibi tablette dener; günlük ödül penceresinin boş başlığı (OYN-03 notu) incelenir"
+    "madde": "OYN-03",
+    "sonraki_adim": "Sahibi APK ile tablette dener; bot adları ve portreleri için sahibinin seçimi beklenir (öneri: oyunun birim unvanları ve birim resimleri); günlük ödül penceresinin boş başlığı incelenir"
   },
   "maddeler": [
     {
@@ -545,9 +545,9 @@
       "baslik": "Emülatör, oyunun WebGL çizimi sırasında kapanıyor (swiftshader_indirect)",
       "sinif": "hata",
       "onem": "Orta",
-      "durum": "ci_bekliyor",
-      "isaret": "◐",
-      "kanit": "PR #15, 13. android çalıştırması (adae314): uygulama kendi sayfasını yükledi, sınama /new.html'e giderken sayfa kapandı, ardından adb 'waiting for device' ve emülatörün 5554 portu reddedildi; emülatör sürecinin kendisi düştü. REG-02'deki iki çöküş de grafik katmanındaydı. Google hata kaydı 410512342: swiftshader_indirect ile emülatör segfault. Emülatör ANGLE üzerinden yazılım çizimine (-gpu swangle_indirect) alındı; sinama.sh emülatör kapanınca bunu açıkça yazar.",
+      "durum": "duzeltildi",
+      "isaret": "✔",
+      "kanit": "PR #15, 13. android çalıştırması (adae314): uygulama kendi sayfasını yükledi, sınama /new.html'e giderken sayfa kapandı, ardından adb 'waiting for device' ve emülatörün 5554 portu reddedildi; emülatör sürecinin kendisi düştü. REG-02'deki iki çöküş de grafik katmanındaydı. Google hata kaydı 410512342: swiftshader_indirect ile emülatör segfault. Emülatör ANGLE üzerinden yazılım çizimine (-gpu swangle_indirect) alındı; sinama.sh emülatör kapanınca bunu açıkça yazar. Doğrulandı: 14. android çalıştırması (f788bc9) yeşil; sunucu hazır, 'Krallığa Gir'den sonra Ruffle 62 sn'de kuruldu, oyun 69 sn'de yüklendi, 129b-init ve eğitimin ilk adımları (200-tut1, 200-tut3) geldi; toplam 108 sn. Bu kipte GPU sınırı daha yüksek: Ruffle wgpu-webgl çizicisini seçti.",
       "test": ".github/workflows/android.yml (sinama)",
       "pr": "#15",
       "onay": null,

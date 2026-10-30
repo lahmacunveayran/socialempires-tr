@@ -26,3 +26,4 @@ dist/
 .gradle/
 local.properties
 *.apk
+node_modules/

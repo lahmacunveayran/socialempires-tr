@@ -58,6 +58,10 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle kayitliDurum) {
         super.onCreate(kayitliDurum);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        // Yalnızca CI sınaması (android/sinama.sh) açar: WebView'a adb üzerinden DevTools ile bağlanılabilir
+        if (getIntent().getBooleanExtra("sinama", false)) {
+            WebView.setWebContentsDebuggingEnabled(true);
+        }
 
         web = new WebView(this);
         durum = new TextView(this);

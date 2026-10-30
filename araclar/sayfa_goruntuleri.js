@@ -71,7 +71,7 @@ async function giris(baglam) {
     sayfa.on("console", (m) => gunluk.push(m.text()));
     await sayfa.setViewportSize({ width: 1920, height: 1080 });
     await sayfa.goto(`${ADRES}/play.html`);
-    await sayfa.click("#kralliga-gir");
+    await sayfa.click("#kralliga-gir", { force: true }); // düğme nabız gibi atıyor
     await sayfa.waitForSelector("#yukleme[hidden]", { state: "attached", timeout: 120000 });
     await bekle(20000);
     await sayfa.locator("#oyun-kutusu").screenshot({ path: path.join(cikti, "oyun_1920.png") });

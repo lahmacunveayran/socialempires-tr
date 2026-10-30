@@ -7,7 +7,7 @@ her kapının nasıl sınandığı ve sonucu yazılı.
 | Faz | Durum | Kabul kapısı | Sonuç |
 | --- | --- | --- | --- |
 | 0. Temel ve ölçüm | Bitti | Harita tıklaması belgelendi, internetsiz açılış, testler, 304 | Geçti ([ayrıntı](FAZ0_OLCUMLER.md)) |
-| 1. Açılış sahnesi | Bitti | 3 ekranda görüntü, oran 1,2667 ± 0,002, üç gökyüzü | Geçti (Lighthouse ölçülmedi) |
+| 1. Açılış sahnesi | Bitti | 3 ekranda görüntü, oran 1,2667 ± 0,002, üç gökyüzü, LCP ≤ 2,5 sn, CLS ≤ 0,1 | Geçti (Lighthouse masaüstü: LCP 0,7 sn, CLS 0) |
 | 2. Canlı dünya | Bitti | Λ 1,2 ile 2 arası, şerit durdurulabilir, kürsü < 50 ms | Geçti |
 | 3. Oyun içeriği | Büyük kısmı | 10 bayram tarihi, hafta sonu ödülü yalnız ilk 10'a, yedek bayt bayt | Geçti (testlerle) |
 | 4. Dağıtım | Kısmen | Temiz Windows 11'de 60 sn'de açılış, telefon ve iPad | Sınanamadı (Windows ve telefon yok) |
@@ -35,6 +35,24 @@ her kapının nasıl sınandığı ve sonucu yazılı.
 - Ruffle'da ilk tıklama yalnızca odağı alıyordu; oyun açılınca odak sayfa
   tarafından verildiği için artık ilk tıklama da oyuna ulaşır.
 
+### Lighthouse
+
+`lighthouse@12`, yalnızca performans, `/play.html` (giriş yapılmış):
+
+| | Skor | LCP | CLS | Toplam |
+| --- | --- | --- | --- | --- |
+| Masaüstü, önce | 64 | 1,3 sn | 0,773 | 989 KiB |
+| Masaüstü, sonra | 100 | 0,7 sn | 0 | 896 KiB |
+| Mobil (yavaş 4G benzetimi), önce | 54 | 6,0 sn | 0,186 | 989 KiB |
+| Mobil (yavaş 4G benzetimi), sonra | 83 | 3,7 sn | 0,012 | 896 KiB |
+
+Kaymanın kaynakları: oyun kutusu JS ile sonradan boyutlanıyordu (artık CSS
+`aspect-ratio` ve kap birimleriyle ilk çizimde doğru boyutta), başlık web
+yazı tipi inince uzuyordu (artık sabit yükseklik) ve paneller veri gelince
+büyüyordu (artık yer önceden ayrılır). Ruffle artık yalnızca "Krallığa
+Gir"e basınca indirilir; süs resimleri düşük öncelikle istenir. Mobildeki
+3,7 sn, 1,6 Mbps'lik benzetim içindir; ev ağındaki telefon çok daha hızlıdır.
+
 ## Faz 2: Canlı dünya
 
 - `GET /dunya/olaylar?sonra=<id>` (15 sn yoklama), şeritte 5 sn'de en fazla bir
@@ -56,8 +74,16 @@ her kapının nasıl sınandığı ve sonucu yazılı.
 - Kayıt yedeği (`oyun/kayit_yedek.py`): indir/yükle, SHA-256, şema ve kimlik
   denetimi, `.bak`.
 
-Yapılmayanlar: Arthur'un etkinliğe özel hedefleri; 2030 sonrası için
-`hijridate` kurulu değilse ayarlardan elle tarih girilmeli.
+Yapılmayanlar:
+
+- **Arthur'un etkinliğe özel hedefleri bu istemciyle yapılamaz.** Yapılandırmadaki
+  228 görev (`missions`) yalnızca metindir (başlık, açıklama, ödül); her görevin
+  koşulu istemci SWF'sinin içinde görev numarasına göre gömülüdür.
+  `config/patch/mission_goals.json`'daki `goals` biçimi (`built_id` gibi hedef
+  türleri) daha yeni bir istemciye aittir; bu istemcide o türlerin hiçbiri yok.
+  Yeni hedef eklemek oyunun AS3 bayt kodunu değiştirmeyi gerektirir.
+- 2030 sonrası için `hijridate` kurulu değilse bayram tarihleri ayarlardan elle
+  girilmeli.
 
 ## Faz 4: Dağıtım
 
@@ -97,7 +123,6 @@ Yol haritasının açık soruları yanıtlandı:
 - ~~Yükleyicideki İspanyolca "Cargando" yazısı~~: artık görünmüyor. Yükleme
   ekranı kare kare çekildi (her 200 ms); yalnızca küre logo ve Türkçe "Oyun
   beta sürümünde. Lütfen sabırlı olun." yazısı çıkıyor.
-- Lighthouse (LCP, CLS) ölçümü yapılmadı.
 - Gerçek Windows 11 sanal makinesi, Android telefon ve iPad ile kabul sınaması.
 
 ## Görsel tasarım

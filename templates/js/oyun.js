@@ -99,6 +99,75 @@
     document.head.appendChild(betik);
   });
 
+  // Ruffle'ın varsayılan çizicisi (wgpu-webgl) köşe gölgelendiricisinde 256'dan fazla uniform ister. Birçok telefon ve
+  // tablet GPU'su (ve Android emülatörü) en fazla 256 verir; o zaman Ruffle "unreachable" ile çöker ve oyun açılmaz.
+  // Böyle GPU'larda Ruffle'ın kendi WebGL çizicisi seçilir (DAG-07).
+  // Ruffle çalışırken çökerse ("unreachable") çizici değiştirilmez; sayfa bir kez WebGL çizicisiyle yeniden açılır.
+  var WEBGL_ISARETI = "ruffle-webgl";
+  function webglIsaretli() {
+    try { return sessionStorage.getItem(WEBGL_ISARETI) === "1"; } catch (e) { return false; }
+  }
+  window.addEventListener("error", function (e) {
+    if (!/unreachable/.test(String(e.message)) || webglIsaretli() || !document.querySelector("ruffle-player")) return;
+    try { sessionStorage.setItem(WEBGL_ISARETI, "1"); } catch (h) { return; }
+    location.reload();
+  });
+
+  function kisitliGpu() {
+    if (webglIsaretli()) return true;
+    try {
+      var tuval = document.createElement("canvas");
+      var gl = tuval.getContext("webgl2") || tuval.getContext("webgl");
+      return !gl || gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS) <= 256;
+    } catch (e) {
+      return true;
+    }
+  }
+
+  // Oyun fare tekerleğiyle yakınlaşır. Dokunmatik ekranda iki parmağı açıp kapamak tekerleğe çevrilir: olay,
+  // parmakların ortasındaki Ruffle tuvaline (açık gölge DOM) gönderilir. Her %12'lik açılma bir tekerlek adımıdır.
+  // İkinci parmağın işaretçi olayları Ruffle'a hiç ulaşmaz; yoksa Flash'a ikinci bir fare tıklaması gider.
+  // Dokunuştan hemen önce aynı noktaya bir "pointermove" gönderilir: Ruffle bazı Android sürümlerinde dokunuşu
+  // imlecin bir önceki konumunda tıklama sayıyor (ruffle-rs/ruffle#23184).
+  var ADIM = 1.12;
+  function dokunmayiDuzelt(oyuncu) {
+    ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach(function (tur) {
+      kutu.addEventListener(tur, function (e) {
+        if (e.pointerType !== "touch") return;
+        if (!e.isPrimary) { e.stopPropagation(); return; }
+        if (tur !== "pointerdown" || !oyuncu.shadowRoot) return;
+        var hedef = oyuncu.shadowRoot.elementFromPoint(e.clientX, e.clientY);
+        if (hedef) hedef.dispatchEvent(new PointerEvent("pointermove", {
+          pointerId: e.pointerId, pointerType: "touch", isPrimary: true, clientX: e.clientX, clientY: e.clientY,
+          bubbles: true, composed: true,
+        }));
+      }, true);
+    });
+  }
+  function ikiParmaklaYakinlastir(oyuncu) {
+    dokunmayiDuzelt(oyuncu);
+    var onceki = null;
+    function aralik(t) { return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY); }
+    kutu.addEventListener("touchstart", function (e) {
+      onceki = e.touches.length === 2 ? aralik(e.touches) : null;
+    }, { passive: true });
+    kutu.addEventListener("touchmove", function (e) {
+      if (e.touches.length !== 2 || !onceki) return;
+      var simdi = aralik(e.touches);
+      var oran = simdi / onceki;
+      if (oran < ADIM && oran > 1 / ADIM) return;
+      onceki = simdi;
+      var x = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      var y = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      var hedef = (oyuncu.shadowRoot && oyuncu.shadowRoot.elementFromPoint(x, y)) || oyuncu;
+      hedef.dispatchEvent(new WheelEvent("wheel", {
+        deltaY: oran > 1 ? -120 : 120, deltaMode: 0, clientX: x, clientY: y,
+        bubbles: true, cancelable: true, composed: true,
+      }));
+    }, { passive: true });
+    kutu.addEventListener("touchend", function (e) { if (e.touches.length < 2) onceki = null; }, { passive: true });
+  }
+
   function oyunuBaslat() {
     window.RufflePlayer = window.RufflePlayer || {};
     window.RufflePlayer.config = {
@@ -110,10 +179,15 @@
       backgroundColor: "#669C2C",
       letterbox: "off",
       logLevel: "warn",
+      // Oyun açılışta ~5 MB'lık yapılandırmayı tek seferde işler; Ruffle'ın 15 sn'lik betik sınırı yavaş
+      // tablette (ve emülatörde) aşılıp oyun "too long to execute" ile durdu (DAG-08).
+      maxExecutionDuration: 60,
     };
+    if (kisitliGpu()) window.RufflePlayer.config.preferredRenderer = "webgl";
     var ruffle = window.RufflePlayer.newest();
     var oyuncu = ruffle.createPlayer();
     kutu.appendChild(oyuncu);
+    ikiParmaklaYakinlastir(oyuncu);
     ilerle(35, "Yükleyici indiriliyor...");
     oyuncu.addEventListener("loadedmetadata", function () { ilerle(60, "Oyun dosyası indiriliyor..."); });
     oyuncu.addEventListener("loadeddata", function () {
@@ -140,8 +214,9 @@
   }
   // Simgeler oyunun kendi armalarıdır (images_new/b_*.png).
   var ARMA = AYAR.varlik + "images_new/";
-  var HABER_SIMGELERI = { savas: "b_4.png", seviye: "b_14.png", ekonomi: "b_5.png", lonca: "b_1.png", dunya: "b_9.png" };
-  var HABER_TURLERI = { savas: "Savaş", seviye: "Seviye", ekonomi: "Ordu", lonca: "Lonca", dunya: "Dünya" };
+  var HABER_SIMGELERI = { savas: "b_4.png", seviye: "b_14.png", ekonomi: "b_5.png", lonca: "b_1.png", dunya: "b_9.png",
+                          ittifak: "b_8.png" };
+  var HABER_TURLERI = { savas: "Savaş", seviye: "Seviye", ekonomi: "Ordu", lonca: "Lonca", dunya: "Dünya", ittifak: "İttifak" };
   function satirEkle(olay, yeni) {
     var bos = liste.querySelector(".bos-haber");
     if (bos) bos.remove();

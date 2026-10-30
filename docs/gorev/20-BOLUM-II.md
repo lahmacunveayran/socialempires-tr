@@ -10,7 +10,7 @@
 | Madde  | Durum           | Ne gerekiyor                                                                      |
 | ------ | --------------- | --------------------------------------------------------------------------------- |
 | DAG-04 | onay_bekliyor   | Sahibi gerçek Android telefon ve iPad'de dener (§7.1)                             |
-| HIZ-03 | ci_bekliyor     | Karar verildi: kısa ekranlarda başlık sıkışık düzene geçer (alan oyuna)            |
+| HIZ-03 | duzeltildi      | Karar verildi: kısa ekranlarda başlık sıkışık düzene geçer (PR #13) (alan oyuna)            |
 | HIZ-02 | ertelendi       | Mobil LCP 3,7 sn (yavaş 4G benzetimi); ev ağında sorun beklenmiyor                 |
 | ICR-01 | engelli         | İstemcinin AS3 bayt kodunu değiştirmeden yapılamaz                                 |
 | VAR-01 | duzeltildi (◐)  | Ateş topu efektinin ekrandaki görünüşü gözle denetlenmedi (§7.2)                   |

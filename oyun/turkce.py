@@ -124,6 +124,24 @@ def _bolum_anahtarlari(config):
             kayitlar.append((f"tip:{i}", "ipucu", t["text"],
                              ("level_up_tips", i, "text")))
 
+    # 10) Büyüler (Büyü Kitabı)
+    for i, m in enumerate(config.get("magics", [])):
+        if not isinstance(m, dict):
+            continue
+        for alan, etiket in (("name", "ad"), ("description", "aciklama")):
+            if m.get(alan):
+                kayitlar.append((f"magic:{m.get('id')}:{etiket}", "buyu", m[alan], ("magics", i, alan)))
+
+    # 11) Onur rütbeleri
+    for i, h in enumerate(config.get("honor_levels", [])):
+        if isinstance(h, dict) and h.get("rank"):
+            kayitlar.append((f"honor:{h.get('id')}", "onur", h["rank"], ("honor_levels", i, "rank")))
+
+    # 12) Turnuva türleri
+    for tid, t in (config.get("tournament_type") or {}).items():
+        if isinstance(t, dict) and t.get("name"):
+            kayitlar.append((f"tournament:{tid}", "turnuva", t["name"], ("tournament_type", tid, "name")))
+
     # 9) Sosyal bina işçi adları
     for i, s in enumerate(config.get("social_items", [])):
         if isinstance(s, dict) and s.get("workers"):

@@ -85,13 +85,16 @@ jobs:
     needs: apk
     runs-on: ubuntu-latest
     # Varsayılan 6 saat; takılan bir adım PR'ı saatlerce bekletmesin
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v7
         with:
           name: android-apk
           path: dist
+      - name: WebView sürücüsü
+        # Uygulamanın WebView'u DevTools ile sürülür (android/sinama_oyun.js); tarayıcı indirilmez
+        run: npm install --no-save --no-package-lock playwright-core@1.63.0
       - name: KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -99,16 +102,21 @@ jobs:
           sudo udevadm trigger --name-match=kvm
       - uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
+          # 35: kalıptaki WebView daha yeni (34'teki Chrome 113'tü); gerçek cihazlarda WebView Play Store'dan güncellenir
+          api-level: 35
           arch: x86_64
           target: google_apis
           disable-animations: true
-          script: bash android/sinama.sh "dist/${{ needs.apk.outputs.ad }}.apk" ekran.png
+          cores: 4
+          # Varsayılan swiftshader_indirect, oyunun WebGL çizimi sırasında emülatörü düşürdü (REG-03;
+          # issuetracker.google.com/issues/410512342); ANGLE üzerinden yazılım çizimi
+          emulator-options: -no-window -gpu swangle_indirect -noaudio -no-boot-anim -camera-back none
+          script: bash android/sinama.sh "dist/${{ needs.apk.outputs.ad }}.apk" oyun.png
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: android-ekran
-          path: ekran.png
+          path: oyun.png
           if-no-files-found: ignore
 
   surum:

@@ -15,7 +15,7 @@ Son güncelleme: 30 Ekim 2026. Push'tan önce yerel kapılar temiz olur; CI kap�
 
 | Kapı                | Komut                                       | Son sonuç                |
 | ------------------- | ------------------------------------------- | ------------------------ |
-| Python testleri     | `python -m unittest discover -s tests`      | ✔ 137 test (30 Ekim)     |
+| Python testleri     | `python -m unittest discover -s tests`      | ✔ 139 test (30 Ekim)     |
 | Tarayıcı JS testleri | `node --test tests/js/*.test.js`           | ✔ 5 test                 |
 | Sözdizimi           | `python -m compileall -q .`                 | ✔                        |
 | JS sözdizimi        | `node --check templates/js/*.js`            | ✔                        |
@@ -29,7 +29,7 @@ Son güncelleme: 30 Ekim 2026. Push'tan önce yerel kapılar temiz olur; CI kap�
 | Testler (Python + JS)    | `tests.yml`               | ✔ PR #11                                     |
 | CodeQL (Python, JS)      | depo ayarı                | ✔ PR #11; PR #8'deki 5 uyarı giderildi       |
 | Windows paketi + sınama  | `windows.yml`             | ✔ PR #11; temiz Windows'ta 1,1 sn'de hazır   |
-| Android APK + emülatör   | `android.yml`             | bekliyor (ilk çalıştırma)                    |
+| Android APK + emülatör   | `android.yml`             | ✔ PR #14; Android 14'te sunucu ~13 sn'de hazır |
 
 ## Elle kapılar (görsel ya da davranış değişikliğinde)
 

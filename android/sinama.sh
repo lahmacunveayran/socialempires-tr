@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 # Emülatörde kabul kapısı: APK kurulur, açılır; uygulamanın içindeki sunucu 4 dakika içinde hazır olmalı,
-# Ruffle uygulamayla gelmiş olmalı ve uygulama açık kalmalı. Uygulama sunucuyu açamazsa beklemeden düşer.
+# Ruffle uygulamayla gelmiş olmalı. Sonra uygulamanın kendi WebView'u DevTools ile sürülür (sinama_oyun.js):
+# yeni imparatorluk, "Krallığa Gir", oyun yüklenmeli ve oyun sunucuya "init" bitişini bildirmeli.
+# Uygulama sunucuyu açamazsa beklemeden düşer.
 # Her adımın süre sınırı vardır; takılan adım günlükte adıyla görünür.
-# Kullanım (emülatör açıkken): bash android/sinama.sh <apk> [ekran.png]
+# Kabuktan ekran görüntüsü (adb screencap) alınmaz: emülatörün grafik katmanını iki kez düşürdü.
+# Kullanım (emülatör açıkken, playwright-core kurulu): bash android/sinama.sh <apk> [oyun.png]
 set -uo pipefail
 APK="$1"
-EKRAN="${2:-ekran.png}"
+OYUN_EKRANI="${2:-oyun.png}"
 PAKET=io.github.lahmacunveayran.socialempirestr
 
 adim() { echo "== $(date +%H:%M:%S) $*"; }
@@ -19,7 +22,7 @@ timeout 180 adb install -r "$APK" || exit 1
 timeout 20 adb logcat -c
 baslangic=$(date +%s)
 adim "Uygulama açılıyor"
-timeout 60 adb shell am start -n "$PAKET/.MainActivity" || exit 1
+timeout 60 adb shell am start -n "$PAKET/.MainActivity" --ez sinama true || exit 1
 timeout 20 adb forward tcp:5050 tcp:5050 || exit 1
 
 adim "Sunucu bekleniyor"
@@ -33,12 +36,6 @@ while [ $(( $(date +%s) - baslangic )) -lt 240 ]; do
 done
 echo "Hazır olma süresi: $(( $(date +%s) - baslangic )) sn"
 
-if [ "$hazir" = 1 ]; then
-  adim "Giriş sayfası yükleniyor"
-  sleep 15
-fi
-adim "Ekran görüntüsü"
-timeout 30 adb exec-out screencap -p > "$EKRAN" || echo "ekran görüntüsü alınamadı"
 gunluk
 
 [ "$hazir" = 1 ] || { echo "Sunucu 4 dakika içinde hazır olmadı"; exit 1; }
@@ -47,5 +44,19 @@ curl -fsS --max-time 10 http://127.0.0.1:5050/saglik || exit 1
 echo
 kod=$(curl -s --max-time 60 -o /dev/null -w "%{http_code}" http://127.0.0.1:5050/ruffle/0.7.1/ruffle.js)
 [ "$kod" = 200 ] || { echo "Ruffle uygulamayla gelmemiş ($kod)"; exit 1; }
-timeout 20 adb shell pidof "$PAKET" >/dev/null || { echo "Uygulama kapanmış"; exit 1; }
-adim "Tamam: sunucu hazır, Ruffle var, uygulama açık."
+pid=$(timeout 20 adb shell pidof "$PAKET" | tr -d '\r') || true
+[ -n "$pid" ] || { echo "Uygulama kapanmış"; exit 1; }
+
+adim "WebView'a DevTools ile bağlanılıyor (pid $pid)"
+timeout 600 node "$(dirname "$0")/sinama_oyun.js" "$PAKET" "$OYUN_EKRANI"
+[ $? = 0 ] || {
+  echo "Oyun WebView'da yüklenmedi"
+  if [ "$(timeout 10 adb get-state 2>/dev/null)" != device ]; then
+    echo "Emülatör kapandı (grafik katmanı çökmüş olabilir); cihaz günlüğü alınamıyor"; exit 1
+  fi
+  echo "--- WebView, çökme ve sistem günlüğü ---"
+  timeout 30 adb logcat -d -s SocialEmpires:V chromium:V cr_AwContents:V DEBUG:V libc:F ActivityManager:I lowmemorykiller:V \
+    | grep -v "Loading save" | tail -120
+  exit 1
+}
+adim "Tamam: sunucu hazır, oyun Android WebView'da yüklendi ve açılışını bitirdi."

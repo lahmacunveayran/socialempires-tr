@@ -2,9 +2,9 @@
   "surum": "0.05a",
   "guncelleme": "2026-10-30",
   "devam_noktasi": {
-    "faz": "Android uygulaması",
-    "madde": "DAG-05",
-    "sonraki_adim": "CI'da APK ve emülatör sınaması yeşil olunca sahibi Samsung tablette kurar (ANDROID.md)"
+    "faz": "Tablet özellikleri; sonra bot dünyası, imparatorluk günlüğü, çeviri taraması",
+    "madde": "OYN-03",
+    "sonraki_adim": "Sahibi APK ile tablette dener; bot adları ve portreleri için sahibinin seçimi beklenir (öneri: oyunun birim unvanları ve birim resimleri); günlük ödül penceresinin boş başlığı incelenir"
   },
   "maddeler": [
     {
@@ -181,13 +181,13 @@
       "baslik": "Kısa ekranlarda (dizüstü, telefon yatay) oyun çerçevesi küçük kalıyor",
       "sinif": "hata",
       "onem": "Orta",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "StatCounter Türkiye masaüstü (Temmuz 2026): 1536×864 %10,55, 1366×768 %7,86. Tarayıcı çubukları düşünce pencere 657/744 px; çerçeve ~441 px idi. Kısa ekran düzeniyle (yükseklik ≤ 820 px başlık 76 px, ≤ 500 px başlık 44 px şerit) araclar/cihaz_denemesi.js: 1366×657'de 612×483, 1536×744'te 722×570, telefon yatayda ekran yüksekliğini dolduruyor; 9 cihazda sığıyor, oran 1,2667.",
       "test": "araclar/cihaz_denemesi.js (elle)",
       "pr": "#13",
       "onay": "Sahibi kararı geliştiriciye bıraktı (30 Ekim 2026)",
-      "notlar": "Karar: kısa ekranlarda alan oyuna verilir; başlık sıkışık düzene geçer."
+      "notlar": "Karar: kısa ekranlarda alan oyuna verilir; başlık sıkışık düzene geçer. PR #13 birleşti, CI yeşil (30 Ekim 2026)."
     },
     {
       "id": "TAS-01",
@@ -402,13 +402,13 @@
       "baslik": "Android uygulaması: sunucu cihazın içinde, oyun tam ekran WebView'da",
       "sinif": "ozellik",
       "onem": "Orta",
-      "durum": "ci_bekliyor",
-      "isaret": "◐",
-      "kanit": "Python tarafı yerelde Android düzeniyle çalıştırıldı (✔): oyun dosyaları salt okunur klasörde (chmod a-w), yazılabilir klasör ayrı (SE_TABAN_DIZINI); sunucu 5 sn'de hazır, 51 bot köyü ve Ruffle 0.7.1 (uygulamayla gelen .tgz, SHA-512 denetimli) yazılabilir klasöre kuruldu. Galaxy Tab S9 yatay benzetiminde yeni imparatorluk kuruldu, 'Krallığa Gir' ile oyun Türkçe açıldı, sayfa hatası 0; ilk oyunda ~60 MB varlık indi. APK derlemesi ve emülatör sınaması CI'da (bu oturumda dl.google.com kapalı, Android SDK inmiyor). İlk CI: 'Python 3.12 is not available for the ABI armeabi-v7a' (Chaquopy 3.12+ yalnızca 64 bit); 32 bit eski tabletler dışarıda kalmasın diye Python 3.11'e geçildi, 137 test 3.11'de geçti (✔).",
+      "durum": "onay_bekliyor",
+      "isaret": "✔",
+      "kanit": "Python tarafı yerelde Android düzeniyle çalıştırıldı (✔): oyun dosyaları salt okunur klasörde (chmod a-w), yazılabilir klasör ayrı (SE_TABAN_DIZINI); sunucu 5 sn'de hazır, 51 bot köyü ve Ruffle 0.7.1 (uygulamayla gelen .tgz, SHA-512 denetimli) yazılabilir klasöre kuruldu. Galaxy Tab S9 yatay benzetiminde yeni imparatorluk kuruldu, 'Krallığa Gir' ile oyun Türkçe açıldı, sayfa hatası 0; ilk oyunda ~60 MB varlık indi. APK derlemesi ve emülatör sınaması CI'da (bu oturumda dl.google.com kapalı, Android SDK inmiyor). İlk CI: 'Python 3.12 is not available for the ABI armeabi-v7a' (Chaquopy 3.12+ yalnızca 64 bit); 32 bit eski tabletler dışarıda kalmasın diye Python 3.11'e geçildi, 137 test 3.11'de geçti (✔). CI emülatörü (Android 14, x86_64, PR #14 son commit): APK kuruldu, açıldı; uygulamanın içindeki sunucu ~13 sn'de hazır, 50 bot köyü yüklendi, WebView giriş sayfasını açtı ve sunucu oyun varlıklarını GitHub'dan HTTPS ile indirdi; /saglik ok, Ruffle uygulamada, uygulama açık (✔).",
       "test": "tests/test_android.py; .github/workflows/android.yml (APK + emülatör)",
-      "pr": null,
+      "pr": "#14",
       "onay": "Sahibi, 30 Ekim 2026: 'Bunu android uygulaması olarak yap', 'Öyle deneyeceğim'",
-      "notlar": "Chaquopy 17.1 (Python 3.11, AGP 8.13), minSdk 24. Kayıtlar uygulama içinde; kaldırma siler. İmza: sahibin anahtarı GitHub sırrındaysa (ANDROID_IMZA) güncelleme kayıtları korur; yoksa geçici anahtar, güncellemede yedek al-kaldır-kur-yükle (KAR-07). Yedek indir/yükle Android dosya seçicisiyle çalışır."
+      "notlar": "Chaquopy 17.1 (Python 3.11, AGP 8.13), minSdk 24. Kayıtlar uygulama içinde; kaldırma siler. İmza: sahibin anahtarı GitHub sırrındaysa (ANDROID_IMZA) güncelleme kayıtları korur; yoksa geçici anahtar, güncellemede yedek al-kaldır-kur-yükle (KAR-07). Yedek indir/yükle Android dosya seçicisiyle çalışır. Kalan: sahibi gerçek Samsung tablette kurar (ANDROID.md)."
     },
     {
       "id": "KAR-07",
@@ -419,7 +419,7 @@
       "isaret": "✔",
       "kanit": "Güncellemelerin eskisinin üstüne kurulması için sabit bir anahtar depoya eklenmek istendi; oturumun otomatik güvenlik denetimi commit'i 'kimlik bilgisi sızıntısı' diye durdurdu. Anahtar silindi, commit'e girmedi.",
       "test": null,
-      "pr": null,
+      "pr": "#14",
       "onay": "Sahibine soruldu: anahtarı GitHub sırrı olarak ekler mi (ANDROID.md 'İmza anahtarı')",
       "notlar": "CI ANDROID_IMZA ve ANDROID_IMZA_SIFRESI sırlarını kullanır; yoksa geçici hata ayıklama anahtarı ve uyarı."
     },
@@ -428,13 +428,143 @@
       "baslik": "Android'de dosya kopyalama izin ve SELinux özniteliği yüzünden düşüyor",
       "sinif": "hata",
       "onem": "Yüksek",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "CI emülatörü (Android 14, x86_64): APK kuruldu ve açıldı, Python başladı; ilk açılışta shutil.copytree(mods) 'Permission denied' ile düştü, sunucu açılmadı. Neden: copy2/copystat izinleri ve genişletilmiş öznitelikleri (security.selinux) de kopyalamaya çalışır, Android uygulamaya izin vermez. Aynı kalıp oyun/yedek.py (günlük yedek) ve oyun/kayit_yedek.py'de ('Yedekten Yükle' öncesi .bak) vardı. Yerelde shutil.copystat EACCES verecek şekilde taklit edilip hata yeniden üretildi, yalnızca içerik kopyalayan düzeltmeyle geçti.",
       "test": "tests/test_android.py (oznitelik reddi taklidi; çalışan kodda copy2/copytree/copystat yok)",
-      "pr": null,
+      "pr": "#14",
       "onay": null,
-      "notlar": "Bu PR'da düzeltildi; emülatör sınaması yeniden koşuyor."
+      "notlar": "Düzeltme sonrası emülatörde ilk açılış geçti (✔)."
+    },
+    {
+      "id": "REG-02",
+      "baslik": "Emülatör sınaması takıldığında iş 6 saate kadar bekleyebiliyordu",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "duzeltildi",
+      "isaret": "✔",
+      "kanit": "İlk sınama, uygulama ilk saniyede çöktüğü hâlde 4 dk bekledi; ikincisinde sunucu 13 sn'de hazır oldu ama ekran görüntüsü sırasında adb bağlantısı koptu ('error: closed') ve 'adb logcat' 'waiting for device' ile 30+ dk takıldı (iş varsayılan sınırı 6 saat). İş iptal edildi.",
+      "test": "android/sinama.sh (her adb/curl çağrısında timeout; 'Sunucu acilamadi' görülünce hemen düşer); android.yml timeout-minutes 25/30",
+      "pr": "#14",
+      "onay": null,
+      "notlar": "Düzeltmeden sonraki sınama 2,5 dk'da geçti. Ders: CI'daki dış araç çağrılarına her zaman süre sınırı."
+    },
+    {
+      "id": "DAG-07",
+      "baslik": "Ruffle'ın wgpu çizicisi 256 köşe uniform sınırlı GPU'larda çöküyor, oyun açılmıyor",
+      "sinif": "hata",
+      "onem": "Yüksek",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "Android 15 emülatöründe (WebView Chrome 124) 'Krallığa Gir' sonrası oyun 7 dk açılmadı; WebView konsolu: 'Vertex shader active uniforms exceed GL_MAX_VERTEX_UNIFORM_VECTORS (256)', 'wgpu error: Validation Error', 'Uncaught RuntimeError: unreachable (ruffle_web.wasm)'. Birçok mobil GPU da 256 verir; tablette de olabilirdi. Düzeltme: oyun.js GPU sınırını okur, ≤256 ise Ruffle preferredRenderer='webgl'. Yerelde sınır 256'ya taklit edilerek: Ruffle 'Used renderer: webgl', panik yok, oyun 129b-init ve 200-tut1'e ulaştı; 4096'da eski davranış (wgpu-webgl) (✔). PR #15 emülatörü: 'Used renderer: webgl', çökme yok, oyun yüklendi (✔).",
+      "test": "tests/test_android.py (KisitliGpu); android/sinama.sh + sinama_oyun.js (emülatör)",
+      "pr": "#15",
+      "onay": null,
+      "notlar": "Sınama betiği artık başarısızlıkta WebView konsolunu döküyor."
+    },
+    {
+      "id": "DAG-08",
+      "baslik": "Yavaş cihazda oyun açılışta Ruffle'ın 15 sn betik sınırına takılıyor",
+      "sinif": "hata",
+      "onem": "Yüksek",
+      "durum": "ci_bekliyor",
+      "isaret": "◐",
+      "kanit": "Android 15 emülatörü (2 çekirdek, yazılım GPU): oyun yüklendi, 100-config'ten sonra durdu; konsol: 'Error dispatching event \"complete\": A script in this movie has taken too long to execute and has been terminated.' Oyun ~5 MB'lık yapılandırmayı tek olayda işliyor; düşük güçlü tablette de aşılabilir. Düzeltme: Ruffle maxExecutionDuration 60 sn; emülatör 4 çekirdek.",
+      "test": "android/sinama.sh + sinama_oyun.js (129b-init şartı)",
+      "pr": "#15",
+      "onay": null,
+      "notlar": null
+    },
+    {
+      "id": "DAG-09",
+      "baslik": "Çevrimdışı paket: oyun varlıklarını bir kerede indirme",
+      "sinif": "ozellik",
+      "onem": "Orta",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "Arşiv 4.479 dosya / 1,3 GB; bu sürümde kullanılmayanlar (başka sürümlerin SWF'leri, yapılandırmada geçmeyen çizimler, boş ve ESDEGERLER adlı dosyalar) atılınca 4.408 dosya / 1,07 GB. Temel paket (öncelik 0-1) 174 MB. Yerelde temel paket indirildi (3.081 dosya), sunucu ölü vekille internetsiz açılıp yeni imparatorlukla oyuna girildi: tek eksik 'jinetePerdido.swf' (haritada rastgele beliren kayıp eşya, alt kategori 91) çıktı; kayıp eşyalar temel pakete alındı. Ölçüm: HEAD istekleriyle 4.479 dosyanın boyutu.",
+      "test": "tests/test_onindirme.py",
+      "pr": null,
+      "onay": "Sahibi, 30 Ekim 2026: 'Tablet için (en çok fayda) bunları yap'",
+      "notlar": "Liste: araclar/onindirme_listesi.py -> config/onindirme.tsv. Başlat/durdur yalnızca bu cihazdan; disk boşluğu denetlenir."
+    },
+    {
+      "id": "DAG-10",
+      "baslik": "Wi-Fi ile taşı: imparatorluğu bilgisayar ile tablet arasında aktarma",
+      "sinif": "ozellik",
+      "onem": "Orta",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "Gönderen cihaz 10 dk'lığına ayrı bir sunucu (5051) açar, yalnızca liste ve yedek zarfını 6 haneli kodla verir; 10 yanlış kodda kapanır; asıl sunucu ev ağına açılmaz. Alan cihaz yalnızca özel IPv4 adresine bağlanır; kayıt yedek yüklemedeki denetimlerden geçer, eski hâli .bak. Yerelde aynı makinede ev ağı adresiyle gönderilip alındı; yanlış kod, 127.0.0.1 ve kapattıktan sonraki bağlantı reddedildi (✔).",
+      "test": "tests/test_tasima.py",
+      "pr": null,
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Tek kişilik: aynı kişinin kendi cihazları arasında."
+    },
+    {
+      "id": "DAG-11",
+      "baslik": "Dokunmatik: iki parmakla yakınlaştırma, ikinci parmak ve dokunuş konumu",
+      "sinif": "ozellik",
+      "onem": "Orta",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "Oyun fare tekerleğiyle yakınlaşıyor (masaüstünde tekerlekle doğrulandı). İki parmak hareketi Ruffle tuvaline tekerlek olayı olarak gönderiliyor; CDP dokunma olaylarıyla yakınlaşma ve uzaklaşma görüldü. İkinci parmağın işaretçi olayları Ruffle'a ulaşmıyor; dokunuştan önce aynı noktaya pointermove (ruffle-rs/ruffle#23184). Ruffle 'unreachable' ile çökerse sayfa bir kez WebGL çizicisiyle yeniden açılıyor.",
+      "test": "elle (CDP dokunma benzetimi); gerçek tablet sahibinde",
+      "pr": null,
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Bilinen: ilk parmağın altındaki bina seçilebilir. Kaynak taraması: Android'de Ruffle/WebView/Chaquopy/Samsung (Auto Blocker, uyutma) bulguları ANDROID.md'ye işlendi."
+    },
+    {
+      "id": "OYN-01",
+      "baslik": "Bot dünyası: değişen ittifaklar ve intikam seferleri (Diyar Haberleri)",
+      "sinif": "ozellik",
+      "onem": "Orta",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "İttifaklar artık kayıtta (bot_hafiza.ittifak), 15 turda bir bot kalabalık ittifaktan en küçüğüne geçebiliyor (haber). Başka ittifaktan bir bota yenilen botun ittifakı intikam seferi ilan ediyor; sefer 12 turda en çok 3 akın, her turda ittifakın en güçlü uygun üyesi (saldırı hakkı, aynı hedef 6 saat kuralı ve aralıklar korunur); sonucu haber olur. Oyuncu bir bota saldırınca o botun ittifakı oyuncuya sefer ilan edebilir; oyuncuya akınlar kalkana ve aralığa saygılı. Yerelde 5 sn'lik turla: 'Yeşil Birlik, Modu Han için Tardu köyüne intikam seferi ilan etti' ardından 'Timur → Tardu: kazandı' (✔). Ayrıca: saldıran botun kaydı her akında yazılıyor (önce yalnızca ekonomisi değişince yazılıyordu).",
+      "test": "tests/test_sistemler.py (IttifakSeferTestleri)",
+      "pr": null,
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Ayarlar: dunya.intikam_olasiligi (0,35), dunya.oyuncuya_intikam (0,5). Haber türü 'ittifak', simge oyunun kendi arması b_8.png."
+    },
+    {
+      "id": "OYN-02",
+      "baslik": "İmparatorluk günlüğü: savaş geçmişi, ganimet ve seviye ilerlemesi tek sayfada",
+      "sinif": "ozellik",
+      "onem": "Düşük",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "/gunluk yalnızca kayıttan okur (attacksSent, attacksReceived, onur; günlük yedeklerden 14 güne kadar seviye/XP/onur/kaynak). Simgeler oyunun kendi armaları (b_4 saldırı, b_10 savunma, b_7 kayıp) ve collect_g0.jpg; portreler oyunun/deponun profil resimleri. Gerçek bir kayıtla Galaxy Tab S9 yatay benzetiminde denendi; iki hata bulunup düzeltildi: 'arma' sınıfı başlık armasının konumunu devralıyordu, savunma satırı yanlış okunuyordu ('X köyüne saldırdı' -> 'X sana saldırdı').",
+      "test": "tests/test_gunluk.py",
+      "pr": null,
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Bot akınlarının eski 'gönderilen' kayıtlarında açıklama yok: sonuç '—'."
+    },
+    {
+      "id": "REG-03",
+      "baslik": "Emülatör, oyunun WebGL çizimi sırasında kapanıyor (swiftshader_indirect)",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "duzeltildi",
+      "isaret": "✔",
+      "kanit": "PR #15, 13. android çalıştırması (adae314): uygulama kendi sayfasını yükledi, sınama /new.html'e giderken sayfa kapandı, ardından adb 'waiting for device' ve emülatörün 5554 portu reddedildi; emülatör sürecinin kendisi düştü. REG-02'deki iki çöküş de grafik katmanındaydı. Google hata kaydı 410512342: swiftshader_indirect ile emülatör segfault. Emülatör ANGLE üzerinden yazılım çizimine (-gpu swangle_indirect) alındı; sinama.sh emülatör kapanınca bunu açıkça yazar. Doğrulandı: 14. android çalıştırması (f788bc9) yeşil; sunucu hazır, 'Krallığa Gir'den sonra Ruffle 62 sn'de kuruldu, oyun 69 sn'de yüklendi, 129b-init ve eğitimin ilk adımları (200-tut1, 200-tut3) geldi; toplam 108 sn. Bu kipte GPU sınırı daha yüksek: Ruffle wgpu-webgl çizicisini seçti.",
+      "test": ".github/workflows/android.yml (sinama)",
+      "pr": "#15",
+      "onay": null,
+      "notlar": "Gerçek tabletlerde emülatör grafik katmanı yok; bu yalnızca CI ortamı sorunu. Düzelme bir sonraki CI çalıştırmasıyla doğrulanacak."
+    },
+    {
+      "id": "OYN-03",
+      "baslik": "Çeviri taraması: oyun baştan oynanıp İngilizce kalan metinler bulundu",
+      "sinif": "ozellik",
+      "onem": "Düşük",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "Oyun yerelde Chromium + Ruffle ile oynandı (köy, inşa, dünya, hedefler, ayarlar, hediye, küre, günlük ödül); ekran görüntüleri tek tek okundu. Eklenen: büyüler (magics, 10. bölüm), onur rütbeleri (honor_levels), turnuva türleri (tournament_type) tr.json'a (+53), 20 SWF metin alanı arayuz_tr.json'a (savaş, sınır, müttefik pazarı yardımları, Element Tanrıları anlatısı, casuslar, dalga, kalan birim...). Varsayılan harita adı 'My Empire' -> 'İmparatorluğum' (yeni köy ve eski kayıtlar). SWF yaması 581 alanı değiştiriyor.",
+      "test": "tests/test_sistemler.py (CeviriTestleri, SwfYamaTestleri)",
+      "pr": "#15",
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Kalan İngilizce: 'world' (küre vektör çizimi), BUILD/ADD ALLY (resim), 'Add Cash' (SWF metin alanlarında yok, resim ya da başka parça); resimlerdeki yazılar karar gereği kalır. Açık (?): günlük ödül penceresinin başlık kutusu boş görünüyor ve '250 altın' etiketi kutuya sığmıyor ('250 al'); 2. ve 4. gün ödülü yalnızca '1'. Bunlar istemcinin kendi kodunda kuruluyor; doğrulanmadı."
     }
   ]
 }

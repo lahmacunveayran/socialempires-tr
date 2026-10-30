@@ -27,7 +27,17 @@ VARSAYILAN_AYAR = {
     "saldiri_olasiligi": 0.45,
     "oyuncuya_saldiri": 0.15,
     "olay_saklama": 200,
+    "intikam_olasiligi": 0.35,   # bir bot yenilince ittifakının intikam seferi ilan etmesi
+    "oyuncuya_intikam": 0.5,     # oyuncu bir bota saldırınca
 }
+
+# İttifaklar: aynı ittifaktaki botlar birbirine saldırmaz. Üyelik bot kaydında (bot_hafiza.ittifak) durur;
+# hiç değişmemiş botun ittifakı kimliğinden çıkar. Zaman zaman bir bot ittifak değiştirir.
+ITTIFAKLAR = ["Kızıl Birlik", "Mavi Birlik", "Yeşil Birlik"]
+SEFER_SALDIRI = 3     # bir intikam seferinde en çok saldırı
+SEFER_SURESI = 12     # tur; bu sürede bitmeyen sefer dağılır
+EN_COK_SEFER = 3      # aynı anda süren sefer
+ITTIFAK_DEGISIMI = 15  # tur: bu aralıkla bir bot ittifak değiştirebilir
 
 
 @functools.lru_cache(maxsize=1)
@@ -173,6 +183,14 @@ def rapor_ekle(hedef, saldiran, veri):
 etkin = None
 
 
+def _hafiza(kayit):
+    """Botun kayıttaki hafızası (öfke, son hedef, ittifak); yoksa kurulur."""
+    ps = kayit.setdefault("privateState", {})
+    if not isinstance(ps.get("bot_hafiza"), dict):
+        ps["bot_hafiza"] = {}
+    return ps["bot_hafiza"]
+
+
 class Dunya:
     def __init__(self):
         self.ayar = ayarlari_yukle()
@@ -191,6 +209,8 @@ class Dunya:
         self._veri_onbellek = None
         self._veri_zamani = 0
         self.gecmis = []
+        self.seferler = []           # süren intikam seferleri
+        self._son_sonuc = None       # son akının sonucu (seferin hesabı için)
 
     # -- erişim -----------------------------------------------------------
     def oyuncular(self):
@@ -253,7 +273,10 @@ class Dunya:
                     if hedef:
                         saldiri_sayisi += 1
                         self._son_saldiri[uid] = simdi
-                        degisen.add(hedef)
+                        degisen.update((hedef, uid))  # saldıranın ganimeti ve kayıpları da yazılsın
+
+            degisen.update(self._seferleri_yurut(botlar, simdi))
+            degisen.update(self._ittifak_degisimi())
 
             # Bot ekonomisi her turda onlarca birim üretir; şerit boğulmasın
             # diye turda yalnızca biri haber olur (dakikada ~1 olay).
@@ -323,11 +346,112 @@ class Dunya:
         return None
 
     # -- dünya olayları ---------------------------------------------------
-    def _ittifak(self, uid):
-        return int(hashlib.sha256(str(uid).encode("utf-8")).hexdigest(), 16) % 3
+    def _ittifak(self, uid, kayit=None):
+        kayit = kayit if kayit is not None else session(uid)
+        hafiza = (kayit or {}).get("privateState", {}).get("bot_hafiza")
+        secilen = hafiza.get("ittifak") if isinstance(hafiza, dict) else None
+        if isinstance(secilen, int) and 0 <= secilen < len(ITTIFAKLAR):
+            return secilen
+        return int(hashlib.sha256(str(uid).encode("utf-8")).hexdigest(), 16) % len(ITTIFAKLAR)
 
-    def ittifak_adi(self, uid):
-        return ["Kizil Birlik", "Mavi Birlik", "Yesil Birlik"][self._ittifak(uid)]
+    def ittifak_adi(self, uid, kayit=None):
+        return ITTIFAKLAR[self._ittifak(uid, kayit)]
+
+    def _ittifak_degisimi(self):
+        """Arada bir, bir bot kalabalık ittifakından ayrılıp en küçük ittifaka geçer (haber olur)."""
+        if self.tick % ITTIFAK_DEGISIMI != 0 or random.random() > 0.6:
+            return set()
+        botlar = self._botlar()
+        if len(botlar) < 3:
+            return set()
+        uyeler = {i: [] for i in range(len(ITTIFAKLAR))}
+        for uid, kayit in botlar:
+            uyeler[self._ittifak(uid, kayit)].append((uid, kayit))
+        kalabalik = max(uyeler, key=lambda i: len(uyeler[i]))
+        kucuk = min(uyeler, key=lambda i: len(uyeler[i]))
+        if kalabalik == kucuk or not uyeler[kalabalik]:
+            return set()
+        uid, kayit = random.choice(uyeler[kalabalik])
+        _hafiza(kayit)["ittifak"] = kucuk
+        ad = kayit.get("playerInfo", {}).get("name", uid)
+        self.olay("ittifak", f"{ad}, {ITTIFAKLAR[kalabalik]}'ten ayrılıp {ITTIFAKLAR[kucuk]}'e katıldı")
+        return {uid}
+
+    # -- intikam seferleri ------------------------------------------------
+    def _sefer_ilan(self, ittifak, hedef_id, hedef_ad, sebep_ad, oyuncu=False):
+        """`ittifak`, üyesi `sebep_ad`'ın intikamı için `hedef_id`'ye sefer açar."""
+        if len(self.seferler) >= EN_COK_SEFER or any(
+                s["ittifak"] == ittifak and s["hedef"] == str(hedef_id) for s in self.seferler):
+            return None
+        sefer = {"ittifak": ittifak, "hedef": str(hedef_id), "hedef_ad": hedef_ad, "kalan": SEFER_SALDIRI,
+                 "bitis": self.tick + SEFER_SURESI, "zafer": 0, "yenilgi": 0, "ganimet": 0, "oyuncu": oyuncu}
+        self.seferler.append(sefer)
+        if oyuncu:
+            self.olay("ittifak", f"{ITTIFAKLAR[ittifak]}, {sebep_ad} için senin köyüne intikam seferi ilan etti!")
+        else:
+            self.olay("ittifak", f"{ITTIFAKLAR[ittifak]}, {sebep_ad} için {hedef_ad} köyüne intikam seferi ilan etti")
+        return sefer
+
+    def oyuncu_saldirdi(self, oyuncu_id, oyuncu_ad, kurban_id, kurban):
+        """Oyuncu bir bota saldırdı (pvp.saldiri_bitir): kurbanın ittifakı intikam seferi ilan edebilir."""
+        if not (kurban or {}).get("playerInfo", {}).get("bot"):
+            return None
+        if random.random() >= float(self.ayar.get("oyuncuya_intikam", 0.5)):
+            return None
+        kurban_ad = kurban.get("playerInfo", {}).get("name", kurban_id)
+        return self._sefer_ilan(self._ittifak(kurban_id, kurban), oyuncu_id, oyuncu_ad, kurban_ad, oyuncu=True)
+
+    def _seferleri_yurut(self, botlar, simdi):
+        """Her seferden turda en çok bir saldırı: ittifakın en güçlü uygun üyesi hedefe akın eder."""
+        degisen = set()
+        aralik = int(self.ayar.get("bot_saldiri_araligi", 180))
+        for sefer in list(self.seferler):
+            hedef = session(sefer["hedef"])
+            if sefer["kalan"] <= 0 or self.tick > sefer["bitis"] or not hedef:
+                self._sefer_bitir(sefer)
+                continue
+            if sefer["oyuncu"]:
+                # Oyuncuya akınlar da aralıklı ve kalkana saygılı
+                yarim = int(self.ayar.get("oyuncu_saldiri_araligi", 600)) // 2
+                if (simdi - self._son_oyuncu_saldiri < yarim or int(hedef["maps"][0].get("level", 1)) < 6
+                        or int(hedef.get("privateState", {}).get("shield_until", 0) or 0) > simdi):
+                    continue
+            uyeler = [(u, k) for u, k in botlar
+                      if u != sefer["hedef"] and self._ittifak(u, k) == sefer["ittifak"]
+                      and int(k["maps"][0].get("level", 1)) >= 6 and sum(birim_sayilari(k).values()) >= 3
+                      and simdi - self._son_saldiri.get(u, 0) >= aralik
+                      and self._saldiri_hakki(k, simdi) and self._hedefe_uygun(k, sefer["hedef"], simdi)]
+            if not uyeler:
+                continue
+            uid, kayit = max(uyeler, key=lambda uk: ordu_gucu(birim_sayilari(uk[1])))
+            if not self._akin(uid, kayit, botlar, simdi, zorla=(sefer["hedef"], hedef)):
+                continue
+            self._son_saldiri[uid] = simdi
+            degisen.update((uid, sefer["hedef"]))
+            sefer["kalan"] -= 1
+            if self._son_sonuc["kazandi"]:
+                sefer["zafer"] += 1
+                sefer["ganimet"] += self._son_sonuc["ganimet"]
+            else:
+                sefer["yenilgi"] += 1
+            if sefer["kalan"] <= 0:
+                self._sefer_bitir(sefer)
+        return degisen
+
+    def _sefer_bitir(self, sefer):
+        if sefer not in self.seferler:
+            return
+        self.seferler.remove(sefer)
+        ittifak = ITTIFAKLAR[sefer["ittifak"]]
+        hedef_ad = "Köyün" if sefer["oyuncu"] else sefer["hedef_ad"]
+        saldiri = sefer["zafer"] + sefer["yenilgi"]
+        if not saldiri:
+            self.olay("ittifak", f"{ittifak}'in {sefer['hedef_ad']} seferi dağıldı")
+        elif sefer["zafer"]:
+            self.olay("ittifak", f"{ittifak} intikam seferini bitirdi: {hedef_ad} {saldiri} akında "
+                                 f"{sefer['ganimet']} kaynak kaybetti")
+        else:
+            self.olay("ittifak", f"{hedef_ad}, {ittifak}'in intikam seferini {saldiri} akında püskürttü")
 
     def _olay_guncelle(self, simdi):
         if self.aktif_olay and simdi >= self.aktif_olay.get("bitis", 0):
@@ -405,11 +529,7 @@ class Dunya:
         return int(hafiza.get("ofke", {}).get(str(hedef_id), 0))
 
     def _ofke_artir(self, kayit, hedef_id, miktar=1):
-        ps = kayit.setdefault("privateState", {})
-        hafiza = ps.get("bot_hafiza")
-        if not isinstance(hafiza, dict):
-            hafiza = {}
-            ps["bot_hafiza"] = hafiza
+        hafiza = _hafiza(kayit)
         ofke = hafiza.get("ofke")
         if not isinstance(ofke, dict):
             ofke = {}
@@ -442,10 +562,16 @@ class Dunya:
                 pass
         return True
 
-    def _akin(self, saldiran_id, saldiran, botlar, simdi):
+    def _akin(self, saldiran_id, saldiran, botlar, simdi, zorla=None):
+        """Bir akın; hedefi ağırlıklı seçer ya da `zorla=(hedef_id, hedef)` (intikam seferi)."""
         saldiran_birimler = birim_sayilari(saldiran)
         if sum(saldiran_birimler.values()) < 3:
             return None
+        oyuncu_hedefleri = [(u, k) for u, k in self.oyuncular() if not k.get("playerInfo", {}).get("bot")]
+        if zorla:
+            hedef_id, hedef = zorla
+            return self._savas(saldiran_id, saldiran, hedef_id, hedef, simdi,
+                               oyuncuya=hedef_id in [u for u, _ in oyuncu_hedefleri])
 
         kendi_guc = ordu_gucu(saldiran_birimler) + kule_gucu(saldiran) * 0.5
         adaylar = []
@@ -459,7 +585,7 @@ class Dunya:
             if not self._hedefe_uygun(saldiran, u, simdi):
                 continue
             # Aynı ittifaktaki botlara saldırma; rakip ittifaklara daha istekli ol.
-            ayni = self._ittifak(u) == self._ittifak(saldiran_id)
+            ayni = self._ittifak(u, k) == self._ittifak(saldiran_id, saldiran)
             if ayni:
                 continue
             guc = ordu_gucu(birim_sayilari(k)) + kule_gucu(k) * 0.6
@@ -469,7 +595,6 @@ class Dunya:
             adaylar.append((u, k, max(0.05, agirlik)))
 
         # Oyuncuya saldırı: belirli aralıktan sık değil
-        oyuncu_hedefleri = [(u, k) for u, k in self.oyuncular() if not k.get("playerInfo", {}).get("bot")]
         aralik = int(self.ayar.get("oyuncu_saldiri_araligi", 600))
         if oyuncu_hedefleri and simdi - self._son_oyuncu_saldiri >= aralik:
             if random.random() < float(self.ayar.get("oyuncuya_saldiri", 0.15)):
@@ -493,7 +618,13 @@ class Dunya:
                 hedef_id, hedef = u, k
                 break
 
-        if hedef_id in [u for u, _ in oyuncu_hedefleri]:
+        return self._savas(saldiran_id, saldiran, hedef_id, hedef, simdi,
+                           oyuncuya=hedef_id in [u for u, _ in oyuncu_hedefleri])
+
+    def _savas(self, saldiran_id, saldiran, hedef_id, hedef, simdi, oyuncuya=False):
+        """Savaşı çözer, kayıtlara ve haberlere yazar; hedefin kimliğini döndürür."""
+        saldiran_birimler = birim_sayilari(saldiran)
+        if oyuncuya:
             self._son_oyuncu_saldiri = simdi
 
         # Savunma kişiliği: savunmacı daha fazla birliğini sahaya sürer
@@ -575,11 +706,18 @@ class Dunya:
 
         hedef_ad = hedef.get("playerInfo", {}).get("name", hedef_id)
         saldiran_ad = saldiran.get("playerInfo", {}).get("name", saldiran_id)
+        toplam = sum(ganimet.values())
         if kazandi:
-            toplam = sum(ganimet.values())
             self.olay("savas", f"{saldiran_ad} → {hedef_ad}: kazandı, {toplam} kaynak ganimet")
         else:
             self.olay("savas", f"{saldiran_ad} → {hedef_ad}: saldırı püskürtüldü")
+        self._son_sonuc = {"kazandi": kazandi, "ganimet": toplam}
+
+        # Yenilen botun ittifakı (başka ittifaksa) intikam seferi ilan edebilir
+        if (kazandi and hedef.get("playerInfo", {}).get("bot")
+                and self._ittifak(hedef_id, hedef) != self._ittifak(saldiran_id, saldiran)
+                and random.random() < float(self.ayar.get("intikam_olasiligi", 0.35))):
+            self._sefer_ilan(self._ittifak(hedef_id, hedef), saldiran_id, saldiran_ad, hedef_ad)
         return hedef_id
 
     # -- döngü ------------------------------------------------------------
@@ -636,6 +774,7 @@ class Dunya:
                 "ofke": len(ofke),
                 "kalkan": max(0, int(kayit.get("privateState", {}).get("shield_until", 0) or 0) - int(time.time())),
                 "konum": {"x": round(x, 1), "y": round(y, 1)},
+                "ittifak": self.ittifak_adi(uid, kayit) if pi.get("bot") else "",
             })
         toplam = {"coins": 0, "wood": 0, "stone": 0, "food": 0, "birim": 0}
         kisi_sayilari = {}
@@ -657,6 +796,8 @@ class Dunya:
             "aktif": bool(self.ayar.get("aktif", True)),
             "oyuncular": oyuncular,
             "olaylar": list(reversed(self.olaylar[-40:])),
+            "seferler": [{"ittifak": ITTIFAKLAR[x["ittifak"]], "hedef": x["hedef_ad"], "kalan": x["kalan"]}
+                         for x in self.seferler],
         }
         self._veri_onbellek = veri
         self._veri_zamani = simdi

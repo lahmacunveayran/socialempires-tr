@@ -45,6 +45,9 @@ indirmek için gerekir.
   argüman sırasıyla işler; kayıt yeniden yüklendiğinde oyun aynı kalır.
 - **Yeni içerik**: Büyük Ev, Büyük Değirmen, Büyük Kule; Süper Şövalye,
   Süper Okçu, Süper Kılıçlı ve yeni mağaza paketleri.
+- **Çevrimdışı paket**: oyun dosyaları bir kerede iner (temel ~175 MB, tam ~1,1 GB), sonra internet gerekmez.
+- **Wi-Fi ile taşı**: imparatorluk, bilgisayar ile tablet arasında 6 haneli kodla aktarılır.
+- **Android uygulaması**: sunucu tabletin içinde; iki parmakla yakınlaştırma ([ANDROID.md](ANDROID.md)).
 - **Güvenli kayıt**: atomik yazım, `.bak` yedeği, günlük yedekler ve
   `USERID` doğrulaması.
 

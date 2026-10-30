@@ -37,10 +37,11 @@ def _dize(s):
     return _u30(len(b)) + b
 
 
-DIZELER = ["addCommand", "cmd", "args", "buy", "Base", "Commands", "", "Oyun", "gonder", "Object"]
+DIZELER = ["addCommand", "cmd", "args", "buy", "Base", "Commands", "", "Oyun", "gonder", "Object", "text",
+           "Level "]
 D = {s: i + 1 for i, s in enumerate(DIZELER)}
 # Çok adlılar: QName(paket, ad); sıra 1'den
-ADLAR = ["addCommand", "Base", "Commands", "cmd", "args", "Oyun", "gonder", "Object"]
+ADLAR = ["addCommand", "Base", "Commands", "cmd", "args", "Oyun", "gonder", "Object", "text"]
 M = {s: i + 1 for i, s in enumerate(ADLAR)}
 
 # gonder(x): Base.Commands.addCommand({cmd: "buy", args: [x, 7, -1]}); arada atlanan anlamsız baytlar
@@ -69,6 +70,15 @@ KOD_YEREL = bytes([
 ])
 
 
+# x.text = "Level " + y  (ekrana yazılan dize birleştirmeyle)
+KOD_YAZI = bytes([
+    0xD0, 0x30,
+    0xD1, 0x2C, D["Level "], 0xD2, 0xA0,          # getlocal_1, pushstring, getlocal_2, add
+    0x61, M["text"],                              # setproperty text
+    0x47,
+])
+
+
 def _govde(yontem, kod):
     return (_u30(yontem) + _u30(4) + _u30(3) + _u30(0) + _u30(1) + _u30(len(kod)) + kod
             + _u30(0) + _u30(0))
@@ -89,7 +99,7 @@ def abc_kur():
     b += _u30(1) + _u30(M["gonder"]) + bytes([1]) + _u30(0) + _u30(0)   # yöntem özelliği -> 0
     b += _u30(2) + _u30(0)                                 # sınıf: cinit 2, özellik yok
     b += _u30(1) + _u30(3) + _u30(0)                       # betik: init 3
-    b += _u30(2) + _govde(0, KOD_NESNE) + _govde(3, KOD_YEREL)
+    b += _u30(3) + _govde(0, KOD_NESNE) + _govde(3, KOD_YEREL) + _govde(2, KOD_YAZI)
     return b
 
 
@@ -135,6 +145,12 @@ class AbcOkur(unittest.TestCase):
     def test_cagri_argumanlari_yereldeki_nesneden(self):
         cagrilar = self.abc.cagrilar("addCommand", 3)
         self.assertEqual(abc_okur.yaz(cagrilar[0].argumanlar[0]), "{'cmd': 'buy', 'args': [yerel1]}")
+
+    def test_ekrana_yazilan_dizeler(self):
+        self.assertEqual([d for _, _, d in self.abc.yazi_dizeleri()], ["Level "])
+        # birleştirme ifadesi dizeyi taşır, işlev çağrısının sonucu taşımaz
+        self.assertEqual(abc_okur.icindeki_dizeler(abc_okur.Ifade("x", ("a",))), ("a",))
+        self.assertEqual(abc_okur.icindeki_dizeler("Loc.get('ANAHTAR')"), ())
 
     def test_swf_icinden(self):
         for sikistir in (False, True):

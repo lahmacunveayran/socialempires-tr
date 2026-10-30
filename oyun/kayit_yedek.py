@@ -15,7 +15,7 @@ from datetime import datetime
 from flask import request, session
 from werkzeug.utils import safe_join
 
-from oyun.kayit import (all_saves_userid, gecerli_uid, is_valid_village, load_saved_villages,
+from oyun.kayit import (all_saves_userid, gecerli_uid, kaydi_dogrula, load_saved_villages,
                         save_lock)
 from oyun.sunucu import app
 from oyun.yollar import SAVES_DIR
@@ -73,7 +73,9 @@ def zarfi_ac(veri, oturum_uid):
         kayit = json.loads(ham)
     except ValueError:
         raise YedekHatasi("okunamadi")
-    if not isinstance(kayit, dict) or not is_valid_village(kayit):
+    try:
+        kaydi_dogrula(kayit)  # sunucunun bir sonraki açılışını bozacak kayıt içeri alınmaz
+    except ValueError:
         raise YedekHatasi("sema")
     kimlik = str(kayit["playerInfo"].get("pid", ""))
     if kimlik != zarf_.get("kimlik") or not gecerli_uid(kimlik):

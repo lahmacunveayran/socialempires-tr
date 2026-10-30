@@ -10,6 +10,7 @@ import os
 import re
 import shutil
 import tempfile
+import time
 import traceback
 import urllib.error
 import urllib.parse
@@ -48,14 +49,30 @@ def _gecerli_dosya(yol):
         return False
 
 
+# İnternetsiz ya da kaynakta olmayan varlık her istekte yeniden denenmesin: her deneme bir istek iş parçacığını
+# 2×30 sn'ye kadar tutuyordu (Waitress'te 8 tane); oyunun komutları beklerdi. Başarısız yol 10 dk denenmez.
+BASARISIZ_BEKLEME = 600
+_basarisiz = {}
+
+
 def _indir(path, hedef):
+    if time.time() < _basarisiz.get(path, 0):
+        return False
+    if _indir_dene(path, hedef):
+        _basarisiz.pop(path, None)
+        return True
+    _basarisiz[path] = time.time() + BASARISIZ_BEKLEME
+    return False
+
+
+def _indir_dene(path, hedef):
     os.makedirs(os.path.dirname(hedef), exist_ok=True)
     for kalip in VARLIK_KAYNAKLARI:
         url = kalip.format(path=urllib.parse.quote(path))
         fd, gecici = tempfile.mkstemp(dir=os.path.dirname(hedef), prefix="indir-", suffix=".tmp")
         os.close(fd)
         try:
-            with urllib.request.urlopen(url, timeout=30) as yanit, open(gecici, "wb") as f:
+            with urllib.request.urlopen(url, timeout=15) as yanit, open(gecici, "wb") as f:
                 shutil.copyfileobj(yanit, f)
             if not _gecerli_dosya(gecici):
                 raise OSError("indirilen dosya gecersiz")

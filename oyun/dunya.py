@@ -191,6 +191,14 @@ def _hafiza(kayit):
     return ps["bot_hafiza"]
 
 
+# Bot kayıtları bu kadar turda bir diske yazılır (oyuncunun kaydı her turda)
+BOT_YAZMA_ARALIGI = 5
+
+
+def _bot_mu(uid):
+    return bool((session(uid) or {}).get("playerInfo", {}).get("bot"))
+
+
 class Dunya:
     def __init__(self):
         self.ayar = ayarlari_yukle()
@@ -205,6 +213,7 @@ class Dunya:
         self._is_parcacigi = None
         self._son_guncelleme = int(time.time())
         self._son_saldiri = {}       # bot_id -> son akın zamanı
+        self._bekleyen_botlar = set()  # yazılmayı bekleyen bot kayıtları (BOT_YAZMA_ARALIGI)
         self._son_oyuncu_saldiri = 0  # oyuncuya son akın zamanı
         self._veri_onbellek = None
         self._veri_zamani = 0
@@ -289,7 +298,15 @@ class Dunya:
             if lonca:
                 degisen.add(lonca)
 
-            for uid in degisen:
+            # Oyuncunun kaydı hemen yazılır. Botların kaydı her turda değişir (kaynak üretimi); hepsini her dakika
+            # yazmak tablette günde ~3,5 GB yazım ve kilit bekleyişi demekti: biriktirilip birkaç turda bir yazılır.
+            # Süreç kapanırsa en çok son birkaç turun bot gelişimi kaybolur.
+            self._bekleyen_botlar.update(u for u in degisen if _bot_mu(u))
+            yazilacak = {u for u in degisen if not _bot_mu(u)}
+            if self.tick % BOT_YAZMA_ARALIGI == 0:
+                yazilacak |= self._bekleyen_botlar
+                self._bekleyen_botlar = set()
+            for uid in yazilacak:
                 try:
                     save_session(uid)
                 except OSError as hata:
@@ -742,6 +759,17 @@ class Dunya:
 
     def durdur(self):
         self._duruyor = True
+        self.bekleyenleri_yaz()
+
+    def bekleyenleri_yaz(self):
+        """Biriken bot kayıtlarını yazar (kayıtlar diskten yeniden okunmadan önce çağrılır)."""
+        with save_lock:
+            bekleyen, self._bekleyen_botlar = self._bekleyen_botlar, set()
+            for uid in bekleyen:
+                try:
+                    save_session(uid)
+                except OSError as hata:
+                    print(f" ! Dunya kaydi yazilamadi ({uid}): {hata}")
 
     # -- panel verisi -----------------------------------------------------
     def veri(self):

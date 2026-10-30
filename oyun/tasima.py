@@ -31,7 +31,7 @@ EN_COK_YANLIS = 10
 ZAMAN_ASIMI = 15
 
 _kilit = threading.Lock()
-_gonderim = {"sunucu": None, "kod": None, "bitis": 0, "yanlis": 0, "gonderilen": 0}
+_gonderim = {"sunucu": None, "kod": None, "bitis": 0, "yanlis": 0, "gonderilen": 0, "zamanlayici": None}
 
 
 def _oyuncu_kayitlari():
@@ -46,12 +46,17 @@ gonderici = Flask("tasima")
 
 def _kod_dogru():
     kod = request.args.get("kod", "")
-    beklenen = _gonderim["kod"]
-    if beklenen and time.time() < _gonderim["bitis"] and hmac.compare_digest(kod, beklenen):
-        return True
-    _gonderim["yanlis"] += 1
-    if _gonderim["yanlis"] >= EN_COK_YANLIS:  # kod tahmin edilmeye çalışılıyorsa kapat
-        threading.Thread(target=gonderimi_durdur, daemon=True).start()
+    with _kilit:
+        beklenen = _gonderim["kod"]
+        if beklenen and time.time() < _gonderim["bitis"] and hmac.compare_digest(kod, beklenen):
+            return True
+        _gonderim["yanlis"] += 1
+        if _gonderim["yanlis"] < EN_COK_YANLIS:
+            return False
+        # Kod tahmin edilmeye çalışılıyor: kod hemen geçersiz, sunucu ayrı iş parçacığında kapanır
+        # (bu istek o sunucunun iş parçacığında çalışıyor)
+        _gonderim.update(kod=None, bitis=0)
+    threading.Thread(target=gonderimi_durdur, daemon=True).start()
     return False
 
 
@@ -80,9 +85,12 @@ def gonderimi_baslat():
             threading.Thread(target=sunucu.run, name="tasima-gonderici", daemon=True).start()
             _gonderim["sunucu"] = sunucu
         _gonderim.update(kod=f"{secrets.randbelow(10**6):06d}", bitis=time.time() + SURE, yanlis=0, gonderilen=0)
+        if _gonderim["zamanlayici"] is not None:
+            _gonderim["zamanlayici"].cancel()  # her başlatma 10 dakikalık bir iş parçacığı bırakmasın
         zamanlayici = threading.Timer(SURE, _suresi_doldu, args=(_gonderim["bitis"],))
         zamanlayici.daemon = True
         zamanlayici.start()
+        _gonderim["zamanlayici"] = zamanlayici
     return gonderim_durumu()
 
 
@@ -94,9 +102,16 @@ def _suresi_doldu(bitis):
 def gonderimi_durdur():
     with _kilit:
         sunucu = _gonderim["sunucu"]
-        _gonderim.update(sunucu=None, kod=None, bitis=0)
+        zamanlayici = _gonderim["zamanlayici"]
+        _gonderim.update(sunucu=None, kod=None, bitis=0, zamanlayici=None)
+    if zamanlayici is not None and zamanlayici is not threading.current_thread():
+        zamanlayici.cancel()
     if sunucu is not None:
         sunucu.close()
+        # close() yalnızca dinlemeyi bırakır; waitress'in iş parçacıkları da kapanmazsa her açıp kapatmada 2 kalır
+        dagitici = getattr(sunucu, "task_dispatcher", None)
+        if dagitici is not None:
+            dagitici.shutdown(cancel_pending=True, timeout=5)
 
 
 def gonderim_durumu():
@@ -122,10 +137,20 @@ def _ev_agi_adresi(adres):
     return str(ip)
 
 
+class _YonlendirmeYok(urllib.request.HTTPRedirectHandler):
+    """Gönderen cihaz yönlendirme verirse izlenmez (ev ağı adres denetimi atlatılamasın)."""
+
+    def redirect_request(self, istek, dosya, kod, ileti, basliklar, yeni_adres):
+        raise urllib.error.HTTPError(istek.full_url, kod, "yonlendirme reddedildi", basliklar, dosya)
+
+
+_ACICI = urllib.request.build_opener(_YonlendirmeYok)
+
+
 def _getir(adres, yol, kod):
     url = f"http://{_ev_agi_adresi(adres)}:{PORT}{yol}?kod={urllib.request.quote(kod or '')}"
     try:
-        with urllib.request.urlopen(url, timeout=ZAMAN_ASIMI) as yanit:
+        with _ACICI.open(url, timeout=ZAMAN_ASIMI) as yanit:
             return yanit.read(kayit_yedek.EN_BUYUK + 1)
     except urllib.error.HTTPError as hata:
         raise TasimaHatasi("kod" if hata.code == 403 else "yok")

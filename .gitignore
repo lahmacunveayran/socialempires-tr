@@ -27,3 +27,4 @@ dist/
 local.properties
 *.apk
 node_modules/
+.oturum_anahtari

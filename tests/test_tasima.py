@@ -98,5 +98,50 @@ class Tasima(unittest.TestCase):
         self.assertEqual(zarf["bicim"], "SocialEmpiresTR-yedek")
 
 
+
+class TasimaKaynaklari(unittest.TestCase):
+    """DNT: gönderen sunucu açılıp kapanınca iş parçacığı bırakmaz; alan taraf yönlendirme izlemez."""
+
+    def test_acip_kapatmak_is_parcacigi_birakmaz(self):
+        import socket
+        import threading
+        def bos_port():  # 5051 başka bir sunucuda açık olabilir; her tur ayrı port (yalnızca sızıntı ölçülür)
+            with socket.socket() as s:
+                s.bind(("127.0.0.1", 0))
+                return s.getsockname()[1]
+
+        once = threading.active_count()
+        for _ in range(3):
+            with mock.patch.object(tasima, "PORT", bos_port()):
+                tasima.gonderimi_baslat()
+                tasima.gonderimi_durdur()
+        # dinleme döngüsü bir sonraki yoklamada biter; önce her açıp kapatma 2 iş parçacığı bırakıyordu
+        for _ in range(50):
+            if threading.active_count() <= once:
+                break
+            tasima.time.sleep(0.1)
+        self.assertLessEqual(threading.active_count(), once)
+
+    def test_yonlendirme_izlenmez(self):
+        import http.server
+        import threading
+
+        class Yonlendir(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(302)
+                self.send_header("Location", "http://8.8.8.8/")
+                self.end_headers()
+
+            def log_message(self, *a):
+                pass
+
+        sunucu = http.server.HTTPServer(("127.0.0.1", 0), Yonlendir)
+        threading.Thread(target=sunucu.handle_request, daemon=True).start()
+        with self.assertRaises(tasima.urllib.error.HTTPError) as h:
+            tasima._ACICI.open(f"http://127.0.0.1:{sunucu.server_port}/liste", timeout=5)
+        self.assertEqual(h.exception.code, 302)
+        sunucu.server_close()
+
+
 if __name__ == "__main__":
     unittest.main()

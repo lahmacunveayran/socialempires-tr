@@ -660,6 +660,25 @@ img { -webkit-user-drag: none; }
 .hile-miktar select { margin-left: 6px; padding: 4px 6px; border-radius: 8px; border: 1.5px solid #b49464; background: #fffaf0; font: 700 13px var(--metin-yazi); }
 .hile-dugmeler { display: flex; flex-wrap: wrap; gap: 8px; }
 .cevrimdisi [hidden], .tasima [hidden] { display: none; }
+.gunluk { max-width: 760px; }
+.gunluk-kimlik { display: flex; align-items: center; gap: 12px; margin: 4px 0 14px; }
+.gunluk-kimlik img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 0 0 2px #c2a46c; }
+.gunluk-kimlik b { display: block; font-size: 22px; }
+.gunluk-kimlik span { font: 700 13px var(--metin-yazi); color: var(--murekkep-soluk); }
+.gunluk-ozet .kaynak { cursor: default; }
+.gunluk-ozet .kaynak img { width: 56px; height: 56px; object-fit: contain; border: 0; background: none; }
+.gunluk-ozet small { font: 700 11.5px var(--metin-yazi); color: var(--murekkep-soluk); }
+.gunluk-savaslar li { grid-template-columns: 26px 36px 1fr auto; }
+.gunluk-savaslar img.yon-armasi { width: 26px; height: 26px; border: 0; border-radius: 0; box-shadow: none; background: none; object-fit: contain; }
+.gunluk-savaslar .ad { white-space: normal; }
+.gunluk-savaslar .ad .sv { display: inline; color: var(--murekkep-soluk); }
+.gunluk-savaslar .sonuc { font: 800 12.5px var(--metin-yazi); text-align: right; }
+.gunluk-savaslar li.zafer .sonuc { color: #2f6a12; }
+.gunluk-savaslar li.yenilgi .sonuc { color: #a3201a; }
+.gunluk-tablo { width: 100%; border-collapse: collapse; font: 700 13px var(--metin-yazi); color: var(--murekkep); }
+.gunluk-tablo th { font: 800 11px var(--metin-yazi); letter-spacing: .5px; text-transform: uppercase; color: var(--murekkep-soluk); text-align: right; padding: 4px 6px; border-bottom: 1.5px solid #c9ab7a; }
+.gunluk-tablo td { text-align: right; padding: 5px 6px; border-bottom: 1px dashed #dcc391; font-variant-numeric: tabular-nums; }
+.gunluk-tablo th:first-child, .gunluk-tablo td:first-child { text-align: left; }
 .tasima-bilgi { margin: 2px 0; font: 800 18px var(--metin-yazi); color: var(--murekkep); }
 .tasima-bilgi b { margin-left: 8px; font: 800 30px/1.1 var(--baslik-yazi); letter-spacing: 2px; }
 .tasima-form { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }

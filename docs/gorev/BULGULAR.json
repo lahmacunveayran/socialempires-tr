@@ -526,6 +526,19 @@
       "pr": null,
       "onay": "Sahibi, 30 Ekim 2026",
       "notlar": "Ayarlar: dunya.intikam_olasiligi (0,35), dunya.oyuncuya_intikam (0,5). Haber türü 'ittifak', simge oyunun kendi arması b_8.png."
+    },
+    {
+      "id": "OYN-02",
+      "baslik": "İmparatorluk günlüğü: savaş geçmişi, ganimet ve seviye ilerlemesi tek sayfada",
+      "sinif": "ozellik",
+      "onem": "Düşük",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "/gunluk yalnızca kayıttan okur (attacksSent, attacksReceived, onur; günlük yedeklerden 14 güne kadar seviye/XP/onur/kaynak). Simgeler oyunun kendi armaları (b_4 saldırı, b_10 savunma, b_7 kayıp) ve collect_g0.jpg; portreler oyunun/deponun profil resimleri. Gerçek bir kayıtla Galaxy Tab S9 yatay benzetiminde denendi; iki hata bulunup düzeltildi: 'arma' sınıfı başlık armasının konumunu devralıyordu, savunma satırı yanlış okunuyordu ('X köyüne saldırdı' -> 'X sana saldırdı').",
+      "test": "tests/test_gunluk.py",
+      "pr": null,
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Bot akınlarının eski 'gönderilen' kayıtlarında açıklama yok: sonuç '—'."
     }
   ]
 }

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+{%- set V = varlik %}
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>İmparatorluk Günlüğü · {{ bilgi.name }}</title>
+    <link rel="icon" type="image/gif" href="/img/icon.gif">
+    <link rel="stylesheet" href="/css/oyun.css">
+    <script src="/js/gokyuzu.js" defer></script>
+</head>
+<body>
+    <div class="manzara" aria-hidden="true">
+        <div class="orman orman-uzak"></div>
+        <div class="orman orman-orta"></div>
+        <div class="sis"></div>
+        <div class="orman orman-yakin"></div>
+    </div>
+    {%- macro sayi(n) %}{{ "{:,}".format(n).replace(",", ".") }}{% endmacro %}
+
+    <main class="giris hile gunluk">
+        <section class="panel" aria-labelledby="gunluk-basligi">
+            <h2><span class="serit-baslik" id="gunluk-basligi">İmparatorluk Günlüğü</span></h2>
+            <div class="icerik">
+                <div class="gunluk-kimlik">
+                    <img src="{{ portre }}" alt="">
+                    <div><b class="yazi-oyun">{{ bilgi.name }}</b>
+                        <span>{% if rutbe %}{{ rutbe }} · {% endif %}{{ bilgi.level }}. seviye · {{ sayi(bilgi.xp) }} XP · {{ sayi(ozet.onur) }} onur</span></div>
+                </div>
+
+                <div class="kaynaklar gunluk-ozet">
+                    <div class="kaynak"><img src="{{ V }}images_new/b_4.png" alt=""><b>Saldırı</b>
+                        <span class="miktar yazi-altin">{{ ozet.saldiri }}</span><small>{{ ozet.saldiri_zafer }} zafer</small></div>
+                    <div class="kaynak"><img src="{{ V }}images_new/collect_g0.jpg" alt=""><b>Ganimet</b>
+                        <span class="miktar yazi-altin">{{ sayi(ozet.ganimet) }}</span><small>altın · {{ sayi(ozet.xp) }} XP</small></div>
+                    <div class="kaynak"><img src="{{ V }}images_new/b_10.png" alt=""><b>Savunma</b>
+                        <span class="miktar yazi-altin">{{ ozet.savunma }}</span><small>{{ ozet.savunma_zafer }} püskürtüldü</small></div>
+                    <div class="kaynak"><img src="{{ V }}images_new/b_7.png" alt=""><b>Kayıp</b>
+                        <span class="miktar yazi-altin">{{ sayi(ozet.kayip) }}</span><small>altın yağmalandı</small></div>
+                </div>
+
+                <h3 class="yazi-oyun">Savaş geçmişi</h3>
+                {% if savaslar %}
+                <ul class="levha gunluk-savaslar">
+                    {% for s in savaslar %}
+                    <li class="{{ s.yon }}{% if s.zafer %} zafer{% elif s.zafer is not none %} yenilgi{% endif %}" style="--i: {{ [loop.index0, 12] | min }}">
+                        <img class="yon-armasi" src="{{ V }}images_new/{{ 'b_4.png' if s.yon == 'saldiri' else 'b_10.png' }}" alt="{{ 'Saldırı' if s.yon == 'saldiri' else 'Savunma' }}">
+                        <img src="{{ s.rakip.resim }}" alt="">
+                        <span class="ad">
+                            {%- if s.yon == "saldiri" %}{{ s.rakip.ad }} köyüne saldırdın{% else %}{{ s.rakip.ad }} sana saldırdı{% endif %}
+                            {%- if s.rakip.seviye %} <small class="sv">sv {{ s.rakip.seviye }}</small>{% endif %}
+                            <small>{{ s.tarih }}</small></span>
+                        <span class="sonuc">
+                            {%- if s.zafer is none %}—
+                            {%- elif s.yon == "saldiri" %}{% if s.zafer %}Zafer · +{{ sayi(s.altin) }} altın{% if s.xp %} · +{{ s.xp }} XP{% endif %}{% else %}Yenilgi{% endif %}
+                            {%- else %}{% if s.zafer %}Püskürtüldü{% if s.altin %} · +{{ sayi(s.altin) }} altın{% endif %}{% else %}Yağmalandı · −{{ sayi(s.altin) }} altın{% endif %}{% endif %}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="paket-aciklama">Henüz savaş yok. Dünya haritasından bir köye saldırın ya da botların akınını bekleyin.</p>
+                {% endif %}
+
+                <h3 class="yazi-oyun">Seviye ilerlemesi</h3>
+                <p class="paket-aciklama">Gün gün, günlük yedeklerden (son 14 gün).</p>
+                <table class="gunluk-tablo">
+                    <thead><tr><th>Gün</th><th>Seviye</th><th>XP</th><th>Artış</th><th>Onur</th><th>Kaynak</th></tr></thead>
+                    <tbody>
+                        {% for g in ilerleme | reverse %}
+                        <tr><td>{{ g.gun[8:10] }}.{{ g.gun[5:7] }}.{{ g.gun[:4] }}</td><td>{{ g.seviye }}</td><td>{{ sayi(g.xp) }}</td>
+                            <td>{% if g.xp_artis %}+{{ sayi(g.xp_artis) }}{% else %}—{% endif %}</td><td>{{ sayi(g.onur) }}</td><td>{{ sayi(g.kaynak) }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="giris-dugmeler"><a class="yesil-dugme" href="/play.html">Oyuna Dön</a></div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

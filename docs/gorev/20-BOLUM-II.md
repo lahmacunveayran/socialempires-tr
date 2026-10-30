@@ -65,5 +65,5 @@ Sahibi PR #18 APK'sını denemeyecek, denemeyi 1.4.07'ye geçiş bitince yapacak
 
 ### 7.5 Android imza anahtarı (bir kez)
 
-Adımlar `ANDROID.md` "İmza anahtarı" bölümünde. Anahtar GEC-08'den önce eklenmeli, yoksa her güncellemede yedek al,
-kaldır, kur, yükle gerekir.
+Sahibinin kararı (KAR-09): bütün işler bittikten sonra, **en son iş** olarak yapılır. Adımlar `ANDROID.md` "İmza
+anahtarı" bölümünde. O zamana kadar her yeni APK'da yedek al, kaldır, kur, yükle gerekir.

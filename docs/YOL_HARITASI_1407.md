@@ -1,6 +1,6 @@
 # Yol haritası: 1.4.07'ye tam geçiş
 
-Tarih: 30 Ekim 2026. Görev kitabı: GEC-01 … GEC-09, OYN-11 … OYN-13, ONR-01 … ONR-04, KAR-08.
+Tarih: 30 Ekim 2026. Görev kitabı: GEC-01 … GEC-09, OYN-11 … OYN-13, ONR-01 … ONR-04, KAR-08, KAR-09.
 
 İşaretler: **✔** ölçüldü ya da okunarak doğrulandı, **◐** dolaylı kanıt, **?** tahmin ya da ölçülmedi.
 
@@ -109,8 +109,9 @@ Emek tahmini üç noktalıdır (o: iyimser, m: olası, p: kötümser, iş günü
 | **GEC-05** Yeni PvP, botlar, turnuva | 7 PvP komutu ve `/pvp/*` uçları (yalnızca botlara karşı, KAR-02); kalkan, onur, saldırı günlüğü; bot dünyası ve Diyar Haberleri'nin yeni PvP'ye bağlanması; turnuva | PvP dahil `|G ∖ H| = 0`; 404 yok; bot dünya turu süresi ≤ önceki | 2 / 3 / 5 | 3,17 |
 | **GEC-06** Türkçe | ~130 yeni SWF metni, 51 kaybolan anahtarın karşılığı, 428 `loc` adı, 206 hedef (23.530 karakter); yazı tiplerinde Türkçe harfler; yeni pencerelerin yazıları | Dört T = 1; ekran görüntüleriyle denetim | 2 / 3 / 5 | 3,17 |
 | **GEC-07** Bayram hedefleri | Sunucu, `goals` listesine bayram tarihlerinde hedef ekler; istemci tarih bilmez. Resimler oyunun hedef resimlerinden seçilir (ICR-01) | Takvim testleri: bayram günü hedef var, ertesi gün yok; ödül bir kez | 1 / 1,5 / 2 | 1,50 |
-| **GEC-08** Android, çevrimdışı paket, hız | `config/onindirme.tsv`'nin yenilenmesi (+347 dosya); APK; emülatör sınaması; açılış süresi; imza anahtarı | CI yeşil; süre kapısı; paket listesi eksiksiz | 1 / 2 / 3 | 2,00 |
+| **GEC-08** Android, çevrimdışı paket, hız | `config/onindirme.tsv`'nin yenilenmesi (+347 dosya); APK; emülatör sınaması; açılış süresi | CI yeşil; süre kapısı; paket listesi eksiksiz | 1 / 2 / 3 | 2,00 |
 | **GEC-09** Kabul ve sürüm | Uçtan uca oynanış betiği; sahibinin tablet denemesi; v0.1.0 (sahibinin onayıyla) | Bütün kapılar; sahibinin "tamam"ı | 1 / 1,5 / 3 | 1,67 |
+| **Son iş** İmza anahtarı (KAR-09) | Sahibi, bütün işler bittikten sonra Android imza anahtarını üretip GitHub sırrına ekler (`ANDROID.md` "İmza anahtarı") | CI'da "Sahibin anahtarıyla imzalanacak" | — | — |
 | **Küçük işler** OYN-11 … OYN-13 | Aşağıda §4 | Her biri kendi testiyle | 1 / 1,5 / 3 | 1,67 |
 | **Öneriler** ONR-01 … ONR-04 | Aşağıda §5 | Her biri kendi testiyle | 4 / 7 / 12 (dördünün toplamı) | 7,33 |
 
@@ -124,7 +125,8 @@ Toplamın hesabı:
 
 Sıra ve bağımlılıklar:
 
-- GEC-01 → GEC-02 → (GEC-03 ∥ GEC-04) → GEC-05 → GEC-06 → GEC-07 → GEC-08 → GEC-09.
+- GEC-01 → GEC-02 → (GEC-03 ∥ GEC-04) → GEC-05 → GEC-06 → GEC-07 → GEC-08 → GEC-09 → imza anahtarı.
+- İmza anahtarı en son iştir (sahibinin kararı, KAR-09). Ondan önceki APK'lar geçici anahtarla imzalanır.
 - Küçük işler GEC-02'den sonra herhangi bir arada yapılır.
 - Öneriler GEC-05'ten sonra gelir; GEC-09 kabul denemesi hepsini birlikte kapsar.
 
@@ -161,4 +163,4 @@ tek cümleyle onaylatılır.
 | Göçte oyuncunun kaydının bozulması | Düşük | Çok yüksek | Göç öncesi `.bak` ve günlük yedek; değişmezlik testleri; 51 gerçek biçimli kayıtla deneme |
 | Upstream yamalı SWF'yi değiştirir | Düşük | Orta | Commit ve SHA-256 sabit; değişiklik bize kendiliğinden gelmez |
 | Yeni pencerelerdeki İngilizce, resmin içinde | Yüksek ✔ | Düşük | KAR-01: resimdeki yazı yeniden çizilmez; metin alanındaysa çevrilir |
-| Android imza anahtarı olmadan güncelleme kayıtları korumaz | Kesin ✔ | Yüksek | Anahtar GEC-08'den önce GitHub sırrına eklenir (ANDROID.md "İmza anahtarı") |
+| Android imza anahtarı olmadan güncelleme kayıtları korumaz | Kesin ✔ | Yüksek | Anahtar en son eklenir (KAR-09). O zamana kadar her yeni APK'da: yedek indir → kaldır → kur → Yedekten Yükle. Anahtar eklendikten sonraki ilk APK'da bir kez daha aynısı |

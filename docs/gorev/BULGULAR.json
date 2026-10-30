@@ -421,7 +421,7 @@
       "test": null,
       "pr": "#14",
       "onay": "Sahibine soruldu: anahtarı GitHub sırrı olarak ekler mi (ANDROID.md 'İmza anahtarı')",
-      "notlar": "CI ANDROID_IMZA ve ANDROID_IMZA_SIFRESI sırlarını kullanır; yoksa geçici hata ayıklama anahtarı ve uyarı."
+      "notlar": "CI ANDROID_IMZA ve ANDROID_IMZA_SIFRESI sırlarını kullanır; yoksa geçici hata ayıklama anahtarı ve uyarı. 30.10.2026: sahibi anahtarı en son iş olarak ekleyecek (KAR-09)."
     },
     {
       "id": "DAG-06",
@@ -811,7 +811,7 @@
       "test": null,
       "pr": "#19",
       "onay": "Sahibi, 30 Ekim 2026",
-      "notlar": "Yol haritası: docs/YOL_HARITASI_1407.md. Sorun kaydı: docs/gorev/SORUN_COZUM.md. v0.1.0 için ayrı onay bekleniyor (GEC-09)."
+      "notlar": "Yol haritası: docs/YOL_HARITASI_1407.md. Sorun kaydı: docs/gorev/SORUN_COZUM.md. İmza anahtarı en son iş (KAR-09). v0.1.0 için ayrı onay bekleniyor (GEC-09)."
     },
     {
       "id": "GEC-01",
@@ -1020,6 +1020,19 @@
       "pr": null,
       "onay": null,
       "notlar": "Uygulamadan önce taslak tanım sahibine onaylatılır (önerinin harfiyen uygulanması kuralı). Görseller yalnızca oyunun kendi dosyaları."
+    },
+    {
+      "id": "KAR-09",
+      "baslik": "Android imza anahtarı en son iş",
+      "sinif": "karar",
+      "onem": "Orta",
+      "durum": "karar_verildi",
+      "isaret": "✔",
+      "kanit": "Sahibi 30.10.2026: 'İmza anahtarına gerek yok zaten işler bittikten sonra yapacağım mesele değil bunu not et en son iş bu'.",
+      "test": null,
+      "pr": "#19",
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Yol haritasında GEC-09'dan sonraki son adım (docs/YOL_HARITASI_1407.md §3). O zamana kadar APK'lar geçici anahtarla imzalanır; her yeni APK'da yedek indir → kaldır → kur → Yedekten Yükle. Adımlar ANDROID.md 'İmza anahtarı'."
     }
   ]
 }

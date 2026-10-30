@@ -43,7 +43,11 @@ def cheat_sayfasi():
     uid = session.get("USERID")
     if not uid or uid not in all_saves_userid():
         return redirect("/")
-    return render_template("cheat.html", save_info=save_info(uid), version=version_name)
+    from oyun.dunya import rutbe
+    from oyun.sunucu import STATIK_YOL
+    bilgi = save_info(uid)
+    return render_template("cheat.html", save_info=bilgi, version=version_name, varlik=STATIK_YOL,
+                           rutbe=rutbe(bilgi["level"]), ozet=_kayit_ozeti(kayit_oturumu(uid)))
 
 
 @app.route("/cheat/uygula", methods=["POST"])

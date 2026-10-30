@@ -1,0 +1,112 @@
+name: windows
+
+# Python kurulu olmayan Windows için paket (araclar/windows_paketi.py).
+# Etiket (v*) gönderilince paket üretilir, temiz bir Windows makinesinde
+# sınanır ve SHA-256 özetiyle GitHub sürümüne yüklenir. Paket betiği
+# değişen PR'larda yalnızca üretilip sınanır.
+
+on:
+  push:
+    tags: ["v*"]
+  pull_request:
+    paths:
+      - araclar/windows_paketi.py
+      - requirements.txt
+      - .github/workflows/windows.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  paket:
+    runs-on: ubuntu-latest
+    outputs:
+      ad: ${{ steps.ad.outputs.ad }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Bağımlılıklar
+        run: pip install -r requirements.txt
+      - name: Paket adı
+        id: ad
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then surum="${GITHUB_REF_NAME}"; else surum="${GITHUB_SHA::7}"; fi
+          echo "ad=SocialEmpiresTR-${surum}-windows" >> "$GITHUB_OUTPUT"
+      - name: Ruffle (sabit sürüm, önceden sıkıştırılmış)
+        run: python -c "import sys; sys.path.insert(0, '.'); from oyun import ruffle; assert ruffle.hazirla(); ruffle.brotli_baslat(bekle=True)"
+      - name: Paket
+        run: python araclar/windows_paketi.py --ad "${{ steps.ad.outputs.ad }}" --cikti dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-paketi
+          path: dist/
+          if-no-files-found: error
+
+  sinama:
+    # Kabul kapısı: Python kurulmadan, gömülü Python ile 60 saniye içinde açılır.
+    needs: paket
+    runs-on: windows-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-paketi
+          path: dist
+      - name: Özet
+        shell: pwsh
+        run: |
+          $ad = "${{ needs.paket.outputs.ad }}"
+          $beklenen = (Get-Content "dist/$ad.zip.sha256").Split(" ")[0]
+          $gercek = (Get-FileHash "dist/$ad.zip" -Algorithm SHA256).Hash.ToLower()
+          if ($beklenen -ne $gercek) { throw "SHA-256 tutmuyor: $gercek" }
+      - name: Aç ve 60 saniye içinde başlat
+        shell: pwsh
+        run: |
+          $ad = "${{ needs.paket.outputs.ad }}"
+          Expand-Archive "dist/$ad.zip" -DestinationPath oyun
+          $kok = "oyun/$ad"
+          $env:PYTHONIOENCODING = "utf-8"   # başlatıcının yaptığı gibi
+          $env:PYTHONUTF8 = "1"
+          $sure = [Diagnostics.Stopwatch]::StartNew()
+          $surec = Start-Process -FilePath "$kok/python/python.exe" -ArgumentList "server.py" `
+            -WorkingDirectory $kok -PassThru -RedirectStandardOutput cikti.txt -RedirectStandardError hata.txt
+          $hazir = $false
+          while ($sure.Elapsed.TotalSeconds -lt 60 -and -not $surec.HasExited) {
+            try {
+              $r = Invoke-WebRequest "http://127.0.0.1:5050/saglik/hazir" -UseBasicParsing -TimeoutSec 2
+              if ($r.StatusCode -eq 200) { $hazir = $true; break }
+            } catch {}
+            Start-Sleep -Milliseconds 500
+          }
+          Write-Host ("Hazır olma süresi: {0:N1} sn" -f $sure.Elapsed.TotalSeconds)
+          if ($hazir) {
+            $s = Invoke-WebRequest "http://127.0.0.1:5050/saglik" -UseBasicParsing
+            Write-Host $s.Content
+            $r = Invoke-WebRequest "http://127.0.0.1:5050/ruffle/0.7.1/ruffle.js" -UseBasicParsing
+            if ($r.StatusCode -ne 200) { $hazir = $false; Write-Host "Ruffle pakette yok" }
+          }
+          if (-not $surec.HasExited) { Stop-Process -Id $surec.Id -Force }
+          Get-Content cikti.txt -Tail 40
+          Get-Content hata.txt -Tail 40
+          if (-not $hazir) { throw "Sunucu 60 saniye içinde hazır olmadı" }
+
+  surum:
+    if: github.ref_type == 'tag'
+    needs: [paket, sinama]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-paketi
+          path: dist
+      - name: GitHub sürümü
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/* --repo "${GITHUB_REPOSITORY}" \
+            --title "Social Empires Türkçe ${GITHUB_REF_NAME}" \
+            --notes "Windows: zip'i açın, \"Social Empires.bat\" dosyasına çift tıklayın (Python gerekmez). SmartScreen uyarısında \"Ek bilgi\" > \"Yine de çalıştır\". Dosyanın SHA-256 özeti yanındaki .sha256 dosyasında."

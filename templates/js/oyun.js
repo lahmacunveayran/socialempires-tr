@@ -47,27 +47,9 @@
     panel.style.setProperty("--my", (o.clientY - k.top) + "px");
   });
 
-  var GEN = 760, YUK = 600, EN_BUYUK_OLCEK = 1.5;
 
   // --- Çerçeve ölçeği: oyun EXACT_FIT ile kutuya esner, oran tam 760:600 kalmalı.
   var kutu = document.getElementById("oyun-kutusu");
-  var alan = document.querySelector(".oyun-alani");
-  function olcekle() {
-    var stil = getComputedStyle(document.documentElement);
-    var baslik = document.querySelector(".baslik").offsetHeight;
-    var bosluk = parseFloat(stil.getPropertyValue("--bosluk")) || 0;
-    var arma = parseFloat(stil.getPropertyValue("--arma-payi")) || 0;
-    var cerceve = 38; // ahşap çerçeve ve altın kenar
-    var genislik = alan.clientWidth - cerceve;
-    var yukseklik = window.innerHeight - baslik - arma - 2 * bosluk - cerceve;
-    var s = Math.min(genislik / GEN, yukseklik / YUK, EN_BUYUK_OLCEK);
-    // Çok dar yükseklikte (telefon yatay) genişliğe göre ölçeklenir, sayfa kayar.
-    if (s < 0.45) s = Math.min(genislik / GEN, EN_BUYUK_OLCEK);
-    kutu.style.width = Math.floor(GEN * s) + "px";
-    kutu.style.height = Math.round(Math.floor(GEN * s) * YUK / GEN) + "px";
-  }
-  window.addEventListener("resize", olcekle);
-  olcekle();
 
   // Paralaks yalnızca transform ile; prefers-reduced-motion açıkken CSS kapatır.
   window.addEventListener("scroll", function () {
@@ -109,6 +91,15 @@
     nasihatDegistir();
     nasihatSayaci = setInterval(nasihatDegistir, 6000);
     ilerle(15, "Ruffle hazırlanıyor...");
+    if (window.RufflePlayer && window.RufflePlayer.newest) return oyunuBaslat();
+    var betik = document.createElement("script");
+    betik.src = AYAR.ruffle;
+    betik.onload = oyunuBaslat;
+    betik.onerror = function () { ilerle(15, "Ruffle yüklenemedi. Sayfayı yenileyin."); };
+    document.head.appendChild(betik);
+  });
+
+  function oyunuBaslat() {
     window.RufflePlayer = window.RufflePlayer || {};
     window.RufflePlayer.config = {
       autoplay: "on",
@@ -134,7 +125,7 @@
       }, 2500);
     });
     oyuncu.load({ url: AYAR.swf, parameters: AYAR.parametreler });
-  });
+  }
 
   // --- Diyar Haberleri: 15 saniyede bir yoklama; en fazla 5 saniyede bir satır.
   var liste = document.getElementById("haberler");
@@ -339,9 +330,10 @@
           " setleri mağazada.<small>" + tarih(e.son_gun) + " gün sonuna dek</small>");
       });
       if (yakin) parcalar.push(olay(yakin, "Sıradaki şenlik: " + yakin.ad + "<small>" + tarih(yakin.baslangic) + "</small>"));
-      if (parcalar.length) { etkinlik.innerHTML = parcalar.join(""); etkinlik.hidden = false; }
+      if (parcalar.length) etkinlik.innerHTML = parcalar.join("");
+      else etkinlik.remove();
     })
-    .catch(function () {});
+    .catch(function () { etkinlik.remove(); });
 
   // --- Kayıt yedeği: başka bilgisayardan alınan yedeği yükle
   document.getElementById("yedek-dosyasi").addEventListener("change", function (e) {

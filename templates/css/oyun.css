@@ -49,7 +49,7 @@
   --muhur-acik: #d23a2c;
   --altin: #f2c14e;
   --altin-koyu: #b07d18;
-  --baslik-yuksekligi: 132px;
+  --baslik-yuksekligi: 181px; /* sabit: web yazı tipi geç inse de çerçeve kaymasın */
   --arma-payi: 58px;
   --bosluk: 16px;
   --baslik-yazi: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
@@ -118,7 +118,7 @@ img { -webkit-user-drag: none; }
 
 /* ================= Başlık ================= */
 .baslik {
-  min-height: var(--baslik-yuksekligi);
+  height: var(--baslik-yuksekligi);
   display: flex; align-items: center; justify-content: space-between; gap: var(--bosluk);
   padding: 10px var(--bosluk) 6px; max-width: 1880px; margin: 0 auto;
 }
@@ -198,7 +198,7 @@ img { -webkit-user-drag: none; }
   max-width: 1880px; margin: 0 auto;
   grid-template-columns: 1fr; grid-template-areas: "oyun" "haber" "kursu";
 }
-.oyun-alani { grid-area: oyun; display: flex; justify-content: center; min-width: 0; padding-top: var(--arma-payi); }
+.oyun-alani { grid-area: oyun; display: flex; justify-content: center; min-width: 0; padding-top: var(--arma-payi); container-type: inline-size; }
 .panel-haber { grid-area: haber; }
 .panel-kursu { grid-area: kursu; }
 @media (min-width: 600px) {
@@ -211,7 +211,7 @@ img { -webkit-user-drag: none; }
   .yerlesim { grid-template-columns: 300px 1fr 300px; grid-template-areas: "haber oyun kursu"; }
 }
 @media (max-width: 599px) {
-  :root { --baslik-yuksekligi: 64px; --arma-payi: 36px; }
+  :root { --baslik-yuksekligi: 70px; --arma-payi: 36px; }
   .baslik .logo img { height: 48px; }
   .oturum { padding: 4px 8px 4px 4px; gap: 0 8px; }
   .muhur-seviye { width: 40px; height: 40px; font-size: 15px; }
@@ -238,8 +238,16 @@ img { -webkit-user-drag: none; }
 @keyframes dalga { 0%, 100% { transform: skewY(0deg) scaleY(1); } 50% { transform: skewY(-6deg) scaleY(.96); } }
 @keyframes dalga-ters { 0%, 100% { transform: scaleX(-1) skewY(0deg); } 50% { transform: scaleX(-1) skewY(-6deg) scaleY(.96); } }
 
+/* Oyun kendini EXACT_FIT ile kutuya esnettiği için oran tam 760:600 kalmalı.
+   Boyutu CSS hesaplar (ilk çizimde doğru boyut: sayfa kaymaz):
+   s = min(genişlik / 760, yükseklik / 600, 1,5); çok alçak ekranda en az 342 px. */
 .oyun-kutusu {
-  position: relative; width: 760px; height: 600px; /* JS 760:600 oranını korur */
+  --g: calc(100cqw - 38px);
+  --y: calc((100vh - var(--ust-pay)) * 760 / 600);
+  --y: calc((100dvh - var(--ust-pay)) * 760 / 600);
+  --ust-pay: calc(var(--baslik-yuksekligi) + var(--arma-payi) + 2 * var(--bosluk) + 38px);
+  position: relative; width: max(min(var(--g), var(--y), 1140px), min(var(--g), 342px));
+  aspect-ratio: 760 / 600; height: auto;
   background: #669c2c; border-radius: 6px; overflow: hidden; container-type: size;
   box-shadow: 0 0 0 3px #e3b04b, 0 0 0 5px #3a210d, inset 0 0 30px rgba(0, 0, 0, .35);
 }
@@ -583,3 +591,8 @@ img { -webkit-user-drag: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Veri gelmeden yer ayrılır: paneller dolunca alttakiler kaymasın (CLS). */
+#kursu { min-height: 727px; }
+#hafta { min-height: 534px; }
+#etkinlik { min-height: 216px; }

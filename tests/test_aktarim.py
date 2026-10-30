@@ -115,6 +115,10 @@ class RuffleTestleri(unittest.TestCase):
         duz.close()
 
         self.assertEqual(self.istemci.get(f"/ruffle/{Ruffle.SURUM}/ruffle.js.gz").status_code, 404)
+        # Klasör dışına çıkma ve gizli/sıkıştırılmış kopyalar sunulmaz.
+        for ad in ("..%2F..%2Fayarlar.json", "..", ".gizli", "abc.wasm.br", "yok.js"):
+            self.assertIsNone(Ruffle.dosya(ad.replace("%2F", "/")), ad)
+            self.assertEqual(self.istemci.get(f"/ruffle/{Ruffle.SURUM}/{ad}").status_code, 404, ad)
         self.assertEqual(self.istemci.get("/ruffle/0.0.1/ruffle.js").status_code, 404)
 
     def test_oyun_sayfasi_sabit_surumu_kullanir(self):

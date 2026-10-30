@@ -147,6 +147,8 @@ class YedekTestleri(unittest.TestCase):
         with open(self.yol, "rb") as f:
             self.assertEqual(f.read(), orijinal)
         self.assertTrue(os.path.exists(self.yol + ".bak"))
+        # Yanıt yüklenen dosyadaki hiçbir değeri geri yansıtmaz.
+        self.assertEqual(sonuc.get_json(), {"durum": "ok"})
 
     def test_bozuk_ozet_ve_kimlik_cakismasi(self):
         zarf = json.loads(self.istemci.get("/kayit/indir").data)

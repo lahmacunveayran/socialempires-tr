@@ -126,14 +126,29 @@ def dosya(ad, kabul_edilen=""):
     `kabul_edilen`: istemcinin Accept-Encoding başlığı. Önceden sıkıştırılmış
     sürüm varsa ve istemci kabul ediyorsa o döner.
     """
-    if "/" in ad or "\\" in ad or ad.startswith(".") or ad.endswith((".gz", ".br", ".tmp")):
+    # Yol istekten değil, klasörün kendi listesinden gelir (izin listesi):
+    # "../" gibi adlar listede olmadığı için hiçbir zaman dosya yoluna dönüşmez.
+    dosyalar = sunulanlar()
+    yol = dosyalar.get(ad)
+    if yol is None:
         return None
-    yol = os.path.join(KLASOR, ad)
-    if not os.path.isfile(yol):
-        return None
-    tur = TURLER.get(os.path.splitext(ad)[1], "application/octet-stream")
+    tur = TURLER.get(os.path.splitext(yol)[1], "application/octet-stream")
     kabul = {k.split(";")[0].strip() for k in kabul_edilen.lower().split(",")}
     for kodlama, uzanti in (("br", ".br"), ("gzip", ".gz")):
-        if kodlama in kabul and os.path.isfile(yol + uzanti):
-            return yol + uzanti, tur, kodlama
+        sikisik = _sikisik(yol, uzanti)
+        if kodlama in kabul and sikisik:
+            return sikisik, tur, kodlama
     return yol, tur, None
+
+
+def sunulanlar():
+    """{dosya adı: yol}: klasördeki sunulabilir dosyalar (sıkıştırılmış kopyalar hariç)."""
+    if not os.path.isdir(KLASOR):
+        return {}
+    return {ad: os.path.join(KLASOR, ad) for ad in os.listdir(KLASOR)
+            if not ad.startswith(".") and not ad.endswith((".gz", ".br", ".tmp"))
+            and os.path.isfile(os.path.join(KLASOR, ad))}
+
+
+def _sikisik(yol, uzanti):
+    return yol + uzanti if os.path.isfile(yol + uzanti) else None

@@ -21,6 +21,25 @@ from oyun.sunucu import app
 from oyun.yollar import SAVES_DIR
 
 BICIM = "SocialEmpiresTR-yedek"
+
+# Kullanıcıya gösterilen iletiler sabittir; istisnanın metni dışarı verilmez.
+HATALAR = {
+    "bicim": "Dosya bir imparatorluk yedeği değil.",
+    "ozet": "Yedek bozulmuş: SHA-256 özeti tutmuyor.",
+    "okunamadi": "Yedekteki kayıt okunamadı.",
+    "sema": "Yedekteki kayıt geçerli bir imparatorluk değil.",
+    "kimlik": "Yedeğin kimliği tutarsız.",
+    "cakisma": "Bu bilgisayarda aynı kimlikle başka bir imparatorluk var; "
+               "üzerine yazmak için o imparatorlukla giriş yapın.",
+}
+
+
+class YedekHatasi(ValueError):
+    """`kod`: HATALAR anahtarı."""
+
+    def __init__(self, kod):
+        super().__init__(kod)
+        self.kod = kod
 EN_BUYUK = 32 * 1024 * 1024
 
 
@@ -40,28 +59,27 @@ def zarf(uid):
 
 
 def zarfi_ac(veri, oturum_uid):
-    """Zarfı denetler; (kimlik, ham bayt) döndürür ya da ValueError (Türkçe ileti)."""
+    """Zarfı denetler; (kimlik, ham bayt) döndürür ya da YedekHatasi."""
     try:
         zarf_ = json.loads(veri)
     except (ValueError, UnicodeDecodeError):
-        raise ValueError("Dosya bir imparatorluk yedeği değil.")
+        raise YedekHatasi("bicim")
     if not isinstance(zarf_, dict) or zarf_.get("bicim") != BICIM or not isinstance(zarf_.get("kayit"), str):
-        raise ValueError("Dosya bir imparatorluk yedeği değil.")
+        raise YedekHatasi("bicim")
     ham = zarf_["kayit"].encode("utf-8")
     if hashlib.sha256(ham).hexdigest() != zarf_.get("sha256"):
-        raise ValueError("Yedek bozulmuş: SHA-256 özeti tutmuyor.")
+        raise YedekHatasi("ozet")
     try:
         kayit = json.loads(ham)
     except ValueError:
-        raise ValueError("Yedekteki kayıt okunamadı.")
+        raise YedekHatasi("okunamadi")
     if not isinstance(kayit, dict) or not is_valid_village(kayit):
-        raise ValueError("Yedekteki kayıt geçerli bir imparatorluk değil.")
+        raise YedekHatasi("sema")
     kimlik = str(kayit["playerInfo"].get("pid", ""))
     if kimlik != zarf_.get("kimlik") or not gecerli_uid(kimlik):
-        raise ValueError("Yedeğin kimliği tutarsız.")
+        raise YedekHatasi("kimlik")
     if kimlik != oturum_uid and kimlik in all_saves_userid():
-        raise ValueError("Bu bilgisayarda aynı kimlikle başka bir imparatorluk var; "
-                         "üzerine yazmak için o imparatorlukla giriş yapın.")
+        raise YedekHatasi("cakisma")
     return kimlik, ham
 
 
@@ -103,9 +121,9 @@ def kayit_yukle():
         return ({"hata": "Dosya çok büyük."}, 413)
     try:
         kimlik, ham = zarfi_ac(veri, session.get("USERID"))
-    except ValueError as hata:
-        return ({"hata": str(hata)}, 400)
+    except YedekHatasi as hata:
+        return ({"hata": HATALAR.get(hata.kod, HATALAR["bicim"])}, 400)
     geri_yukle(kimlik, ham)
     session["USERID"] = kimlik
     session.setdefault("GAMEVERSION", "SocialEmpires0926bsec.swf")
-    return {"durum": "ok", "kimlik": kimlik}
+    return {"durum": "ok"}

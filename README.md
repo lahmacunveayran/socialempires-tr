@@ -50,7 +50,22 @@ indirmek için gerekir.
 
 ---
 
-## Kurulum (Windows)
+## En kolay yol: hazır Windows paketi
+
+Python kurmanız gerekmez.
+
+1. [Sürümler](https://github.com/lahmacunveayran/socialempires-tr/releases)
+   sayfasından en yeni `SocialEmpiresTR-...-windows.zip` dosyasını indirin.
+2. Zip'i bir klasöre açın ve `Social Empires.bat` dosyasına çift tıklayın.
+3. Tarayıcı kendiliğinden açılır: <http://127.0.0.1:5050/>
+
+Windows "bilgisayarınızı korudu" (SmartScreen) derse **Ek bilgi** >
+**Yine de çalıştır**'a basın; paket imzasızdır. İndirilen dosyanın
+değişmediğini yanındaki `.sha256` dosyasıyla denetleyebilirsiniz
+(PowerShell: `Get-FileHash dosya.zip -Algorithm SHA256`). Her paket
+yayınlanmadan önce temiz bir Windows makinesinde açılıp sınanır.
+
+## Kurulum (Windows, kaynak koddan)
 
 1. **Python 3.12+** kurulu olsun.
 2. Depoyu indirin veya klonlayın:

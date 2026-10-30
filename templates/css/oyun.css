@@ -592,6 +592,51 @@ img { -webkit-user-drag: none; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 
+/* Oyunun yeşil "Ödülü al" düğmesi */
+.yesil-dugme {
+  position: relative; overflow: hidden; display: inline-block; padding: 10px 30px 9px; border-radius: 99px;
+  cursor: pointer; border: 3px solid #2f5a0b; text-decoration: none;
+  font: 800 22px/1 var(--baslik-yazi); color: #fff; -webkit-text-stroke: 5px #2f5a0b; paint-order: stroke fill;
+  background: linear-gradient(#e2fb8a, #9fd447 40%, #62a41e 75%, #4f8c14);
+  box-shadow: 0 6px 0 #2f5a0b, 0 10px 20px rgba(0, 0, 0, .3), inset 0 3px 0 rgba(255, 255, 255, .6);
+  transition: transform .35s var(--yay), filter .15s;
+}
+.yesil-dugme::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, .65) 50%, transparent 65%);
+  background-size: 250% 100%; animation: parla 2.4s ease-in-out infinite;
+}
+.yesil-dugme:hover, .yesil-dugme:focus-visible { filter: brightness(1.07); transform: translateY(-3px) scale(1.04); }
+.yesil-dugme:active { transform: translateY(4px); box-shadow: 0 2px 0 #2f5a0b; }
+
+/* ================= Giriş sayfası ================= */
+.giris { position: relative; max-width: 620px; margin: 0 auto; padding: 18px var(--bosluk) 40px; text-align: center; }
+.giris-logo {
+  height: 150px; margin-bottom: 18px;
+  filter: drop-shadow(0 5px 0 rgba(60, 30, 10, .6)) drop-shadow(0 0 22px rgba(255, 210, 120, .6));
+  animation: logo-gel .9s var(--yay) both;
+}
+@keyframes logo-gel { from { opacity: 0; transform: translateY(-24px) scale(.8); } }
+.giris-panel { text-align: left; animation: bulanik-gel .7s cubic-bezier(.2, .8, .2, 1) .15s both; }
+.giris-panel .icerik { padding: 14px 18px 18px; }
+.imparatorluklar .levha li { grid-template-columns: 44px 1fr auto auto; padding: 7px 8px 7px 7px; }
+.imparatorluklar .levha img { width: 44px; height: 44px; }
+.imparatorluklar .levha .ad { font-size: 16px; }
+.imparatorluklar .xp-kucuk { color: var(--murekkep-soluk) !important; }
+.imparatorluklar .gir { font-size: 16px; padding: 7px 16px 6px; }
+.gelismis { margin: 8px 2px 4px; font: 700 13px var(--metin-yazi); color: var(--murekkep-soluk); }
+.gelismis summary { cursor: pointer; }
+.gelismis select { margin-top: 8px; width: 100%; padding: 6px; border-radius: 8px; border: 1.5px solid #b49464; background: #fffaf0; font: 700 13px var(--metin-yazi); }
+.giris-dugmeler { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; align-items: center; margin-top: 18px; }
+.yedekten { font-size: 16px; padding: 9px 16px 8px; }
+.giris-not { margin: 12px 0 0; text-align: center; font: 700 12px var(--metin-yazi); color: var(--murekkep-soluk); }
+.surum { margin-top: 18px; font: 700 12px var(--metin-yazi); color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, .7); }
+@media (max-width: 599px) {
+  .giris-logo { height: 96px; }
+  .imparatorluklar .levha li { grid-template-columns: 38px 1fr auto; }
+  .imparatorluklar .kalkan-rozet { display: none; }
+}
+
 /* Veri gelmeden yer ayrılır: paneller dolunca alttakiler kaymasın (CLS). */
 #kursu { min-height: 727px; }
 #hafta { min-height: 534px; }

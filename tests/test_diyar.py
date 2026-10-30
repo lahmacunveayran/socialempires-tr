@@ -44,6 +44,23 @@ class OyunSayfasiTestleri(unittest.TestCase):
         self.assertTrue(Dunya.turkce_ad(512))
 
 
+class GirisSayfasiTestleri(unittest.TestCase):
+    def test_imparatorluk_kartlari(self):
+        uid = server.new_village()
+        sayfa = server.app.test_client().get("/").get_data(as_text=True)
+        self.assertIn("/css/oyun.css", sayfa)
+        self.assertIn(f'name="USERID" value="{uid}"', sayfa)
+        self.assertIn('href="/new.html"', sayfa)
+        self.assertIn('id="yedek-dosyasi"', sayfa)
+
+    def test_karttan_giris(self):
+        uid = server.new_village()
+        istemci = server.app.test_client()
+        cevap = istemci.post("/", data={"USERID": uid, "GAMEVERSION": "SocialEmpires0926bsec.swf"})
+        self.assertEqual(cevap.status_code, 302)
+        self.assertEqual(istemci.get("/play.html").status_code, 200)
+
+
 class KursuTestleri(unittest.TestCase):
     def test_siralama_ve_onbellek(self):
         istemci = server.app.test_client()

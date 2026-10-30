@@ -126,8 +126,13 @@ def login():
                 kayit["playerInfo"].pop("bot_kisi", None)
                 save_session(uid)
         return redirect("/play.html")
+    from oyun.diyar import portre
     kayitlar = [k for k in all_saves_info() if not bot_mu(k["userid"])]
-    return render_template("login.html", saves_info=kayitlar, version=version_name)
+    for k in kayitlar:
+        k["rutbe"] = rutbe(k["level"])
+        k["resim"] = portre(kayit_oturumu(k["userid"]) or {})
+    kayitlar.sort(key=lambda k: (-int(k["level"]), -int(k["xp"])))
+    return render_template("login.html", saves_info=kayitlar, version=version_name, varlik=STATIK_YOL)
 
 
 STATIK_YOL = "/default01.static.socialpointgames.com/static/socialempires/"

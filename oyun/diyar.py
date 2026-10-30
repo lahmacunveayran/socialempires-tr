@@ -71,3 +71,22 @@ def olaylar_ucu():
     olaylar = dunya.olaylar_sonra(sonra) if dunya else []
     son = olaylar[-1]["id"] if olaylar else sonra
     return {"olaylar": olaylar, "son": son, "yoklama": YOKLAMA_SANIYE}
+
+
+@app.route("/dunya/hafta")
+def hafta_ucu():
+    """Haftalık turnuva tablosu (ilk 10 ödül alır) ve oyuncunun Elo reytingi."""
+    from oyun import elo, turnuva
+    turnuva.haftayi_guncelle()
+    tablo = elo.tablo(turnuva.bot_reytingleri())
+    uid = session.get("USERID")
+    kayit = kayit_oturumu(uid) if uid else None
+    reyting = (kayit or {}).get("privateState", {}).get("elo", {}).get("puan", elo.BASLANGIC)
+    return {"ilk": tablo[:elo.ODULLU_SIRA], "ben": next((o for o in tablo if o["id"] == uid), None),
+            "reyting": round(float(reyting)), "hafta": elo.hafta(elo.turkiye_saati())}
+
+
+@app.route("/dunya/takvim")
+def takvim_ucu():
+    from oyun import takvim
+    return {"etkinlikler": takvim.etkinlikler(), "acik_setler": takvim.acik_setler()}

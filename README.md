@@ -29,8 +29,15 @@ indirmek için gerekir.
   köyleriyle dolar, birinciye turnuva ödülü verilir.
 - **Dünya haritası**: her kıtada 7 rakip köy; hepsi fethedilince sonraki
   kıtaya geçilir.
-- **Tema setleri**: eski etkinliklerin 15 tema seti (Çin, Viking, Mısır,
-  Atlantis, Cadılar Bayramı, Mitoloji...) ve 15 Harika mağazada.
+- **Etkinlik takvimi**: eski etkinliklerin tema setleri (Çin, Viking, Mısır,
+  Atlantis, Cadılar Bayramı, Mitoloji...) bayramlarda ve özel günlerde
+  mağazaya açılır (`config/takvim.json`); bayram tarihleri Diyanet
+  tablosundan. 15 Harika her zaman mağazada. Hepsini sürekli açmak için
+  `ayarlar.json`'da `"magaza_tema_setleri": true`.
+- **Oyun sayfası**: Güneş'in gerçek konumuna göre boyanan gökyüzü, ekrana
+  göre ölçeklenen oyun çerçevesi, Diyar Haberleri şeridi, Şeref Kürsüsü,
+  haftalık turnuva tablosu (Elo; hafta bitince ilk 10'a ödül), 7 günlük
+  hediye sandığı ve tek tıkla kayıt yedeği indirme/yükleme.
 - **Büyücünün İksirleri**: iksir kaynatıp nadir yaratıklar kazanılan şans
   oyunu; her 30 günde yenilenir.
 - **İstemciyle birebir uyumlu komutlar**: sunucu, istemcinin gönderdiği

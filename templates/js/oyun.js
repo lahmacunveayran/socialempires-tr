@@ -100,7 +100,7 @@
 
   function saat(zaman) {
     var t = new Date(zaman * 1000);
-    return t.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+    return t.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Istanbul" });
   }
   function satirEkle(olay, yeni) {
     var bos = liste.querySelector(".bos");
@@ -121,8 +121,7 @@
     fetch("/dunya/olaylar?sonra=" + sonId, { cache: "no-store" })
       .then(function (r) { return r.json(); })
       .then(function (v) {
-        if (v.son < sonId) sonId = 0; // sunucu yeniden başladı
-        else sonId = v.son;
+        sonId = v.son; // sunucu yeniden başladıysa numarayı o sıfırlar
         if (ilkYukleme) {
           v.olaylar.slice(-8).forEach(function (o) { satirEkle(o, false); });
           ilkYukleme = false;
@@ -169,4 +168,97 @@
   }
   kursuYukle();
   setInterval(kursuYukle, 60000);
+
+  // --- Haftalık turnuva: ilk 10 hafta bitince ödül alır.
+  var hafta = document.getElementById("hafta");
+  var haftaBilgi = document.getElementById("hafta-bilgi");
+  function haftaYukle() {
+    fetch("/dunya/hafta", { cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(function (v) {
+        hafta.textContent = "";
+        v.ilk.forEach(function (o) {
+          var li = document.createElement("li");
+          if (o.ben) li.className = "ben";
+          var no = document.createElement("span"); no.className = "no"; no.textContent = o.sira;
+          var ad = document.createElement("span"); ad.className = "ad"; ad.textContent = o.ad;
+          var puan = document.createElement("span"); puan.className = "sv"; puan.textContent = Math.round(o.puan) + " p";
+          li.append(no, ad, puan);
+          hafta.appendChild(li);
+        });
+        var bitis = new Date(v.hafta + "T00:00:00+03:00");
+        bitis.setDate(bitis.getDate() + 7);
+        haftaBilgi.textContent = "Reytingin: " + v.reyting + (v.ben ? " · Bu hafta " + v.ben.sira + ". sıradasın" : "") +
+          " · Hafta " + bitis.toLocaleDateString("tr-TR", { day: "numeric", month: "long", timeZone: "Europe/Istanbul" }) + " 00.00'da kapanır; ilk 10 ödül alır.";
+      })
+      .catch(function () {});
+  }
+  haftaYukle();
+  setInterval(haftaYukle, 60000);
+
+  // --- Etkinlik takvimi
+  var etkinlik = document.getElementById("etkinlik");
+  fetch("/dunya/takvim", { cache: "no-store" })
+    .then(function (r) { return r.json(); })
+    .then(function (v) {
+      var tarih = function (s) { return new Date(s + "T12:00:00+03:00").toLocaleDateString("tr-TR", { day: "numeric", month: "long", timeZone: "Europe/Istanbul" }); };
+      var aktif = v.etkinlikler.filter(function (e) { return e.aktif; });
+      var yakin = v.etkinlikler.filter(function (e) { return !e.aktif; })[0];
+      var parcalar = aktif.map(function (e) {
+        return "<b>" + e.ad + "</b> sürüyor: " + e.setler.join(", ") + " setleri mağazada (" + tarih(e.son_gun) + " sonuna dek).";
+      });
+      if (yakin) parcalar.push("Sıradaki: <b>" + yakin.ad + "</b>, " + tarih(yakin.baslangic) + ".");
+      if (parcalar.length) { etkinlik.innerHTML = parcalar.join("<br>"); etkinlik.hidden = false; }
+    })
+    .catch(function () {});
+
+  // --- Ücretsiz Hediyeler: 7 günlük sandık
+  var pencere = document.getElementById("hediye-penceresi");
+  var gunler = document.getElementById("hediye-gunleri");
+  var ileti = document.getElementById("hediye-ileti");
+  var alDugmesi = document.getElementById("hediye-al");
+  function hediyeGoster() {
+    return fetch("/hediye", { cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(function (v) {
+        gunler.textContent = "";
+        v.oduller.forEach(function (o, i) {
+          var li = document.createElement("li");
+          if (i < v.sira || (!v.alinabilir && i === v.sira)) li.className = "alindi";
+          if (v.alinabilir && i === v.sira) li.className = "bugun";
+          var b = document.createElement("b"); b.textContent = o.gun + ". gün";
+          li.append(b, document.createTextNode(o.adet + " × " + o.ad));
+          gunler.appendChild(li);
+        });
+        alDugmesi.disabled = !v.alinabilir;
+        if (!v.alinabilir) ileti.textContent = "Bugünün hediyesini aldın. Yarın yine gel!";
+      });
+  }
+  document.getElementById("hediye-ac").addEventListener("click", function () {
+    ileti.textContent = "";
+    hediyeGoster().then(function () { pencere.showModal(); }).catch(function () {});
+  });
+  document.getElementById("hediye-kapat").addEventListener("click", function () { pencere.close(); });
+  alDugmesi.addEventListener("click", function () {
+    fetch("/hediye/al", { method: "POST" })
+      .then(function (r) { return r.json(); })
+      .then(function (v) { hediyeGoster(); ileti.textContent = v.ileti || v.hata; })
+      .catch(function () {});
+  });
+
+  // --- Kayıt yedeği: başka bilgisayardan alınan yedeği yükle
+  document.getElementById("yedek-dosyasi").addEventListener("change", function (e) {
+    var dosya = e.target.files[0];
+    if (!dosya) return;
+    if (!confirm("Yedek yüklenecek ve şimdiki kayıt .bak dosyasına alınacak. Sürdürülsün mü?")) return;
+    var form = new FormData();
+    form.append("dosya", dosya);
+    fetch("/kayit/yukle", { method: "POST", body: form })
+      .then(function (r) { return r.json(); })
+      .then(function (v) {
+        if (v.durum === "ok") location.reload();
+        else alert(v.hata || "Yedek yüklenemedi.");
+      })
+      .catch(function () { alert("Yedek yüklenemedi."); });
+  });
 })();

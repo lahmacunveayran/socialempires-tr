@@ -16,6 +16,7 @@ import random
 import threading
 import uuid
 
+from oyun import elo
 from oyun.config import get_game_config, get_item_from_id
 from oyun.ekonomi import timestamp_now
 from oyun.komutlar import depo_ekle
@@ -283,7 +284,58 @@ def mac_bitir(uid, kurban_id, kazandi, puan):
         turnuva["match_playing"] = False
         _guncelle(turnuva, simdi)
         _kaydet()
+    _reyting_isle(uid, kurban_id, mac["attacker_points"])
     return {"result": "OK"}
+
+
+# ---------------------------------------------------------------------------
+# Elo ve haftalık turnuva (oyun.elo)
+# ---------------------------------------------------------------------------
+
+def _bot_reytingi(kayit):
+    from oyun.dunya import birim_sayilari, ordu_gucu
+    return elo.bot_reytingi(ordu_gucu(birim_sayilari(kayit)))
+
+
+def bot_reytingleri():
+    botlar = {}
+    for uid in all_saves_userid():
+        kayit = session(uid)
+        if kayit and kayit["playerInfo"].get("bot"):
+            botlar[str(uid)] = (kayit["playerInfo"].get("name", "Bot"), _bot_reytingi(kayit))
+    return botlar
+
+
+def _odul_ver(uid, esya, adet):
+    kayit = session(uid)
+    if kayit:
+        depo_ekle(kayit, esya, adet)
+        save_session(uid)
+
+
+def haftayi_guncelle(simdi=None):
+    """Hafta bittiyse kapatır, ilk 10'daki oyunculara ödülü depoya yazar."""
+    return elo.haftayi_kapat(simdi or elo.turkiye_saati(), bot_reytingleri(), _odul_ver)
+
+
+def _reyting_isle(uid, kurban_id, puan, simdi=None):
+    kayit, kurban = session(uid), session(kurban_id)
+    if not kayit or kayit["playerInfo"].get("bot"):
+        return
+    durum = kayit["privateState"].setdefault("elo", {"puan": elo.BASLANGIC, "mac": 0})
+    bot = bool(kurban and kurban["playerInfo"].get("bot"))
+    if kurban is None:
+        rakip = elo.BASLANGIC
+    elif bot:
+        rakip = _bot_reytingi(kurban)
+    else:
+        rakip = float(kurban["privateState"].get("elo", {}).get("puan", elo.BASLANGIC))
+    durum["puan"] = round(elo.guncelle(float(durum["puan"]), rakip, float(puan) / 100, durum["mac"], bot), 2)
+    durum["mac"] += 1
+    save_session(uid)
+    simdi = simdi or elo.turkiye_saati()
+    haftayi_guncelle(simdi)
+    elo.mac_kaydet(str(uid), kayit["playerInfo"].get("name", "Oyuncu"), puan, simdi)
 
 
 def _cik(turnuva, uid):

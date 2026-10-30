@@ -29,8 +29,10 @@
         <a class="logo" href="/" title="Giriş ekranı"><img src="/img/logo.png" alt="Social Empires"></a>
         <div class="oturum">
             <div><b>{{ save_info.name }}</b> · sv. {{ save_info.level }}{% if rutbe %} · <span class="rutbe">{{ rutbe }}</span>{% endif %}</div>
-            <div><a href="/">çıkış</a> · <a href="/cheat">hile paneli</a> · {{ version }}</div>
+            <div><a href="/">çıkış</a> · <a href="/cheat">hile paneli</a> · <a href="/kayit/indir">yedek indir</a> ·
+                <label class="yedek-yukle">yedek yükle<input type="file" id="yedek-dosyasi" accept=".json,application/json" hidden></label> · {{ version }}</div>
             <nav class="ust-dugmeler" aria-label="Oyun bağlantıları">
+                <button class="ust-dugme" id="hediye-ac" type="button"><img src="/img/gift.png" alt="">Ücretsiz Hediyeler</button>
                 <a class="ust-dugme" href="/hazine"><img src="/img/cash.png" alt="">Nakit Al</a>
                 <a class="ust-dugme" href="https://discord.gg/zW5gSbQJBw" target="_blank" rel="noopener"><img src="/img/discord.png" alt="">Discord</a>
             </nav>
@@ -62,19 +64,40 @@
             <h2><span id="haber-basligi">Diyar Haberleri</span>
                 <button class="durdur" id="haber-durdur" type="button" aria-pressed="false">Durdur</button></h2>
             <div class="icerik">
+                <div class="etkinlik" id="etkinlik" hidden></div>
                 <p class="gizli" id="haber-ozeti" aria-live="polite"></p>
                 <ul class="haberler" id="haberler"><li class="bos">Diyardan haber bekleniyor...</li></ul>
             </div>
         </aside>
 
-        <aside class="panel panel-kursu" aria-labelledby="kursu-basligi">
-            <h2 id="kursu-basligi">Şeref Kürsüsü</h2>
-            <div class="icerik">
-                <ol class="kursu" id="kursu"></ol>
-                <p class="kursu-ben" id="kursu-ben"></p>
-            </div>
-        </aside>
+        <div class="panel-kursu panel-yigini">
+            <aside class="panel" aria-labelledby="kursu-basligi">
+                <h2 id="kursu-basligi">Şeref Kürsüsü</h2>
+                <div class="icerik">
+                    <ol class="kursu" id="kursu"></ol>
+                    <p class="kursu-ben" id="kursu-ben"></p>
+                </div>
+            </aside>
+            <aside class="panel" aria-labelledby="hafta-basligi">
+                <h2 id="hafta-basligi">Haftalık Turnuva</h2>
+                <div class="icerik">
+                    <p class="kursu-ben" id="hafta-bilgi"></p>
+                    <ol class="kursu" id="hafta"></ol>
+                </div>
+            </aside>
+        </div>
     </main>
+
+    <dialog class="sandik" id="hediye-penceresi" aria-labelledby="hediye-basligi">
+        <h2 id="hediye-basligi">Günlük Hediye Sandığı</h2>
+        <p>Her gün gel, sandık büyüsün. Bir gün kaçırırsan seri sıfırlanmaz, bir adım geri gider.</p>
+        <ol class="gunler" id="hediye-gunleri"></ol>
+        <p class="hediye-ileti" id="hediye-ileti" role="status"></p>
+        <div class="sandik-dugmeler">
+            <button class="ust-dugme" id="hediye-al" type="button">Hediyeyi al</button>
+            <button class="ust-dugme" id="hediye-kapat" type="button">Kapat</button>
+        </div>
+    </dialog>
 
     <script>
         window.OYUN_AYARI = {

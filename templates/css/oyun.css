@@ -207,3 +207,29 @@ body {
 .kursu-ben { margin-top: 8px; font-size: 13px; }
 
 .gizli { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* --- Faz 3: etkinlik, haftalık turnuva, hediye sandığı, yedek ------------- */
+.panel-yigini { display: grid; gap: var(--bosluk); align-content: start; }
+.etkinlik {
+  margin-bottom: 8px; padding: 8px 10px; border-radius: 6px; font-size: 13px;
+  background: linear-gradient(#fff3c4, #f6dd8a); border: 1px solid #c9a24a;
+}
+.etkinlik b { color: var(--muhur); }
+.yedek-yukle { text-decoration: underline; cursor: pointer; color: var(--murekkep-soluk); }
+.sandik {
+  border: 3px solid var(--ahsap); border-radius: 12px; background: var(--parsomen); color: var(--murekkep);
+  max-width: min(560px, calc(100vw - 32px)); padding: 16px 18px; box-shadow: 0 12px 40px rgba(0,0,0,.5);
+}
+.sandik::backdrop { background: rgba(20, 12, 4, .55); }
+.sandik h2 { margin: 0 0 6px; font: bold 20px Georgia, "Times New Roman", serif; color: var(--muhur); }
+.sandik p { margin: 4px 0 10px; font-size: 14px; }
+.gunler { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); gap: 6px; }
+.gunler li {
+  border: 2px solid var(--parsomen-kenar); border-radius: 8px; padding: 6px 4px; text-align: center; font-size: 11.5px;
+  background: #fffaf0;
+}
+.gunler li b { display: block; font-size: 12px; }
+.gunler li.alindi { opacity: .55; }
+.gunler li.bugun { border-color: var(--muhur); background: #fff3c4; box-shadow: 0 0 0 2px var(--altin); }
+.hediye-ileti { min-height: 1.4em; font-weight: bold; }
+.sandik-dugmeler { display: flex; gap: 8px; justify-content: flex-end; }

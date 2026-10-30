@@ -5,7 +5,7 @@
   "magaza_tema_setleri": "takvim",
   "_magaza_tema_setleri": "\"takvim\": eski etkinliklerin tema setleri (Çin, Viking, Mısır, Cadılar Bayramı...) bayram ve özel günlerde açılır (config/takvim.json); Harikalar her zaman açık. true: hepsi her zaman açık. false: hiçbiri.",
   "ev_agi": false,
-  "_ev_agi": "true: evdeki telefon ve tabletler oyunu http://192.168.x.x:5050 adresinden açabilir (adres açılışta yazılır). Hile paneli yine yalnızca bu bilgisayardan açılır.",
+  "_ev_agi": "true: evdeki telefon ve tabletler oyunu http://192.168.x.x:5050 adresinden açabilir (adres açılışta yazılır). Hile paneli yine yalnızca bu bilgisayardan açılır. Uyarı: açıkken aynı Wi-Fi'daki her cihaz bütün imparatorlukları açabilir, yedeklerini indirip yükleyebilir; yalnızca güvendiğiniz ev ağında açın.",
   "dunya": {
     "aktif": true,
     "tick_saniye": 60,

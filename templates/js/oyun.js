@@ -172,6 +172,44 @@
     kutu.addEventListener("touchend", function (e) { if (e.touches.length < 2) onceki = null; }, { passive: true });
   }
 
+  var KALITE_ANAHTARI = "ruffle-kalite";
+  var KALITELER = ["low", "medium", "high", "best"];
+  function kaliteSecimi() {
+    var k = null;
+    try { k = localStorage.getItem(KALITE_ANAHTARI); } catch (e) {}
+    return KALITELER.indexOf(k) >= 0 ? k : "high";
+  }
+  // Görüntü: "doldur" oyunu ekranın tamamına yayar (Android'de varsayılan), "sigdir" 760:600 oranını korur
+  var GORUNUM_ANAHTARI = "oyun-gorunum";
+  function gorunumSecimi() {
+    var g = null;
+    try { g = localStorage.getItem(GORUNUM_ANAHTARI); } catch (e) {}
+    if (g === "doldur" || g === "sigdir") return g;
+    return /SocialEmpiresTR-Android/.test(navigator.userAgent) ? "doldur" : "sigdir";
+  }
+  // Ekran oyunun kendi boyutundan (760×600) küçükse (telefon) doldurmak menüleri keserdi: oran korunur
+  function doldurulsunMu() {
+    return gorunumSecimi() === "doldur" && window.innerWidth >= 760 && window.innerHeight >= 600;
+  }
+  var gorunumKutusu = document.getElementById("gorunum");
+  gorunumKutusu.value = gorunumSecimi();
+  document.body.classList.toggle("ekran-doldur", doldurulsunMu());
+  gorunumKutusu.addEventListener("change", function () {
+    try { localStorage.setItem(GORUNUM_ANAHTARI, gorunumKutusu.value); } catch (e) {}
+    if (document.querySelector("ruffle-player")) {
+      if (confirm("Görüntü değişikliği için oyun yeniden açılsın mı?")) location.reload();
+    } else {
+      document.body.classList.toggle("ekran-doldur", doldurulsunMu());
+    }
+  });
+  var kaliteKutusu = document.getElementById("kalite");
+  kaliteKutusu.value = kaliteSecimi();
+  kaliteKutusu.addEventListener("change", function () {
+    try { localStorage.setItem(KALITE_ANAHTARI, kaliteKutusu.value); } catch (e) {}
+    // Ruffle kaliteyi oyuncu kurulurken alır: oyun açıksa yeniden açılır
+    if (document.querySelector("ruffle-player") && confirm("Kalite değişikliği için oyun yeniden açılsın mı?")) location.reload();
+  });
+
   function oyunuBaslat() {
     window.RufflePlayer = window.RufflePlayer || {};
     window.RufflePlayer.config = {
@@ -188,6 +226,15 @@
       maxExecutionDuration: 60,
     };
     if (kisitliGpu()) window.RufflePlayer.config.preferredRenderer = "webgl";
+    // Ruffle telefonda/tablette kendiliğinden "düşük" kaliteye geçer; görüntü yumuşatılmaz, dokunulan yerlerde
+    // çizim kırıntıları kalabilir. Varsayılan masaüstündeki gibi yüksek; oyuncu başlıktan seçer (KALITE_ANAHTARI).
+    window.RufflePlayer.config.quality = kaliteSecimi();
+    if (document.body.classList.contains("ekran-doldur")) {
+      // Oyun esnetilmez: sahne kutunun gerçek boyutunu alır, oyun haritayı genişletip menülerini yerleştirir
+      // (orijinal oyunun tam ekranı gibi). Kutu en az 760×600 (oyunun kendi boyutu) tutulur.
+      window.RufflePlayer.config.scale = "noScale";
+      window.RufflePlayer.config.forceScale = true;
+    }
     var ruffle = window.RufflePlayer.newest();
     var oyuncu = ruffle.createPlayer();
     kutu.appendChild(oyuncu);

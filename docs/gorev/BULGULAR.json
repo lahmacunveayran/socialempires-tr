@@ -3,8 +3,8 @@
   "guncelleme": "2026-10-30",
   "devam_noktasi": {
     "faz": "Tablet özellikleri; sonra bot dünyası, imparatorluk günlüğü, çeviri taraması",
-    "madde": "DNT-04",
-    "sonraki_adim": "PR (denetim düzeltmeleri) CI yeşil olunca APK tablette denenir; DNT-04 kararları sahibinden"
+    "madde": "OYN-07",
+    "sonraki_adim": "Sahibi PR #17 APK'sıyla izlerin yüksek kalitede kaybolup kaybolmadığına bakar"
   },
   "maddeler": [
     {
@@ -662,13 +662,39 @@
       "baslik": "Denetim: sahibinin kararını bekleyen bulgular",
       "sinif": "karar",
       "onem": "Orta",
-      "durum": "acik",
-      "isaret": "?",
+      "durum": "karar_verildi",
+      "isaret": "✔",
       "kanit": "(1) CSS ile çizilmiş figürler proje kuralına aykırı olabilir: giriş perdesindeki kıvılcım noktaları (.kivilcimlar), ışık hüzmeleri (.huzme, kürsüdeki .b1::before), mühür düğmeleri (.muhur-dugme, .muhur-seviye), kalkan rozeti (.kalkan-rozet), canlı noktası (.canli i); kalsın mı, oyunun kendi resimleriyle mi değişsin? (2) PR derlemeleri sahibinin imza anahtarıyla imzalanıyor (sırlar tanımlıysa): incelenmemiş kod gerçek anahtarla imzalanır; kaldırılırsa PR APK'ları sürüm APK'sının üstüne kurulamaz. (3) ev_agi açıkken ev ağındaki her cihaz bütün kayıtları okuyup değiştirebilir; ayarlar.json yalnızca hile panelinin yerel kaldığını söylüyor. (4) Android'de aynı cihazdaki başka uygulamalar 127.0.0.1:5050'ye ulaşabilir; çözüm her açılışta Java'nın ürettiği bir jeton (çerez). (5) 'sinama' niyet ekiyle her uygulama WebView hata ayıklamasını açabilir; kullanmak için yetkili adb gerekir. (6) Giriş sayfası her açılışta kayıtları diskten yeniden okuyor; aynı anda süren bir yazımın değişikliği kaybolabilir (düşük olasılık). (7) stub/crossdomain.xml domain='*' (yalnızca gerçek Flash Player ile /flash.html'de anlamlı).",
       "test": null,
       "pr": null,
-      "onay": null,
-      "notlar": "Sahibine soruldu."
+      "onay": "Sahibi, 30 Ekim 2026: \"Oyunun kendi resimlerini kullan, onun dışında diğerlerine sen karar ver\"",
+      "notlar": "Kararlar: (1) CSS figürleri oyunun kendi resimleriyle değişti: Krallığa Gir -> popup_pvp/red_shield.png, başlıktaki seviye -> images_new/b_15.png, kürsü/giriş seviye kalkanı -> images_new/b_6.png; ışık hüzmeleri, kıvılcımlar, mühür halkaları ve canlı noktası kaldırıldı (oyunda karşılığı yok). (2) PR imzası olduğu gibi kalır: PR APK'sı sürüm APK'sından farklı anahtarla imzalanırsa üstüne kurulamaz, kaldırıp kurmak tabletteki kayıtları siler; depoya yalnızca sahibi ve bu oturumlar gönderiyor. (3) ev_agi bilinçli açılan bir ayar; ayarlar.json açıklamasına uyarı eklendi. (4) Uygulama her açılışta jeton üretir, WebView'a çerez, sunucuya ortam değişkeni olarak verir; jetonsuz istek (sağlık ve durağan dosyalar dışında) 403 (tests/test_denetim.py UygulamaJetonu). (5) 'sinama' eki kalır: kullanmak için yetkili adb gerekir ve CI sınaması buna dayanır. (6) Giriş sayfasında yeniden okuma kalır; bot dünyasının biriken kayıtları önce yazılır, kalan olasılık düşük. (7) crossdomain.xml yalnızca 127.0.0.1 ve localhost."
+    },
+    {
+      "id": "OYN-07",
+      "baslik": "Kalite seçimi; dokunulan yerlerde kalan koyu yeşil izler",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "ci_bekliyor",
+      "isaret": "?",
+      "kanit": "Sahibi tablette ekran görüntüsü gönderdi: çimende dokunduğu yerlerde koyu yeşil piksel izleri kalıyor ve geçmiyor. Ruffle günlüğü telefon/tablette 'Running on a mobile device; defaulting to low quality' diyor; masaüstü (yüksek kalite) görüntülerde iz görülmedi. Başsız tarayıcıda dokunma taklidiyle yeniden üretilemedi (hedef penceresi açıldı). Önlem: Ruffle kalitesi varsayılan 'yüksek' (masaüstüyle aynı); sahibinin isteğiyle başlıkta Kalite seçimi (Düşük/Orta/Yüksek/En iyi), seçim hatırlanır, oyun açıksa yeniden açılır.",
+      "test": "tarayıcı (seçim kaydı ve Ruffle config.quality)",
+      "pr": null,
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Doğrulanmadı (?): izlerin yüksek kalitede kaybolduğu tablette görülmeli; kaybolmazsa sebep başka (Ruffle'ın dokunma/çizim kırıntısı) ve ayrı incelenir."
+    },
+    {
+      "id": "OYN-08",
+      "baslik": "Görüntü: Doldur, oyun esnetilmeden ekranın tamamını kaplar (Android'de varsayılan)",
+      "sinif": "ozellik",
+      "onem": "Orta",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "Sahibi: 'halen tam ekran istiyorum'; 'Samsung Tab S9+ ona da tam otursun'. Oyun 760:600 oranını korumak için kenarlarda boşluk bırakıyordu; germek oyunu yatayda ~%26 basık gösterirdi (oyun EXACT_FIT). Ruffle scale=noScale + forceScale ile sahne kutunun gerçek boyutunu alır; oyun haritayı genişletip menülerini yerleştirir (orijinal oyunun tam ekranı gibi). Başlıkta Görüntü: Doldur/Sığdır; uygulamada Doldur, tarayıcıda Sığdır varsayılan. Ekran 760×600'den küçükse (telefon, CI emülatörü 640×320) Doldur kendiliğinden Sığdır olur. Çık Doldur'da sağ üstte (sol üstte oyunun kaynak sayaçları). En yüksek seviyeli bot hesabıyla (Fırtına Ejderhası, sv 59; sahibinin önerisi) denendi: 1280×800'de kutu 1280×800, Çık (1216,8); Tab S9+ boyutunda (1400×876, DPR 2) kutu 1400×876, oyun pencereleri ortada.",
+      "test": "tarayıcı (scratchpad/bottest.js, s9test.js); android/sinama_oyun.js (oyun modu ve pencereyi doldurma)",
+      "pr": null,
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Oyun açıkken pencere boyutu değişirse oyunun bazı pencereleri yeniden ortalanmıyor; uygulama yatay kilitli olduğundan tablette etkisiz."
     }
   ]
 }

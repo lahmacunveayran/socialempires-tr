@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
+<!-- Yalnızca bu makinedeki oyun sayfası (gerçek Flash Player'da /flash.html). Önce domain="*" idi: herhangi bir
+     sitenin SWF'si oturum çereziyle bütün uçları okuyup yazabiliyordu (DNT-04). -->
 <cross-domain-policy>
-   <site-control permitted-cross-domain-policies="all"/>
-   <allow-access-from domain="*"/>
-   <allow-http-request-headers-from domain="*" headers="*"/>
+   <site-control permitted-cross-domain-policies="master-only"/>
+   <allow-access-from domain="127.0.0.1"/>
+   <allow-access-from domain="localhost"/>
 </cross-domain-policy>

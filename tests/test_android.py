@@ -181,6 +181,11 @@ class Proje(unittest.TestCase):
         for yol in ("config/**", "villages/**", "ceviri/**", "mods/**", "araclar/**", "ayarlar.json"):
             self.assertIn(f"- {yol}", akis)
         self.assertNotIn("ruffle/0.7.1", self.oku("sinama.sh"))
+        # Jeton: Java üretir, çerez olarak WebView'a, ortam değişkeniyle sunucuya verir
+        self.assertIn('callAttr("baslat", null, JETON)', java)
+        self.assertIn('"se_uygulama=" + JETON', java)
+        with open(os.path.join(ANDROID, "app", "src", "main", "python", "android_giris.py"), encoding="utf-8") as f:
+            self.assertIn('os.environ["SE_UYGULAMA_JETONU"] = jeton', f.read())
 
 
 if __name__ == "__main__":

@@ -39,8 +39,12 @@ def hazirla(taban, kok=KOK):
     os.environ["SE_TABAN_DIZINI"] = taban
 
 
-def baslat(taban=None):
-    """Sunucuyu 127.0.0.1:5050'de açar; dönmez."""
+def baslat(taban=None, jeton=None):
+    """Sunucuyu 127.0.0.1:5050'de açar; dönmez.
+
+    jeton: uygulamanın bu açılış için ürettiği gizli değer; WebView çerez olarak gönderir, başka uygulamalar bilmez."""
+    if jeton:
+        os.environ["SE_UYGULAMA_JETONU"] = jeton
     hazirla(taban or os.path.join(os.environ["HOME"], "socialempires"))
     from oyun import ruffle
     if not ruffle.hazir_mi() and os.path.exists(RUFFLE_PAKETI):

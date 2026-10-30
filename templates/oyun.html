@@ -44,6 +44,18 @@
             </div>
             <nav class="ust-dugmeler" aria-label="Oyun bağlantıları">
                 <button class="ust-dugme tam-ekran-dugme" id="tam-ekran" type="button">Tam Ekran</button>
+                <label class="ust-dugme kalite-secimi">Görüntü
+                    <select id="gorunum" aria-label="Tam ekranda görüntü">
+                        <option value="doldur">Doldur</option>
+                        <option value="sigdir">Sığdır</option>
+                    </select></label>
+                <label class="ust-dugme kalite-secimi">Kalite
+                    <select id="kalite" aria-label="Görüntü kalitesi">
+                        <option value="low">Düşük</option>
+                        <option value="medium">Orta</option>
+                        <option value="high">Yüksek</option>
+                        <option value="best">En iyi</option>
+                    </select></label>
                 <a class="ust-dugme" href="/hazine"><img src="/img/cash.png" alt="">Nakit Al</a>
                 <a class="ust-dugme" href="https://discord.gg/zW5gSbQJBw" target="_blank" rel="noopener"><img src="/img/discord.png" alt="">Discord</a>
             </nav>
@@ -63,12 +75,10 @@
                 <div class="oyun-kutusu" id="oyun-kutusu">
                     <div class="giris-perdesi" id="giris-perdesi">
                         <div class="perde-manzara" style="background-image: url('{{ V }}externalized/PopupLevelUp/background.png')"></div>
-                        <div class="huzme"></div>
                         <img class="perde-agac sol" fetchpriority="low" decoding="async" src="{{ V }}externalized/PopupLevelUp/alpine_tree.png" alt="">
                         <img class="perde-agac sag" fetchpriority="low" decoding="async" src="{{ V }}externalized/PopupLevelUp/alpine_tree.png" alt="">
                         <img class="nobetci sol" fetchpriority="low" decoding="async" src="{{ V }}externalized/PopupLevelUp/unit_left_1.png" alt="">
                         <img class="nobetci sag" fetchpriority="low" decoding="async" src="{{ V }}externalized/PopupLevelUp/unit_right_1.png" alt="">
-                        <div class="kivilcimlar" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
                         <div class="perde-orta">
                             <p class="perde-ust">Sancağın dalgalanıyor</p>
                             <div class="perde-baslik-kap"><h1 class="perde-baslik">{{ save_info.name }}</h1></div>
@@ -93,7 +103,7 @@
             <div class="icerik">
                 <div class="etkinlik" id="etkinlik"></div>
                 <div class="panel-arac">
-                    <span class="canli"><i></i>canlı</span>
+                    <span class="canli">canlı</span>
                     <button class="durdur" id="haber-durdur" type="button" aria-pressed="false">Durdur</button>
                 </div>
                 <p class="gizli" id="haber-ozeti" aria-live="polite"></p>

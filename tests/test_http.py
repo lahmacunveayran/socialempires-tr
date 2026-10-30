@@ -70,6 +70,15 @@ class HttpDumanTestleri(unittest.TestCase):
         cevap = self.istemci.get("/play.html")
         self.assertEqual(cevap.status_code, 200)
 
+    def test_oyun_surumu_sabit(self):
+        # Yalnızca 0.9.26b destekli; formdan gelen başka sürüm (ya da yol) oyuna geçmez
+        istemci = server.app.test_client()
+        istemci.post("/", data={"USERID": UID, "GAMEVERSION": "../../ayarlar.json"})
+        sayfa = istemci.get("/play.html").get_data(as_text=True)
+        self.assertIn("flash/SocialEmpires0926bsec.swf", sayfa)
+        self.assertNotIn("ayarlar.json", sayfa)
+        self.assertNotIn('name="GAMEVERSION"', istemci.get("/").get_data(as_text=True))
+
     def test_config_turkce(self):
         cevap = self.istemci.get(f"{BASE}/get_game_config.php?USERID=x&user_key=1&language=tr&client_id=c")
         self.assertEqual(cevap.status_code, 200)

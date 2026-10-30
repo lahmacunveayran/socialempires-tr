@@ -127,7 +127,8 @@ def login():
         if not gecerli_uid(uid):
             return ("Gecersiz oyuncu kimligi", 400)
         session["USERID"] = uid
-        session["GAMEVERSION"] = request.form.get("GAMEVERSION", "SocialEmpires0926bsec.swf")
+        # Yalnızca 0.9.26b destekli: Türkçe yama, çevrimdışı paket ve sınamalar bu sürüm için (formdaki değere bakılmaz)
+        session["GAMEVERSION"] = OYUN_SWF
         # Bot kaydıyla giriş yapıldıysa oyuncuya devret; yoksa dünya
         # simülasyonu aynı kayda yazarken çakışabilir.
         kayit = kayit_oturumu(uid)
@@ -146,6 +147,7 @@ def login():
     return render_template("login.html", saves_info=kayitlar, version=version_name, varlik=STATIK_YOL)
 
 
+OYUN_SWF = "SocialEmpires0926bsec.swf"
 STATIK_YOL = "/default01.static.socialpointgames.com/static/socialempires/"
 DINAMIK_YOL = "/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/"
 
@@ -217,7 +219,7 @@ def hazine():
 @app.route("/new.html")
 def new():
     session["USERID"] = new_village()
-    session["GAMEVERSION"] = "SocialEmpires0926bsec.swf"
+    session["GAMEVERSION"] = OYUN_SWF
     return redirect("play.html")
 
 

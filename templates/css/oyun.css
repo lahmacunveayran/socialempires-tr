@@ -628,9 +628,6 @@ img { -webkit-user-drag: none; }
 .imparatorluklar .levha .ad { font-size: 16px; }
 .imparatorluklar .xp-kucuk { color: var(--murekkep-soluk) !important; }
 .imparatorluklar .gir { font-size: 16px; padding: 7px 16px 6px; }
-.gelismis { margin: 8px 2px 4px; font: 700 13px var(--metin-yazi); color: var(--murekkep-soluk); }
-.gelismis summary { cursor: pointer; }
-.gelismis select { margin-top: 8px; width: 100%; padding: 6px; border-radius: 8px; border: 1.5px solid #b49464; background: #fffaf0; font: 700 13px var(--metin-yazi); }
 .giris-dugmeler { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; align-items: center; margin-top: 18px; }
 .yedekten { font-size: 16px; padding: 9px 16px 8px; }
 .giris-not { margin: 12px 0 0; text-align: center; font: 700 12px var(--metin-yazi); color: var(--murekkep-soluk); }

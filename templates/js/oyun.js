@@ -99,6 +99,19 @@
     document.head.appendChild(betik);
   });
 
+  // Ruffle'ın varsayılan çizicisi (wgpu-webgl) köşe gölgelendiricisinde 256'dan fazla uniform ister. Birçok telefon ve
+  // tablet GPU'su (ve Android emülatörü) en fazla 256 verir; o zaman Ruffle "unreachable" ile çöker ve oyun açılmaz.
+  // Böyle GPU'larda Ruffle'ın kendi WebGL çizicisi seçilir (DAG-07).
+  function kisitliGpu() {
+    try {
+      var tuval = document.createElement("canvas");
+      var gl = tuval.getContext("webgl2") || tuval.getContext("webgl");
+      return !gl || gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS) <= 256;
+    } catch (e) {
+      return true;
+    }
+  }
+
   function oyunuBaslat() {
     window.RufflePlayer = window.RufflePlayer || {};
     window.RufflePlayer.config = {
@@ -111,6 +124,7 @@
       letterbox: "off",
       logLevel: "warn",
     };
+    if (kisitliGpu()) window.RufflePlayer.config.preferredRenderer = "webgl";
     var ruffle = window.RufflePlayer.newest();
     var oyuncu = ruffle.createPlayer();
     kutu.appendChild(oyuncu);

@@ -15,6 +15,13 @@ const ADRES = "http://127.0.0.1:5050";
 const sinirli = (soz, ms) => Promise.race([soz, new Promise((_, ret) => setTimeout(() => ret(new Error("süre doldu")), ms))]);
 const sure = () => `${((Date.now() - BASLANGIC) / 1000).toFixed(1)} sn`;
 const BASLANGIC = Date.now();
+const hatalar = [];
+const konsol = [];
+function konsoluYaz() {
+  console.log("--- konsol (son 25) ---");
+  konsol.slice(-25).forEach((k) => console.log(k));
+  if (hatalar.length) console.log(`--- sayfa hataları ---\n${hatalar.join("\n")}`);
+}
 
 (async () => {
   const [cihaz] = await android.devices({ omitDriverInstall: true });
@@ -22,8 +29,6 @@ const BASLANGIC = Date.now();
   console.log(`Cihaz: ${cihaz.model()} (${cihaz.serial()})`);
   const webview = await cihaz.webView({ pkg: PAKET }, { timeout: 60000 });
   const sayfa = await webview.page();
-  const hatalar = [];
-  const konsol = [];
   sayfa.on("pageerror", (h) => hatalar.push(h.message));
   sayfa.on("console", (m) => konsol.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
 
@@ -62,9 +67,7 @@ const BASLANGIC = Date.now();
     await sayfa.waitForTimeout(2000);
   }
   console.log(`--- oyunun bildirdiği aşamalar ---\n${asamalar.join("\n")}`);
-  console.log("--- konsol (son 25) ---");
-  konsol.slice(-25).forEach((k) => console.log(k));
-  if (hatalar.length) console.log(`--- sayfa hataları ---\n${hatalar.join("\n")}`);
+  konsoluYaz();
   if (!asamalar.some((a) => a.endsWith("129b-init"))) throw new Error("Oyun açılışını bitirmedi (129b-init yok)");
   if (hatalar.length) throw new Error(`${hatalar.length} sayfa hatası`);
   console.log(`[${sure()}] Tamam: oyun Android WebView'da yüklendi ve açılışını bitirdi.`);
@@ -73,4 +76,4 @@ const BASLANGIC = Date.now();
     .catch((h) => console.log(`(ekran görüntüsü alınamadı: ${h.message})`));
   await sinirli(cihaz.close(), 10000).catch(() => {});
   process.exit(0);
-})().catch((h) => { console.error(`HATA: ${h.message}`); process.exit(1); });
+})().catch((h) => { konsoluYaz(); console.error(`HATA: ${h.message}`); process.exit(1); });

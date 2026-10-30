@@ -448,6 +448,19 @@
       "pr": "#14",
       "onay": null,
       "notlar": "Düzeltmeden sonraki sınama 2,5 dk'da geçti. Ders: CI'daki dış araç çağrılarına her zaman süre sınırı."
+    },
+    {
+      "id": "DAG-07",
+      "baslik": "Ruffle'ın wgpu çizicisi 256 köşe uniform sınırlı GPU'larda çöküyor, oyun açılmıyor",
+      "sinif": "hata",
+      "onem": "Yüksek",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "Android 15 emülatöründe (WebView Chrome 124) 'Krallığa Gir' sonrası oyun 7 dk açılmadı; WebView konsolu: 'Vertex shader active uniforms exceed GL_MAX_VERTEX_UNIFORM_VECTORS (256)', 'wgpu error: Validation Error', 'Uncaught RuntimeError: unreachable (ruffle_web.wasm)'. Birçok mobil GPU da 256 verir; tablette de olabilirdi. Düzeltme: oyun.js GPU sınırını okur, ≤256 ise Ruffle preferredRenderer='webgl'. Yerelde sınır 256'ya taklit edilerek: Ruffle 'Used renderer: webgl', panik yok, oyun 129b-init ve 200-tut1'e ulaştı; 4096'da eski davranış (wgpu-webgl) (✔).",
+      "test": "tests/test_android.py (KisitliGpu); android/sinama.sh + sinama_oyun.js (emülatör)",
+      "pr": "#15",
+      "onay": null,
+      "notlar": "Sınama betiği artık başarısızlıkta WebView konsolunu döküyor."
     }
   ]
 }

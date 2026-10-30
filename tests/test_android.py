@@ -97,6 +97,15 @@ class Oznitelikler(unittest.TestCase):
             self.assertIsNone(re.search(r"shutil\.(copy2|copytree|copystat|copy)\(", kod), yol)
 
 
+class KisitliGpu(unittest.TestCase):
+    def test_256_uniformlu_gpuda_ruffle_webgl_cizicisi(self):
+        # Emülatörde (ve birçok mobil GPU'da) wgpu-webgl, 256 köşe uniform sınırını aşıp çöktü (DAG-07)
+        with open(os.path.join(KOK, "templates", "js", "oyun.js"), encoding="utf-8") as f:
+            kod = f.read()
+        self.assertIn("MAX_VERTEX_UNIFORM_VECTORS) <= 256", kod)
+        self.assertIn('preferredRenderer = "webgl"', kod)
+
+
 class OyunDosyalari(unittest.TestCase):
     def test_hazirlanan_dosyalar(self):
         paketci = modul("android_paketi", os.path.join(KOK, "araclar", "android_paketi.py"))

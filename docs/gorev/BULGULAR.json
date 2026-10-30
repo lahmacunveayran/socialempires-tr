@@ -422,6 +422,19 @@
       "pr": null,
       "onay": "Sahibine soruldu: anahtarı GitHub sırrı olarak ekler mi (ANDROID.md 'İmza anahtarı')",
       "notlar": "CI ANDROID_IMZA ve ANDROID_IMZA_SIFRESI sırlarını kullanır; yoksa geçici hata ayıklama anahtarı ve uyarı."
+    },
+    {
+      "id": "DAG-06",
+      "baslik": "Android'de dosya kopyalama izin ve SELinux özniteliği yüzünden düşüyor",
+      "sinif": "hata",
+      "onem": "Yüksek",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "CI emülatörü (Android 14, x86_64): APK kuruldu ve açıldı, Python başladı; ilk açılışta shutil.copytree(mods) 'Permission denied' ile düştü, sunucu açılmadı. Neden: copy2/copystat izinleri ve genişletilmiş öznitelikleri (security.selinux) de kopyalamaya çalışır, Android uygulamaya izin vermez. Aynı kalıp oyun/yedek.py (günlük yedek) ve oyun/kayit_yedek.py'de ('Yedekten Yükle' öncesi .bak) vardı. Yerelde shutil.copystat EACCES verecek şekilde taklit edilip hata yeniden üretildi, yalnızca içerik kopyalayan düzeltmeyle geçti.",
+      "test": "tests/test_android.py (oznitelik reddi taklidi; çalışan kodda copy2/copytree/copystat yok)",
+      "pr": null,
+      "onay": null,
+      "notlar": "Bu PR'da düzeltildi; emülatör sınaması yeniden koşuyor."
     }
   ]
 }

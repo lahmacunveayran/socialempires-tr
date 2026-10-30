@@ -12,6 +12,15 @@ KOK = os.path.dirname(os.path.abspath(__file__))
 RUFFLE_PAKETI = os.path.join(KOK, "ruffle-paketi.tgz")
 
 
+def _icerigi_kopyala(kaynak, hedef):
+    """Yalnızca içerik: Android, izin ve SELinux özniteliklerinin kopyalanmasını reddeder (copytree/copy2 düşer)."""
+    for klasor, _, dosyalar in os.walk(kaynak):
+        hedef_klasor = os.path.join(hedef, os.path.relpath(klasor, kaynak))
+        os.makedirs(hedef_klasor, exist_ok=True)
+        for ad in dosyalar:
+            shutil.copyfile(os.path.join(klasor, ad), os.path.join(hedef_klasor, ad))
+
+
 def hazirla(taban, kok=KOK):
     """Yazılabilir klasörü kurar; ilk açılışta ayarları ve modları oraya kopyalar (var olanlara dokunmaz)."""
     os.makedirs(taban, exist_ok=True)
@@ -20,7 +29,7 @@ def hazirla(taban, kok=KOK):
         shutil.copyfile(os.path.join(kok, "ayarlar.json"), ayar)
     modlar = os.path.join(taban, "mods")
     if not os.path.isdir(modlar):
-        shutil.copytree(os.path.join(kok, "mods"), modlar)
+        _icerigi_kopyala(os.path.join(kok, "mods"), modlar)
     # oyun.yollar bunu içe aktarılırken okur; bu yüzden oyun modüllerinden önce ayarlanır
     os.environ["SE_TABAN_DIZINI"] = taban
 

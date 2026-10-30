@@ -1,13 +1,16 @@
 """Android uygulaması: yazılabilir klasör, Python girişi, oyun dosyalarının hazırlanması (DAG-05)."""
 
+import glob
 import importlib.util
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 from ortak import KOK
 
@@ -70,6 +73,28 @@ class AndroidGirisi(unittest.TestCase):
             with open(os.path.join(taban, "ayarlar.json"), encoding="utf-8") as f:
                 self.assertEqual(json.load(f), {"zaman_olcegi": 1.0})
             self.assertEqual(os.listdir(os.path.join(taban, "mods")), [])
+
+
+    def test_android_oznitelik_kopyalamayi_reddetse_de_kurulur(self):
+        # Gerçek cihazda (emülatör, Android 14) copytree SELinux özniteliğini kopyalayamayıp EACCES ile düştü
+        def reddet(*a, **k):
+            raise PermissionError(13, "Permission denied")
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(shutil, "copystat", reddet):
+            taban = os.path.join(d, "socialempires")
+            self.giris.hazirla(taban, kok=KOK)
+            self.assertEqual(sorted(os.listdir(os.path.join(taban, "mods"))),
+                             sorted(os.listdir(os.path.join(KOK, "mods"))))
+
+
+class Oznitelikler(unittest.TestCase):
+    def test_calisan_kod_oznitelik_kopyalamaz(self):
+        # copy2/copytree/copystat Android'de EACCES verir; çalışma anındaki kod yalnızca içerik kopyalar
+        dosyalar = glob.glob(os.path.join(KOK, "oyun", "*.py")) + [GIRIS,
+                                                                  os.path.join(KOK, "araclar", "bot_koy_uret.py")]
+        for yol in dosyalar:
+            with open(yol, encoding="utf-8") as f:
+                kod = f.read()
+            self.assertIsNone(re.search(r"shutil\.(copy2|copytree|copystat|copy)\(", kod), yol)
 
 
 class OyunDosyalari(unittest.TestCase):

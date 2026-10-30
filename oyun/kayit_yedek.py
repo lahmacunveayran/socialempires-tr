@@ -87,7 +87,7 @@ def geri_yukle(kimlik, ham):
     yol = _yol(kimlik)
     with save_lock:
         if os.path.exists(yol):
-            shutil.copy2(yol, yol + ".bak")
+            shutil.copyfile(yol, yol + ".bak")  # copy2 değil: Android öznitelik kopyalamayı reddeder
         gecici = yol + ".tmp"
         with open(gecici, "wb") as f:
             f.write(ham)

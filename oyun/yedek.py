@@ -34,7 +34,7 @@ def gunluk_yedek_al():
         hedef = os.path.join(klasor, f"{uid}.save.json")
         if os.path.exists(kaynak) and not os.path.exists(hedef):
             try:
-                shutil.copy2(kaynak, hedef)
+                shutil.copyfile(kaynak, hedef)  # copy2 değil: Android öznitelik kopyalamayı reddeder
                 alinan += 1
             except OSError as hata:
                 print(f" ! Yedek alinamadi ({uid}): {hata}")

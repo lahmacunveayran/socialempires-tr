@@ -4,7 +4,7 @@
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
     "madde": "GEC-02",
-    "sonraki_adim": "PR #20 birleşince GEC-02: OYUN_SWF = 1.4.07, kaynak 54df29e + SHA-256 denetimi; config hattı kararları (KNF-01: 11 çatışan yama), goals, reward_mission goals'tan"
+    "sonraki_adim": "PR #21 birleşince GEC-02: OYUN_SWF = 1.4.07, kaynak 54df29e + SHA-256 denetimi; config hattı kararları (KNF-01: 11 çatışan yama), goals, reward_mission goals'tan"
   },
   "maddeler": [
     {
@@ -822,7 +822,7 @@
       "isaret": "✔",
       "kanit": "Plan: docs/YOL_HARITASI_1407.md §3. Bu PR'da komut kısmı bitti (✔ çalıştırıldı, 31.10.2026): araclar/abc_okur.py (ABC çözücü, akış izleyen işlem kodu okuma, simgesel yığınla çağrı argümanları) ve araclar/komut_imzalari.py. 1.4.07 (SHA-256 0e4cc178…): 288 addCommand çağrı yeri, 0 çözülemeyen; G = 158 gönderilen komut; Constants'ta 185 CMD_ sabiti, 183 farklı değer = 158 gönderilen + 25 kodda hiç okunmayan (kabul kapısı 'G = 183 ile tutarlı' ✔). H = 128; |G ∖ H| = 31; imza uyumsuzluğu 0. Tablo: docs/inceleme/1407-komutlar.md, makinece: docs/inceleme/1407-komutlar.json ve 0926-komutlar.json. İkinci parça (✔ çalıştırıldı, 31.10.2026): araclar/ceviri_kapsami.py dört T oranını ölçer; 1.4.07'de SWF metin alanları 404/638 = 0,633, SWF sabit yazılar 44/58 = 0,759, AS3 dizeleri 0/219 = 0, config loc adları 1478/1976 = 0,748, hedefler 0/410 = 0 (docs/inceleme/ceviri-kapsami.md). araclar/config_hatti.py 13 yamamızı 1.4.07 config'ine karşı sınıflar: 1 gider, 1 kalır, 11 çatışır (docs/inceleme/1407-config-hatti.md, KNF-01). Taban config upstream'in main.json'u ile birebir aynı.",
       "test": "tests/test_komut_imzalari.py, tests/test_ceviri_kapsami.py",
-      "pr": "#20",
+      "pr": "#20, #21",
       "onay": null,
       "notlar": "KAR-08 kararıyla açıldı (30.10.2026). Sınırlar (◐): AS3 ekran dizeleri, örnekleri okunarak seçilmiş atama ve çağrı adlarıyla bulunur (ceviri_kapsami.YAZI_ALANLARI/YAZI_CAGRILARI); değişkenden geçen dize yakalanmaz (0926'da çevrilmiş 'Cargando' bu yüzden sayılmıyor). DOLGU listesi boş: kodun üzerine yazdığı yer tutucuları otomatik ayırma denendi, görünen yazıları da dışladığı için bırakıldı (S-31); GEC-06'da tek tek kanıtla doldurulur. Kapsama kapısı EKSIK_1407 listesiyle 'yalnızca azalır' biçiminde sınanıyor."
     },
@@ -1069,7 +1069,7 @@
       "isaret": "◐",
       "kanit": "araclar/ceviri_kapsami.py 0926b üzerinde: AS3 dizeleri 0/39; config metinleri 4218/4218 = 1; SWF metin alanları 455/559, sabit yazılar 50/65 (kalanların çoğu dolgu: 'asdfasdf', 'Lorem Ipsum', 'lblScore'). Liste: docs/inceleme/ceviri-kapsami.md.",
       "test": "tests/test_ceviri_kapsami.py",
-      "pr": null,
+      "pr": "#21",
       "onay": null,
       "notlar": "Oyunda gözle görülmedi (?): dizelerin bir kısmı ancak belli pencerelerde çıkar. 1.4.07'ye geçildiği için düzeltmesi GEC-06'da, 1.4.07'nin 219 dizesiyle birlikte."
     },
@@ -1082,7 +1082,7 @@
       "isaret": "✔",
       "kanit": "araclar/config_hatti.py (31.10.2026), C1407 = game_config_20120826 (upstream main.json ile birebir aynı) + upstream 54df29e config/patch (0-language_en, 1-mega_patch, 2-unit_patch) + goals.json. gider: dragon_boss_fix (eşya 1.4.07'de daha geniş hâliyle var). kalır: yeni_icerik (8 yeni). çatışır: graveyard (iksir fiyatı: bizde 100 nakit/1, onlarda 5 nakit/25), kompu ve level_up_tips (yerelleştirme id ve metinleri), mission_goals (2 hedef; 1.4.07'de goals.json'un 206'sı), missions_0_1, new_daily_bonus, soulmixer_temp, unit_collections (99 yeni yerelleştirme), unit_patch (191 eşya kapsanıyor, 59 ejderha tamed_id farkı), viral_icons, viral_offers. Ad taraması (◐): level_up_tips, goals, viral_icons, viral_offers adları 0926'nın dize havuzunda yok, 1.4.07'ninkinde var: bu yamalar 0926'da büyük olasılıkla ölüydü, 1.4.07'de canlanır. Tablo: docs/inceleme/1407-config-hatti.md.",
       "test": "tests/test_ceviri_kapsami.py",
-      "pr": null,
+      "pr": "#21",
       "onay": null,
       "notlar": "Upstream da bu adlı yamalarımızı 1.4.07'de yok sayıyor (get_game_config.py patch_ignore; yalnızca okundu). Her çatışan yama için 'upstream'inki mi, bizimki mi' kararı GEC-02'de alanı alanına verilir; oyunun dengesini değiştirenler (graveyard fiyatı) sahibine sorulur."
     }

@@ -19,7 +19,7 @@ import urllib.request
 from flask import request, send_file, send_from_directory
 from werkzeug.utils import safe_join
 
-from oyun import fx_yama, ruffle as Ruffle
+from oyun import fx_yama, kaynaklar, ruffle as Ruffle
 from oyun import swf_yama
 from oyun.sunucu import OYUN_DILI, app
 from oyun.yollar import ASSETS_DIR, INDIRILEN_DIR
@@ -27,7 +27,7 @@ from oyun.yollar import ASSETS_DIR, INDIRILEN_DIR
 STATIK = "/default01.static.socialpointgames.com/static/socialempires"
 INDIRILEN_VARLIKLAR = os.path.join(INDIRILEN_DIR, "assets")
 VARLIK_KAYNAKLARI = (
-    "https://raw.githubusercontent.com/AcidCaos/socialemperors/main/assets/{path}",
+    kaynaklar.HAM_VARLIK,
     "https://static.socialpointgames.com/static/socialempires/assets/{path}",
 )
 # İstemcinin istediği ama arşivde başka adla bulunan dosyalar

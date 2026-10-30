@@ -30,8 +30,7 @@ import urllib.request
 KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, KOK)
 
-DEPO = "https://github.com/AcidCaos/socialemperors.git"
-HAM = "https://raw.githubusercontent.com/AcidCaos/socialemperors/main/"
+from oyun.kaynaklar import COMMIT, DEPO_URL as DEPO, HAM_KOK as HAM  # noqa: E402
 CIKTI = os.path.join(KOK, "config", "onindirme.tsv")
 OYUN_DOSYALARI = {"flash/SELoader.swf", "flash/SocialEmpires0926bsec.swf"}
 
@@ -39,9 +38,9 @@ OYUN_DOSYALARI = {"flash/SELoader.swf", "flash/SocialEmpires0926bsec.swf"}
 def arsiv_dosyalari():
     """[(yol, bayt)]; yol 'assets/' olmadan."""
     with tempfile.TemporaryDirectory(prefix="se-liste-") as gecici:
-        subprocess.run(["git", "clone", "-q", "--depth", "1", "--filter=blob:none", "--no-checkout", DEPO, gecici],
-                       check=True)
-        adlar = subprocess.run(["git", "-C", gecici, "ls-tree", "-r", "--name-only", "HEAD", "assets"],
+        for komut in (["init", "-q"], ["fetch", "-q", "--depth", "1", "--filter=blob:none", DEPO, COMMIT]):
+            subprocess.run(["git", "-C", gecici, *komut], check=True)
+        adlar = subprocess.run(["git", "-C", gecici, "ls-tree", "-r", "--name-only", "FETCH_HEAD", "assets"],
                                check=True, capture_output=True, text=True).stdout.split("\n")
 
     def boyut(yol):

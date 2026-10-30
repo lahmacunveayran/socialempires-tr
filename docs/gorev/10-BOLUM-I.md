@@ -19,8 +19,13 @@ Asıl kayıt `BULGULAR.json`'dur; bu tablo onun özetidir ve çelişirse JSON ge
 | TAS   | Tasarım                             | TAS-01 … TAS-04       |
 | DAG   | Dağıtım (Windows, telefon, CI)      | DAG-01 … DAG-04       |
 | ICR   | Oyun içeriği                        | ICR-01                |
-| KAR   | Sahibinin kararları                 | KAR-01 … KAR-05       |
+| KAR   | Sahibinin kararları                 | KAR-01 … KAR-08       |
 | REG   | Oturum içinde yakalanan geri gidişler | REG-01              |
+| OYN   | Oynanış ve oyun sayfası             | OYN-01 … OYN-13       |
+| DNT   | Bağımsız denetim                    | DNT-01 … DNT-04       |
+| KYN   | Upstream ve kaynaklar               | KYN-01 … KYN-05       |
+| GEC   | 1.4.07'ye tam geçiş (`docs/YOL_HARITASI_1407.md`) | GEC-01 … GEC-09 |
+| ONR   | Sahibinin istediği öneriler         | ONR-01 … ONR-04       |
 
 Çürütülenler (yeniden açma): **F0-01** (Ruffle'da haritaya tıklanıyor; eski yargı eğitim kilidinden), **VAR-02**
 ("Cargando" artık görünmüyor), **TAS-01** (ğ/İ/ş içermeyen yazı tipleri kullanılmadı).

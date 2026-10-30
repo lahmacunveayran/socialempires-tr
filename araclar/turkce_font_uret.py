@@ -22,9 +22,9 @@ import zlib
 KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, KOK)
 
-from oyun import swf_font, swf_yama  # noqa: E402
+from oyun import kaynaklar, swf_font, swf_yama  # noqa: E402
 
-KAYNAK = "https://raw.githubusercontent.com/AcidCaos/socialemperors/main/assets/fonts/{ad}"
+KAYNAK = kaynaklar.HAM_KOK + "assets/fonts/{ad}"
 FONTLAR = ("ErasBold", "ArialRoundedBold")
 
 

@@ -13,6 +13,8 @@ kılmak.
 | `20-BOLUM-II.md`            | §6 açık işler, §7 sahibinin elle yapacağı testler                                   | yeni işe başlarken       |
 | `BULGULAR.json`             | Her maddenin durumu, kanıtı, testi, PR'ı, onayı (makinece okunur)                   | her oturumda             |
 | `KAPILAR.md`                | Kalite kapıları: komutlar, nerede çalıştıkları, son sonuçları                       | push'tan önce            |
+| `SORUN_COZUM.md`            | Ortam, araç ve çalışma biçimi sorunları ile çözümleri (S-01 …)                      | her oturumda; sorun çıkınca |
+| `../YOL_HARITASI_1407.md`   | 1.4.07'ye tam geçişin aşamaları, kabul kapıları ve tahminleri (KAR-08)              | yeni aşamaya başlarken   |
 
 **Kanıt işaretleri** (kitaptaki ve `BULGULAR.json`'daki iddialar için):
 
@@ -50,7 +52,8 @@ oynar, dener ve karar verir. Onunla her zaman **Türkçe**, sade ve adım adım 
 Hepsi ✔ (bu depodan okundu ya da çalıştırıldı, 30 Ekim 2026, `master` @ `cd80a86`), aksi belirtilmedikçe.
 
 - Python 3.12 (CI) / Flask + Waitress (8 iş parçacığı); ayrıntı `oyun/sunucu.py` `calistir`. Bu ortamda Python 3.13.
-- Testler: `python -m unittest discover -s tests` → 126 test; `node --test tests/js/*.test.js` → 5 test (✔ çalıştırıldı).
+- Testler: `python -m unittest discover -s tests` → 199 test; `node --test tests/js/*.test.js` → 3 test (✔ çalıştırıldı,
+  30 Ekim 2026, bu oturumun dalı). Yeni konteynerde önce bağımlılıklar kurulur (`SORUN_COZUM.md` S-01).
 - CI (`.github/workflows/`): `tests` (Python + JS testleri), CodeQL (Python, JavaScript), `windows` (paket üretir,
   temiz Windows'ta 60 sn kapısıyla sınar, `v*` etiketinde sürüm yayınlar).
 - Oyun sayfası Lighthouse (masaüstü): skor 100, LCP 0,7 sn, CLS 0 (✔ `lighthouse@12`, ayrıntı `docs/YOL_HARITASI_DURUM.md`).
@@ -106,6 +109,7 @@ Durum sohbette değil dosyada tutulur; yeni bir oturum dosyalardan ve git geçmi
 | ------------------------------- | ------------------------------------------------------- | -------------- |
 | `docs/gorev/BULGULAR.json`      | Maddelerin durumu, kanıtı, testi, PR'ı, onayı           | yapısal (JSON) |
 | `docs/gorev/KAPILAR.md`         | Kapı komutları, nerede çalıştıkları, son sonuçları      | serbest metin  |
+| `docs/gorev/SORUN_COZUM.md`     | Karşılaşılan sorunlar ve çözümleri                      | tablo          |
 | `docs/devlog/YYYY-AA-GG.md`     | Devir notu (§10 şablonu; aynı gün ikinci oturumsa `-2`) | serbest metin  |
 | `docs/YOL_HARITASI_DURUM.md`    | Yol haritası fazlarının kabul kapıları ve ölçümleri     | mevcut biçim   |
 
@@ -125,7 +129,8 @@ denetler (CI'da çalışır). Durum değerleri:
 | `ertelendi`     | Bilerek sonraya bırakıldı                                           |
 
 **Oturum açılışı:** `git status` ve `git log --oneline -15`; son devir notunu, `BULGULAR.json`'daki
-`devam_noktasi`'ni ve `KAPILAR.md`'yi oku; hızlı kapıları çalıştır; sonra işe başla.
+`devam_noktasi`'ni, `KAPILAR.md`'yi ve `SORUN_COZUM.md`'yi oku; hızlı kapıları çalıştır; sonra işe başla. Bir sorunu
+çözünce ya da yeni bir sorunla karşılaşınca `SORUN_COZUM.md`'ye satır ekle.
 
 **Her PR'da:** ilgili maddelerin `durum`/`pr`/`test` alanlarını güncelle; o günün devir notundaki "Durum" ve
 "Sıradaki adım" bölümlerini güncelle.

@@ -29,7 +29,8 @@ Ruffle konsolunda (`logLevel: "warn"`) oyunu durduran bir eksik işlev uyarısı
 yok. Görülen uyarılar: `Security.allowDomain`, zayıf anahtarlı `Dictionary`,
 `describeTypeJSON`, `System.totalMemoryNumber` taslakları ve bilinmeyen cihaz
 yazı tipleri (Times New Roman, Calibri, Noto Sans). Tek eksik dosya:
-`fx/p.miniFireball2.swf` (404; arşivde karşılığı aranacak).
+`fx/p.miniFireball2.swf` (404). Sonradan kapandı: `oyun/fx_yama.py` onu oyunun
+kendi `p.fireBall` efektinden türetir (VAR-01, PR #9).
 
 Deneyi yeniden çalıştırmak için (sunucu açıkken):
 

@@ -82,19 +82,40 @@ Oyun sayfasının üstündeki **çevrimdışı paket** bağlantısı:
 Android, bir uygulamanın yeni sürümünü ancak aynı anahtarla imzalanmışsa eskisinin üstüne kurar. Anahtar gizlidir;
 depoya konmaz, GitHub sırlarında durur.
 
-1. Java yüklü bir bilgisayarda anahtarı üretin (şifreyi siz seçin, bir yere not edin):
+Windows bilgisayarda adım adım (yaklaşık 10 dakika):
+
+1. **Java'yı kurun.** <https://adoptium.net/> adresinden "Temurin 17 (LTS)" Windows `.msi` dosyasını indirip kurun.
+   Kurulumda "Set JAVA_HOME" ve "Add to PATH" seçenekleri açık kalsın. Java zaten kuruluysa bu adımı atlayın.
+2. **Bir şifre seçin.** En az 8 karakter; harf ve rakam yeterli, tırnak işareti kullanmayın. Şifreyi kâğıda yazın.
+3. **PowerShell'i açın.** Başlat menüsüne `PowerShell` yazıp açın. Açılan pencere kendi klasörünüzdedir
+   (`C:\Users\<adınız>`); anahtar dosyası oraya yazılır.
+4. **Anahtarı üretin.** Aşağıdaki satırı yapıştırıp Enter'a basın. Şifreyi iki kez sorar; yazarken ekranda
+   görünmez, bu normaldir.
 
    ```bash
    keytool -genkeypair -keystore socialempires.jks -storetype PKCS12 -alias socialempires -keyalg RSA -keysize 2048 -validity 36500 -dname "CN=Social Empires Turkce"
    ```
 
-2. Dosyayı metne çevirin: Windows PowerShell'de
-   `[Convert]::ToBase64String([IO.File]::ReadAllBytes("socialempires.jks")) | Set-Clipboard`
-   (Linux/macOS: `base64 -w0 socialempires.jks`).
-3. GitHub'da depo **Settings → Secrets and variables → Actions → New repository secret**:
-   `ANDROID_IMZA` = kopyalanan metin, `ANDROID_IMZA_SIFRESI` = seçtiğiniz şifre.
-4. `socialempires.jks` dosyasını güvenli bir yerde saklayın. Kaybolursa sonraki sürümler eski kurulumun üstüne
-   kurulamaz.
+   "keytool tanınmıyor" derse PowerShell'i kapatıp yeniden açın; Java'nın yolu ancak yeni pencerede görünür.
+5. **Dosyayı metne çevirip panoya alın.** Aşağıdaki satır anahtarı uzun bir metin olarak panoya kopyalar; ekranda bir
+   şey yazmaz.
+
+   ```bash
+   [Convert]::ToBase64String([IO.File]::ReadAllBytes("$PWD\socialempires.jks")) | Set-Clipboard
+   ```
+
+   Linux/macOS'ta: `base64 -w0 socialempires.jks`.
+6. **GitHub'a iki sır ekleyin.** Depoda **Settings → Secrets and variables → Actions → New repository secret**:
+   - Ad `ANDROID_IMZA`, değer: panodaki metin (Ctrl+V). **Add secret**.
+   - Yeniden **New repository secret**: ad `ANDROID_IMZA_SIFRESI`, değer: 2. adımdaki şifre. **Add secret**.
+7. **Dosyayı saklayın.** `socialempires.jks` dosyasını ve şifreyi güvenli bir yerde, en az iki kopya olarak
+   saklayın (ör. USB bellek ve bulut). Kaybolursa sonraki sürümler eski kurulumun üstüne kurulamaz. Dosyayı kimseyle
+   paylaşmayın, depoya koymayın.
+
+Sırlar eklendikten sonraki ilk APK, tablette şimdiye kadar kurulu olan geçici anahtarlı uygulamanın üstüne **bir
+kez daha** kurulamaz: o seferlik **yedek indir → eski uygulamayı kaldır → yenisini kur → Yedekten Yükle**. Sonraki
+bütün güncellemeler doğrudan üstüne kurulur, kayıtlar korunur. CI'daki "İmza anahtarı (varsa)" adımı "Sahibin
+anahtarıyla imzalanacak" yazıyorsa anahtar devrededir.
 
 ## Kaynaktan derleme
 

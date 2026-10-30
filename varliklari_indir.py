@@ -5,7 +5,7 @@ Varlıklar boyutları yüzünden depoda tutulmaz. Sunucu eksik dosyaları
 oynarken tek tek indirebilir; bu betik ise hepsini bir kerede indirir,
 böylece oyun internetsiz ve daha hızlı açılır.
 
-Kaynak: AcidCaos/socialemperors deposundaki assets/ klasörü.
+Kaynak: AcidCaos/socialemperors deposundaki assets/ klasörü, sabit bir commit'te (oyun/kaynaklar.py).
 assets/ altında zaten bulunan dosyalara (ör. Türkçe fontlar) dokunulmaz.
 
 Oyunu tarayıcıda çalıştıran Ruffle'ın sabitlenmiş sürümü de indirilir.
@@ -23,10 +23,11 @@ import tempfile
 import urllib.parse
 import urllib.request
 
-DEPO = "AcidCaos/socialemperors"
-DAL = "main"
 KOK = os.path.dirname(os.path.abspath(__file__))
 HEDEF = os.path.join(KOK, "assets")
+sys.path.insert(0, KOK)
+
+from oyun.kaynaklar import COMMIT, DEPO, DEPO_URL, HAM_KOK  # noqa: E402
 
 
 def _kopyala(kaynak_kok):
@@ -50,10 +51,13 @@ def git_ile():
     gecici = tempfile.mkdtemp(prefix="se-assets-")
     try:
         print("[1/2] git ile indiriliyor (bu biraz surebilir)...")
+        # Dal adı değil commit: "clone -b" commit almaz, sabit commit'i doğrudan getiririz
         komutlar = [
-            ["git", "clone", "--depth", "1", "--filter=blob:none", "--sparse",
-             "-b", DAL, f"https://github.com/{DEPO}.git", gecici],
+            ["git", "-C", gecici, "init", "-q"],
+            ["git", "-C", gecici, "remote", "add", "origin", DEPO_URL],
             ["git", "-C", gecici, "sparse-checkout", "set", "assets"],
+            ["git", "-C", gecici, "fetch", "--depth", "1", "--filter=blob:none", "origin", COMMIT],
+            ["git", "-C", gecici, "-c", "advice.detachedHead=false", "checkout", "-q", "FETCH_HEAD"],
         ]
         for komut in komutlar:
             if subprocess.call(komut) != 0:
@@ -67,7 +71,7 @@ def git_ile():
 
 def http_ile():
     print("[1/2] Dosya listesi aliniyor...")
-    url = f"https://api.github.com/repos/{DEPO}/git/trees/{DAL}?recursive=1"
+    url = f"https://api.github.com/repos/{DEPO}/git/trees/{COMMIT}?recursive=1"
     with urllib.request.urlopen(url, timeout=60) as yanit:
         agac = json.load(yanit)
     dosyalar = [o["path"] for o in agac["tree"]
@@ -79,7 +83,7 @@ def http_ile():
         if os.path.exists(hedef):
             continue
         os.makedirs(os.path.dirname(hedef), exist_ok=True)
-        ham = f"https://raw.githubusercontent.com/{DEPO}/{DAL}/{urllib.parse.quote(yol)}"
+        ham = HAM_KOK + urllib.parse.quote(yol)
         gecici = hedef + ".indir"
         try:
             with urllib.request.urlopen(ham, timeout=60) as yanit, open(gecici, "wb") as f:
@@ -100,7 +104,6 @@ if __name__ == "__main__":
     if not git_ile():
         print("git kullanilamadi; dosyalar tek tek indirilecek.")
         http_ile()
-    sys.path.insert(0, KOK)
     from oyun import ruffle
     if ruffle.hazirla():
         print(f"[+] Ruffle {ruffle.SURUM} hazir; sikistiriliyor (bir dakika kadar surebilir)...")

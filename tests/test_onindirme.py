@@ -6,7 +6,7 @@ import time
 import unittest
 from unittest import mock
 
-from ortak import KOK  # noqa: F401
+from ortak import KOK
 
 from oyun import onindirme, varliklar
 from oyun import sunucu as server
@@ -27,6 +27,25 @@ class Liste(unittest.TestCase):
         self.assertLess(temel, 250e6)
         # Haritada rastgele beliren kayıp eşyalar temel pakette (internetsiz denemede eksik çıkmıştı)
         self.assertIn(("buildingsprites/jinetePerdido.swf", 1), {(y, o) for y, _, o in satirlar})
+
+
+class Kaynak(unittest.TestCase):
+    """Varlıklar dal adından değil sabit commit'ten iner (KYN-03)."""
+
+    def test_kaynak_sabit_committe(self):
+        from oyun import kaynaklar
+        self.assertRegex(kaynaklar.COMMIT, r"^[0-9a-f]{40}$")
+        self.assertEqual(varliklar.VARLIK_KAYNAKLARI[0], kaynaklar.HAM_VARLIK)
+        self.assertIn(f"/{kaynaklar.COMMIT}/assets/", kaynaklar.HAM_VARLIK)
+
+    def test_hicbir_dosya_dal_adiyla_indirmiyor(self):
+        dosyalar = ["oyun/varliklar.py", "varliklari_indir.py", "araclar/onindirme_listesi.py",
+                    "araclar/turkce_font_uret.py"]
+        for yol in dosyalar:
+            with open(os.path.join(KOK, yol), encoding="utf-8") as f:
+                metin = f.read()
+            self.assertNotIn("socialemperors/main", metin, yol)
+            self.assertNotRegex(metin, r'DAL\s*=\s*"main"', yol)
 
 
 class Indirme(unittest.TestCase):

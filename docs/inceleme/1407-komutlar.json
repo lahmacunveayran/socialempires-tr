@@ -1,0 +1,1505 @@
+{
+ "istemci": "SocialEmpires1.4.07sec_fixed.swf",
+ "sha256": "0e4cc17893b1f266b920213d75b0c943f32c3c0d4cf9b994f6a88cab25c76a15",
+ "uretici": "araclar/komut_imzalari.py",
+ "komutlar": {
+  "accept_collect_help": [
+   {
+    "yer": "IsoElement/collectHurryUp@372",
+    "argsayisi": 5
+   }
+  ],
+  "activate": [
+   {
+    "yer": "PopupCollect$/setShit@142",
+    "argsayisi": 5
+   },
+   {
+    "yer": "PopupCollect$/resetShit@157",
+    "argsayisi": 5
+   }
+  ],
+  "activate_dragon": [
+   {
+    "yer": "PopupInactiveNest/goBuy@509",
+    "argsayisi": 1
+   }
+  ],
+  "activate_monster": [
+   {
+    "yer": "PopupInactiveNest/goBuy@548",
+    "argsayisi": 1
+   }
+  ],
+  "add_collectable": [
+   {
+    "yer": "CollectableManager$/addCollectible@123",
+    "argsayisi": 2
+   }
+  ],
+  "add_items_store": [
+   {
+    "yer": "PopupArabicDeals/onBuy@270",
+    "argsayisi": 2
+   }
+  ],
+  "add_survival_vida_extra": [
+   {
+    "yer": "PopupSurvival/buyLifeWithCash@112",
+    "argsayisi": 1
+   }
+  ],
+  "add_unit_warehouse": [
+   {
+    "yer": "IsoBuilding/pushUnitToWarehause@137",
+    "argsayisi": 4
+   }
+  ],
+  "admin_add_animal": [
+   {
+    "yer": "MapInitializer$/spawnAnimals@267",
+    "argsayisi": 2
+   }
+  ],
+  "apply_rewards_ranking": [
+   {
+    "yer": "PopupNextIslandAttack/givePrizes@243",
+    "argsayisi": 3
+   }
+  ],
+  "assist_neighbor": [
+   {
+    "yer": "FauxBar2/update@347",
+    "argsayisi": 3
+   }
+  ],
+  "assist_neighbor_new": [
+   {
+    "yer": "NeighbourManager$/sendCurrentNeighbourAssist@215",
+    "argsayisi": 3
+   }
+  ],
+  "assist_receive": [
+   {
+    "yer": "IACartAlly/removeBoxThrown@105",
+    "argsayisi": 2
+   }
+  ],
+  "assist_send_feed": [
+   {
+    "yer": "PopupSocialFeeds/onPost@236",
+    "argsayisi": 5
+   }
+  ],
+  "attack_player": [
+   {
+    "yer": "Assault$/assaultEnemy@121",
+    "argsayisi": 1
+   },
+   {
+    "yer": "PVPManager/loadMap@109",
+    "argsayisi": 1
+   },
+   {
+    "yer": "ExplorationsManager/doAttack@112",
+    "argsayisi": 1
+   }
+  ],
+  "begin_attack_new": [
+   {
+    "yer": "PVPManager/loadMap@51",
+    "argsayisi": 1
+   }
+  ],
+  "buy": [
+   {
+    "yer": "IsoElement/tick@1324",
+    "argsayisi": 8
+   },
+   {
+    "yer": "IsoElement/tick@1577",
+    "argsayisi": 8
+   },
+   {
+    "yer": "IsoElement/tick@2434",
+    "argsayisi": 8
+   },
+   {
+    "yer": "IsoElement/tick@2586",
+    "argsayisi": 8
+   },
+   {
+    "yer": "IsoElement/collect@3129",
+    "argsayisi": 8
+   },
+   {
+    "yer": "IsoElement/collect@4685",
+    "argsayisi": 8
+   },
+   {
+    "yer": "IsoElement/collect@4828",
+    "argsayisi": 8
+   },
+   {
+    "yer": "CommandManager/buy@109",
+    "argsayisi": 8
+   },
+   {
+    "yer": "AdminPanel/spawnAt@289",
+    "argsayisi": 8
+   },
+   {
+    "yer": "IsoBuilding/upgrade@619",
+    "argsayisi": 8
+   },
+   {
+    "yer": "IsoUnit/updateMove@1771",
+    "argsayisi": 8
+   },
+   {
+    "yer": "MapInitializer$/regenerateResources@377",
+    "argsayisi": 8
+   },
+   {
+    "yer": "MapInitializer$/regenerateResources@641",
+    "argsayisi": 8
+   },
+   {
+    "yer": "MapInitializer$/buyElementNoResources@111",
+    "argsayisi": 8
+   }
+  ],
+  "buy_attacks_pack": [
+   {
+    "yer": "PopUpBuyAssault/onBuyAttack@64",
+    "argsayisi": null
+   }
+  ],
+  "buy_cash": [
+   {
+    "yer": "PopupHeroes/onBuyItem@253",
+    "argsayisi": 5
+   },
+   {
+    "yer": "PopupHeroes/onBuyItem@375",
+    "argsayisi": 5
+   }
+  ],
+  "buy_first_purchase": [
+   {
+    "yer": "AdminPanel/giveFP@35",
+    "argsayisi": 0
+   },
+   {
+    "yer": "PopupFirstBuy/onBuy@124",
+    "argsayisi": 0
+   }
+  ],
+  "buy_graveyard_capacity": [
+   {
+    "yer": "PopupBuyGraveyardCapacity/onBuy@88",
+    "argsayisi": 0
+   }
+  ],
+  "buy_magic": [
+   {
+    "yer": "SelectedMagic/onBuyWithGold@100",
+    "argsayisi": 3
+   },
+   {
+    "yer": "SelectedMagic/onBuyWithCash@100",
+    "argsayisi": 3
+   }
+  ],
+  "buy_mana_new": [
+   {
+    "yer": "PopupBuyMana/onBuyWithCash@147",
+    "argsayisi": 2
+   },
+   {
+    "yer": "PopupBuyMana/onBuyWithGold@151",
+    "argsayisi": 2
+   }
+  ],
+  "buy_map": [
+   {
+    "yer": "PopupRaceSelector/onUnlockCash@219",
+    "argsayisi": 4
+   },
+   {
+    "yer": "PopupRaceSelector/onUnlockGold@220",
+    "argsayisi": 4
+   }
+  ],
+  "buy_monster_step_cash": [
+   {
+    "yer": "PopupMonstersNest/clickGetnow@124",
+    "argsayisi": 1
+   }
+  ],
+  "buy_offer_pack": [
+   {
+    "yer": "PromotionPacks$/buyPack@599",
+    "argsayisi": 3
+   },
+   {
+    "yer": "PromotionPacks$/buyPack@739",
+    "argsayisi": 2
+   }
+  ],
+  "buy_powerups": [
+   {
+    "yer": "PopupSoulMixer/sendPowerUps@76",
+    "argsayisi": 1
+   }
+  ],
+  "buy_pvp_territory": [
+   {
+    "yer": "PopupBuyTerritoryPvp/onBuy@98",
+    "argsayisi": 1
+   }
+  ],
+  "buy_shield": [
+   {
+    "yer": "ShieldManager/buyShield@297",
+    "argsayisi": 1
+   }
+  ],
+  "buy_si_help": [
+   {
+    "yer": "Base/countAllBuildings@686",
+    "argsayisi": 5
+   },
+   {
+    "yer": "AdminPanel/addSocialPerson@214",
+    "argsayisi": 4
+   },
+   {
+    "yer": "PopupSocialBuilding/onBuyFriend@114",
+    "argsayisi": 4
+   },
+   {
+    "yer": "PopupRecruitment/onBuyFriend@77",
+    "argsayisi": 4
+   }
+  ],
+  "buy_spyings_pack": [
+   {
+    "yer": "PopUpBuyAssault/onBuyAttack@198",
+    "argsayisi": null
+   }
+  ],
+  "buy_step_cash": [
+   {
+    "yer": "PopupDragons/clickGetnow@116",
+    "argsayisi": 1
+   }
+  ],
+  "buy_stored_item_cash": [
+   {
+    "yer": "PopupAllUnits/buyUnit@191",
+    "argsayisi": 3
+   }
+  ],
+  "buy_super_offer_pack": [
+   {
+    "yer": "PromotionPacks$/buySuperPack@1110",
+    "argsayisi": 4
+   }
+  ],
+  "buy_survival_map": [
+   {
+    "yer": "PopupSurvival/onUnlock@159",
+    "argsayisi": 2
+   }
+  ],
+  "buy_temple_step_cash": [
+   {
+    "yer": "PopupBahamutSupremeInvocationTemple$/clickGetnow@113",
+    "argsayisi": 1
+   }
+  ],
+  "buy_time_packet": [
+   {
+    "yer": "PopupSelectTime/onBuy@294",
+    "argsayisi": 1
+   }
+  ],
+  "buy_unit_pack": [
+   {
+    "yer": "UnitPacksManager/buyPack@432",
+    "argsayisi": 2
+   }
+  ],
+  "buy_viral_offer_all": [
+   {
+    "yer": "SpecialDayOfferManager/buyAll@38",
+    "argsayisi": 1
+   }
+  ],
+  "buy_viral_offer_friend": [
+   {
+    "yer": "SpecialDayOfferManager/buyFriend@48",
+    "argsayisi": 1
+   },
+   {
+    "yer": "CollectGameManager/buyItem@101",
+    "argsayisi": 1
+   }
+  ],
+  "buy_warehouse_capacity_single": [
+   {
+    "yer": "PopupUnitWarehouse/onBuyMoreSlots@228",
+    "argsayisi": 1
+   }
+  ],
+  "clean_attack_log": [
+   {
+    "yer": "AdminPanel/cleanAttackLog@35",
+    "argsayisi": 0
+   }
+  ],
+  "clean_attacks": [
+   {
+    "yer": "Assault$/cleanAssaults@35",
+    "argsayisi": 0
+   }
+  ],
+  "clean_received_assists": [
+   {
+    "yer": "NeighbourManager$/removeNeighbourAssist@36",
+    "argsayisi": 2
+   }
+  ],
+  "clear_message": [
+   {
+    "yer": "yontem1486@19",
+    "argsayisi": 0
+   }
+  ],
+  "clear_tiles_area": [
+   {
+    "yer": "MapInitializer$/cleanAllMapTiles@309",
+    "argsayisi": 6
+   }
+  ],
+  "collect_game_add_item": [
+   {
+    "yer": "CollectGameManager/addItem@109",
+    "argsayisi": 2
+   }
+  ],
+  "collect_game_buy_all": [
+   {
+    "yer": "CollectGameManager/buyAll@67",
+    "argsayisi": 1
+   }
+  ],
+  "collect_game_reward_given": [
+   {
+    "yer": "CollectGameManager/giveReward@48",
+    "argsayisi": 1
+   }
+  ],
+  "collect_game_speed_up": [
+   {
+    "yer": "CollectGameManager/buySpeedup@88",
+    "argsayisi": 1
+   }
+  ],
+  "collect_game_update_timestamp": [
+   {
+    "yer": "CollectGameManager/collectItem@66",
+    "argsayisi": 1
+   }
+  ],
+  "collect_new": [
+   {
+    "yer": "IsoElement/tick@2192",
+    "argsayisi": 7
+   },
+   {
+    "yer": "IsoElement/collect@3999",
+    "argsayisi": 7
+   },
+   {
+    "yer": "IsoElement/collect@4049",
+    "argsayisi": 4
+   },
+   {
+    "yer": "PopupSocialFeeds/onOpenBuilding@423",
+    "argsayisi": 4
+   }
+  ],
+  "collect_treasure": [
+   {
+    "yer": "MapInitializer$/setCorrectQuest@274",
+    "argsayisi": 6
+   },
+   {
+    "yer": "QuestsInMap$/finalizeQuest@465",
+    "argsayisi": 6
+   }
+  ],
+  "comeback_reward": [
+   {
+    "yer": "ComebackBonusPopUp/_collectClickHandler@466",
+    "argsayisi": 3
+   }
+  ],
+  "complete_mission": [
+   {
+    "yer": "AbstractGoal/checkComplete@198",
+    "argsayisi": 2
+   },
+   {
+    "yer": "GoalsManager/completeGoals@175",
+    "argsayisi": 1
+   }
+  ],
+  "complete_tutorial": [
+   {
+    "yer": "Base/completarTutorial@60",
+    "argsayisi": 1
+   },
+   {
+    "yer": "AdminPanel/onTutorial@36",
+    "argsayisi": 1
+   },
+   {
+    "yer": "AdminPanel/completeTutorial@100",
+    "argsayisi": 1
+   }
+  ],
+  "cross_promotion_finished": [
+   {
+    "yer": "PopupCrossPromotion/_onGetReward@147",
+    "argsayisi": 1
+   }
+  ],
+  "darts_new_free": [
+   {
+    "yer": "PopupDarts$/newFree@56",
+    "argsayisi": 0
+   }
+  ],
+  "darts_reset": [
+   {
+    "yer": "PopupDarts$/resetDartGame@137",
+    "argsayisi": 1
+   }
+  ],
+  "darts_shoot_balloon": [
+   {
+    "yer": "PopupDarts/hitBalloon@334",
+    "argsayisi": 3
+   }
+  ],
+  "desactivate_dragon": [
+   {
+    "yer": "PopupDragons/desactivateNest@35",
+    "argsayisi": 0
+   }
+  ],
+  "desactivate_monster": [
+   {
+    "yer": "PopupMonstersNest/desactivateNest@35",
+    "argsayisi": 0
+   }
+  ],
+  "end_attack": [
+   {
+    "yer": "Assault$/sendAssaultResults@343",
+    "argsayisi": 1
+   },
+   {
+    "yer": "Assault$/sendAssaultResults@379",
+    "argsayisi": 2
+   }
+  ],
+  "end_attack_new": [
+   {
+    "yer": "PVPManager/sendEnd@463",
+    "argsayisi": 14
+   }
+  ],
+  "end_quest": [
+   {
+    "yer": "QuestBossGolem/sendResults@295",
+    "argsayisi": 1
+   },
+   {
+    "yer": "QuestBossYeti/sendResults@509",
+    "argsayisi": 1
+   },
+   {
+    "yer": "QuestIslaCivilizacion/sendResults@197",
+    "argsayisi": 1
+   },
+   {
+    "yer": "QuestIslaHeroes/sendResults@199",
+    "argsayisi": 1
+   },
+   {
+    "yer": "QuestBossDragon/sendResults@385",
+    "argsayisi": 1
+   },
+   {
+    "yer": "QuestBossWorm/sendResults@639",
+    "argsayisi": 1
+   },
+   {
+    "yer": "QuestIslaHardGeneric/sendResults@197",
+    "argsayisi": 1
+   },
+   {
+    "yer": "QuestIslaGodGeneric/sendResults@197",
+    "argsayisi": 1
+   },
+   {
+    "yer": "QuestIslaEgg2/sendResults@200",
+    "argsayisi": 1
+   },
+   {
+    "yer": "QuestBossDragon2/sendResults@388",
+    "argsayisi": 1
+   },
+   {
+    "yer": "QuestIslaTrollsGeneric/sendResults@197",
+    "argsayisi": 1
+   },
+   {
+    "yer": "QuestIslaEgg1/sendResults@200",
+    "argsayisi": 1
+   },
+   {
+    "yer": "QuestCollectable4/sendResults@200",
+    "argsayisi": 1
+   },
+   {
+    "yer": "QuestCollectable5/sendResults@200",
+    "argsayisi": 1
+   },
+   {
+    "yer": "QuestCollectable2/sendResults@200",
+    "argsayisi": 1
+   },
+   {
+    "yer": "QuestCollectable3/sendResults@205",
+    "argsayisi": 1
+   },
+   {
+    "yer": "QuestCollectable1/sendResults@200",
+    "argsayisi": 1
+   }
+  ],
+  "end_survival": [
+   {
+    "yer": "PopupSurvivalResults/givePrizes@215",
+    "argsayisi": 3
+   }
+  ],
+  "end_tournament_match": [
+   {
+    "yer": "TournamentManager$/shutMatch@192",
+    "argsayisi": 1
+   }
+  ],
+  "expand": [
+   {
+    "yer": "Base/purchaseLand@606",
+    "argsayisi": 3
+   }
+  ],
+  "fast_forward": [
+   {
+    "yer": "AdminPanel/fastForward@403",
+    "argsayisi": 1
+   },
+   {
+    "yer": "AdminPanel/onFastForward@37",
+    "argsayisi": 1
+   },
+   {
+    "yer": "AdminPanel/onFastForward1D@40",
+    "argsayisi": 1
+   }
+  ],
+  "finish_collection": [
+   {
+    "yer": "AdminPanel/completeHeartCollection@58",
+    "argsayisi": 1
+   },
+   {
+    "yer": "popupCollections/onBuy@204",
+    "argsayisi": 3
+   },
+   {
+    "yer": "popupCollections/onExchange@149",
+    "argsayisi": 1
+   }
+  ],
+  "finish_dragon_help": [
+   {
+    "yer": "PopupDragons/closeHireResults@196",
+    "argsayisi": 1
+   }
+  ],
+  "finish_si": [
+   {
+    "yer": "IsoElement/collect@503",
+    "argsayisi": 4
+   },
+   {
+    "yer": "PopupSocialFeeds/onOpenBuilding@368",
+    "argsayisi": 7
+   },
+   {
+    "yer": "PopupSocialBuilding/onOpenBuilding@221",
+    "argsayisi": 4
+   },
+   {
+    "yer": "PopupSocialBuilding/onOpenBuilding@337",
+    "argsayisi": 4
+   }
+  ],
+  "finish_si_recruitment": [
+   {
+    "yer": "PopupRecruitment/onOpenBuilding@110",
+    "argsayisi": 5
+   }
+  ],
+  "game_status": [
+   {
+    "yer": "Base/init@1382",
+    "argsayisi": 3
+   },
+   {
+    "yer": "Base/_drawMap@131",
+    "argsayisi": 3
+   },
+   {
+    "yer": "MapInitializer$/Init@530",
+    "argsayisi": 1
+   },
+   {
+    "yer": "MapInitializer$/Init@563",
+    "argsayisi": 1
+   },
+   {
+    "yer": "TutorialPopup/<kurucu>@235",
+    "argsayisi": 1
+   }
+  ],
+  "get_enemy_new": [
+   {
+    "yer": "PVPManager/searchEnemy@44",
+    "argsayisi": 2
+   }
+  ],
+  "gold_statue_conversion": [
+   {
+    "yer": "IsoGoldenDynastyDragon/convertToGoldOnce@95",
+    "argsayisi": 1
+   }
+  ],
+  "graveyard_buy_potions": [
+   {
+    "yer": "PopupBuyGraveyardPotion/onBuy@84",
+    "argsayisi": 0
+   }
+  ],
+  "increase_population": [
+   {
+    "yer": "PopupRecruitmentPopulation/onRecruitComplete@102",
+    "argsayisi": 1
+   }
+  ],
+  "kill": [
+   {
+    "yer": "IsoElement/collect@3675",
+    "argsayisi": 5
+   },
+   {
+    "yer": "IsoFightingElement/kill@967",
+    "argsayisi": 5
+   },
+   {
+    "yer": "IsoFightingElement/kill@1133",
+    "argsayisi": 5
+   }
+  ],
+  "load_map": [
+   {
+    "yer": "AdminPanel/loadMap@58",
+    "argsayisi": null
+   },
+   {
+    "yer": "AdminPanel/onLoad1@36",
+    "argsayisi": 1
+   },
+   {
+    "yer": "AdminPanel/onLoad2@36",
+    "argsayisi": 1
+   },
+   {
+    "yer": "AdminPanel/onLoad3@36",
+    "argsayisi": 1
+   },
+   {
+    "yer": "AdminPanel/onLoad4@36",
+    "argsayisi": 1
+   }
+  ],
+  "modify_position_univers": [
+   {
+    "yer": "ExplorationsManager/evalUserPositionNotConquered@376",
+    "argsayisi": 2
+   }
+  ],
+  "move": [
+   {
+    "yer": "Base/mouseUsed@2077",
+    "argsayisi": 8
+   },
+   {
+    "yer": "Base/repositionCollidingUnits@485",
+    "argsayisi": 8
+   },
+   {
+    "yer": "IsoElement/moveTo@143",
+    "argsayisi": 8
+   },
+   {
+    "yer": "IsoElement/moveTo@204",
+    "argsayisi": 8
+   },
+   {
+    "yer": "CommandManager/onTimerSendUnitMoveCommands@237",
+    "argsayisi": 8
+   }
+  ],
+  "name_map": [
+   {
+    "yer": "EnterNamePopUp/setTownName@60",
+    "argsayisi": 2
+   }
+  ],
+  "next_dragon": [
+   {
+    "yer": "PopupDragons/evalStepsDragon@132",
+    "argsayisi": 1
+   },
+   {
+    "yer": "PopupDragons/getDragon@187",
+    "argsayisi": 1
+   }
+  ],
+  "next_monster": [
+   {
+    "yer": "PopupMonstersNest/evalStepsMonster@132",
+    "argsayisi": 1
+   },
+   {
+    "yer": "PopupMonstersNest/getMonster@188",
+    "argsayisi": 1
+   }
+  ],
+  "next_monster_step": [
+   {
+    "yer": "PopupMonstersNest/clickAction@97",
+    "argsayisi": 1
+   }
+  ],
+  "next_step": [
+   {
+    "yer": "MapInitializer$/spawnDragonNest@190",
+    "argsayisi": 1
+   },
+   {
+    "yer": "PopupDragons/goNextStep@98",
+    "argsayisi": 1
+   }
+  ],
+  "next_temple_step": [
+   {
+    "yer": "PopupBahamutSupremeInvocationTemple/doAction@1139",
+    "argsayisi": 2
+   }
+  ],
+  "orient": [
+   {
+    "yer": "IsoElement/changeDirection@136",
+    "argsayisi": 4
+   }
+  ],
+  "perform_city_quest": [
+   {
+    "yer": "IsoElement/collect@4198",
+    "argsayisi": 4
+   },
+   {
+    "yer": "IsoElement/startCollection@224",
+    "argsayisi": 4
+   }
+  ],
+  "ping": [
+   {
+    "yer": "yontem14@70",
+    "argsayisi": 0
+   }
+  ],
+  "place_gift": [
+   {
+    "yer": "Base/sendPlaceItemCmd@262",
+    "argsayisi": 5
+   }
+  ],
+  "place_iphone": [
+   {
+    "yer": "Base/sendPlaceItemCmd@345",
+    "argsayisi": 5
+   }
+  ],
+  "place_stored_item": [
+   {
+    "yer": "Base/sendPlaceItemCmd@405",
+    "argsayisi": 5
+   }
+  ],
+  "place_warehoused_item": [
+   {
+    "yer": "PopupUnitWarehouse/onUseClick@391",
+    "argsayisi": 5
+   }
+  ],
+  "pop_queue_unit": [
+   {
+    "yer": "IsoBuilding/OnTrainingTimer@562",
+    "argsayisi": 4
+   }
+  ],
+  "pop_sell": [
+   {
+    "yer": "IsoBuilding/PopSell@197",
+    "argsayisi": 5
+   }
+  ],
+  "pop_unit": [
+   {
+    "yer": "IsoBuilding/PopUnit@304",
+    "argsayisi": 7
+   },
+   {
+    "yer": "IsoBuilding/PopUnit@419",
+    "argsayisi": 4
+   },
+   {
+    "yer": "IsoBuilding/PopUnit@485",
+    "argsayisi": 7
+   },
+   {
+    "yer": "IsoUnit/updateMove@1596",
+    "argsayisi": 4
+   }
+  ],
+  "push_queue_unit": [
+   {
+    "yer": "BuildingQueueManager/addUnit@259",
+    "argsayisi": 6
+   }
+  ],
+  "push_unit": [
+   {
+    "yer": "IsoBuilding/PushUnit@201",
+    "argsayisi": 6
+   }
+  ],
+  "put_graveyard": [
+   {
+    "yer": "PhoenixEggDelegate/onPhoenixEggDie@159",
+    "argsayisi": 1
+   }
+  ],
+  "reply_attack": [
+   {
+    "yer": "PVPManager/loadMap@137",
+    "argsayisi": 1
+   }
+  ],
+  "reset": [
+   {
+    "yer": "AdminPanel/onReset@34",
+    "argsayisi": 0
+   }
+  ],
+  "reset_completed_missions": [
+   {
+    "yer": "GoalsManager/resetGoals@123",
+    "argsayisi": 0
+   }
+  ],
+  "reset_dragon": [
+   {
+    "yer": "AdminPanel/resetPopupDragon@35",
+    "argsayisi": 1
+   }
+  ],
+  "reset_heavy_siege": [
+   {
+    "yer": "MapInitializer$/resetHeavySiege@424",
+    "argsayisi": 2
+   }
+  ],
+  "reset_position_univers": [
+   {
+    "yer": "ExplorationsManager/doRelocate@48",
+    "argsayisi": 0
+   }
+  ],
+  "reset_potions_received": [
+   {
+    "yer": "PopupGraveyard/onFrameConstructed@123",
+    "argsayisi": 0
+   }
+  ],
+  "reset_shield": [
+   {
+    "yer": "AdminPanel/resetShieldState@34",
+    "argsayisi": 0
+   },
+   {
+    "yer": "ShieldManager/_checkCoolDown@159",
+    "argsayisi": 0
+   },
+   {
+    "yer": "ShieldManager/disableShield@35",
+    "argsayisi": 0
+   }
+  ],
+  "reset_temple": [
+   {
+    "yer": "AdminPanel/resetBahamutTemple@85",
+    "argsayisi": 0
+   },
+   {
+    "yer": "PopupBahamutSupremeInvocationTemple/resetTempleProgress@229",
+    "argsayisi": 0
+   }
+  ],
+  "reset_warehouse": [
+   {
+    "yer": "Base/storeItem@453",
+    "argsayisi": 1
+   },
+   {
+    "yer": "AdminPanel/removeStoreItems@293",
+    "argsayisi": 1
+   }
+  ],
+  "reset_world_change": [
+   {
+    "yer": "ExplorationsManager/onContinentLoaded@431",
+    "argsayisi": 0
+   }
+  ],
+  "resurrect_hero": [
+   {
+    "yer": "PopupGraveyard/onBuyItem@395",
+    "argsayisi": 5
+   },
+   {
+    "yer": "PopupResurrectHeroes/onBuyItem@306",
+    "argsayisi": 4
+   }
+  ],
+  "reward_mission": [
+   {
+    "yer": "AbstractGoal/rewardMission@104",
+    "argsayisi": 2
+   },
+   {
+    "yer": "GoalsManager/completeGoals@220",
+    "argsayisi": 2
+   }
+  ],
+  "reward_viral_offer": [
+   {
+    "yer": "SpecialDayOfferManager/giveReward@223",
+    "argsayisi": 5
+   },
+   {
+    "yer": "CollectGameManager/giveReward@121",
+    "argsayisi": 5
+   }
+  ],
+  "rider_buy_step_cash": [
+   {
+    "yer": "PopupDragonRiderTraining/clickGetNow@83",
+    "argsayisi": 1
+   }
+  ],
+  "rider_next_step": [
+   {
+    "yer": "PopupDragonRiderTraining/onGameSuccess@72",
+    "argsayisi": 1
+   }
+  ],
+  "rider_select": [
+   {
+    "yer": "PopupDragonRiderTraining/onTrainClick@112",
+    "argsayisi": 1
+   },
+   {
+    "yer": "PopupDragonRiders/onRiderFieldClick@85",
+    "argsayisi": 1
+   }
+  ],
+  "rt_level_up": [
+   {
+    "yer": "PlayerStatus/checkForLevelUp@161",
+    "argsayisi": 1
+   }
+  ],
+  "rt_publish_achievement_unit": [
+   {
+    "yer": "IsoEngine/addElement@1813",
+    "argsayisi": 1
+   }
+  ],
+  "rt_publish_score": [
+   {
+    "yer": "Base/UpdateGame3@654",
+    "argsayisi": 1
+   }
+  ],
+  "save_map": [
+   {
+    "yer": "AdminPanel/saveMap@58",
+    "argsayisi": null
+   },
+   {
+    "yer": "AdminPanel/onSave1@36",
+    "argsayisi": 1
+   },
+   {
+    "yer": "AdminPanel/onSave2@36",
+    "argsayisi": 1
+   },
+   {
+    "yer": "AdminPanel/onSave3@36",
+    "argsayisi": 1
+   },
+   {
+    "yer": "AdminPanel/onSave4@36",
+    "argsayisi": 1
+   }
+  ],
+  "sell": [
+   {
+    "yer": "Base/removeElement@181",
+    "argsayisi": 6
+   },
+   {
+    "yer": "Base/removeDirectBuilding@158",
+    "argsayisi": 6
+   },
+   {
+    "yer": "IsoElement/tick@1195",
+    "argsayisi": 6
+   },
+   {
+    "yer": "IsoElement/tick@1448",
+    "argsayisi": 6
+   },
+   {
+    "yer": "IsoElement/tick@2239",
+    "argsayisi": 6
+   },
+   {
+    "yer": "IsoElement/collect@684",
+    "argsayisi": 6
+   },
+   {
+    "yer": "IsoElement/collect@4464",
+    "argsayisi": 6
+   },
+   {
+    "yer": "IsoFightingElement/kill@867",
+    "argsayisi": 7
+   },
+   {
+    "yer": "IsoFightingElement/kill@1346",
+    "argsayisi": 6
+   },
+   {
+    "yer": "IsoUnit/updateMove@1650",
+    "argsayisi": 6
+   },
+   {
+    "yer": "MapInitializer$/regenerateResources@233",
+    "argsayisi": 6
+   },
+   {
+    "yer": "MapInitializer$/regenerateResources@496",
+    "argsayisi": 6
+   },
+   {
+    "yer": "MapInitializer$/safeAreaClean@487",
+    "argsayisi": 6
+   },
+   {
+    "yer": "MapInitializer$/safeAreaClean@617",
+    "argsayisi": 6
+   },
+   {
+    "yer": "MapInitializer$/removeFromMapNoResources@113",
+    "argsayisi": 6
+   },
+   {
+    "yer": "MapInitializer$/removeFromMapNoResources@221",
+    "argsayisi": 6
+   },
+   {
+    "yer": "MapInitializer$/sellNoResourcesBRef@93",
+    "argsayisi": 6
+   },
+   {
+    "yer": "IsoMummy/onTimerUnitExpired@133",
+    "argsayisi": 6
+   }
+  ],
+  "sell_gift": [
+   {
+    "yer": "AdminPanel/removeStoreItems@150",
+    "argsayisi": 2
+   },
+   {
+    "yer": "GiftButtonLarge/sellGiftReally@61",
+    "argsayisi": 2
+   },
+   {
+    "yer": "UnitPacksManager/buyPack@516",
+    "argsayisi": 2
+   }
+  ],
+  "sell_iphone_item": [
+   {
+    "yer": "AdminPanel/removeStoreItems@214",
+    "argsayisi": 2
+   },
+   {
+    "yer": "GiftButtonLarge/sellGiftReally@140",
+    "argsayisi": 2
+   }
+  ],
+  "sell_stored_item": [
+   {
+    "yer": "AdminPanel/removeStoreItems@251",
+    "argsayisi": 2
+   },
+   {
+    "yer": "PopupBahamutSupremeInvocationTemple/resetTempleProgress@125",
+    "argsayisi": 2
+   },
+   {
+    "yer": "GiftButtonLarge/sellGiftReally@182",
+    "argsayisi": 2
+   }
+  ],
+  "set_attack_team": [
+   {
+    "yer": "SelectionTeamWindow/saveTeamOnServer@152",
+    "argsayisi": 3
+   }
+  ],
+  "set_fake_neighbors": [
+   {
+    "yer": "Base/testABFakeNeighbours@272",
+    "argsayisi": 3
+   }
+  ],
+  "set_first_purchase_timestamp": [
+   {
+    "yer": "AdminPanel/setFP@37",
+    "argsayisi": 1
+   },
+   {
+    "yer": "AdminPanel/resetFP@37",
+    "argsayisi": 1
+   },
+   {
+    "yer": "PopupFirstBuy/<kurucu>@109",
+    "argsayisi": 0
+   }
+  ],
+  "set_help_map": [
+   {
+    "yer": "PopupHelpIsland/<kurucu>@542",
+    "argsayisi": 1
+   },
+   {
+    "yer": "PopupHelpTimeMachine$/addViewedTypeHelp@144",
+    "argsayisi": 1
+   },
+   {
+    "yer": "PopupSurvival/<kurucu>@1705",
+    "argsayisi": 1
+   },
+   {
+    "yer": "PopupHelp$/addViewedTypeHelp@144",
+    "argsayisi": 1
+   }
+  ],
+  "set_info_showed": [
+   {
+    "yer": "PlayerStatus/setInfoShowed@49",
+    "argsayisi": 2
+   }
+  ],
+  "set_quest_var": [
+   {
+    "yer": "CustomQuestNew$/cleanQuestStatus@135",
+    "argsayisi": 3
+   },
+   {
+    "yer": "CustomQuestNew/saveQuestStatus@58",
+    "argsayisi": 3
+   }
+  ],
+  "set_resource_allies": [
+   {
+    "yer": "IsoElement/collect@563",
+    "argsayisi": 5
+   },
+   {
+    "yer": "IsoEngine/RemoveElement@898",
+    "argsayisi": 5
+   },
+   {
+    "yer": "PopupSelectResource/onSelect@151",
+    "argsayisi": 5
+   }
+  ],
+  "set_skin": [
+   {
+    "yer": "PopupWeather/onApply@130",
+    "argsayisi": 2
+   },
+   {
+    "yer": "PopupWeather/onUnlock@207",
+    "argsayisi": 2
+   }
+  ],
+  "set_strategy": [
+   {
+    "yer": "PopUpBattleOptions/closeWindow@90",
+    "argsayisi": 1
+   }
+  ],
+  "set_variables": [
+   {
+    "yer": "AdminPanel/giveResources@475",
+    "argsayisi": 8
+   },
+   {
+    "yer": "AdminPanel/onGive10000@164",
+    "argsayisi": 8
+   },
+   {
+    "yer": "AdminPanel/onGiveCash@141",
+    "argsayisi": 8
+   },
+   {
+    "yer": "AdminPanel/onGiveRes@196",
+    "argsayisi": 8
+   },
+   {
+    "yer": "AdminPanel/onLevelUp@153",
+    "argsayisi": 8
+   },
+   {
+    "yer": "AdminPanel/onLevelDown@167",
+    "argsayisi": 8
+   },
+   {
+    "yer": "AdminPanel/resetResources@169",
+    "argsayisi": 8
+   }
+  ],
+  "speed_up_queue": [
+   {
+    "yer": "BuildingQueueData/speedUp@115",
+    "argsayisi": 1
+   }
+  ],
+  "spy_player": [
+   {
+    "yer": "ExplorationsManager/doSpy@68",
+    "argsayisi": 1
+   }
+  ],
+  "start_heavy_siege": [
+   {
+    "yer": "MapInitializer$/attacksInit@149",
+    "argsayisi": 0
+   }
+  ],
+  "start_quest": [
+   {
+    "yer": "Quest$/start@58",
+    "argsayisi": 2
+   }
+  ],
+  "start_quest_new": [
+   {
+    "yer": "Quest$/start@81",
+    "argsayisi": 0
+   }
+  ],
+  "start_survival": [
+   {
+    "yer": "PopupLoadingSurvival/startSurvival@40",
+    "argsayisi": 0
+   }
+  ],
+  "store_add_items": [
+   {
+    "yer": "Base/storeItem@194",
+    "argsayisi": 1
+   }
+  ],
+  "store_item": [
+   {
+    "yer": "Base/storeItem@305",
+    "argsayisi": 4
+   }
+  ],
+  "store_item_frombug": [
+   {
+    "yer": "Base/storeItem@244",
+    "argsayisi": 4
+   }
+  ],
+  "system_set_count_hack": [
+   {
+    "yer": "Base/UpdateGame@251",
+    "argsayisi": 0
+   }
+  ],
+  "time_ff": [
+   {
+    "yer": "PopupSelectTime/onUse@209",
+    "argsayisi": 1
+   }
+  ],
+  "tournament_refund_resources": [
+   {
+    "yer": "TournamentManager$/evalRefundTournament@268",
+    "argsayisi": 2
+   }
+  ],
+  "tournament_substract_resources": [
+   {
+    "yer": "TournamentManager$/createTournament@154",
+    "argsayisi": 4
+   },
+   {
+    "yer": "TournamentManager$/createTournament@286",
+    "argsayisi": 4
+   },
+   {
+    "yer": "TournamentManager$/joinTournament@200",
+    "argsayisi": 4
+   },
+   {
+    "yer": "TournamentManager$/joinTournament@337",
+    "argsayisi": 4
+   }
+  ],
+  "trade_resource_b": [
+   {
+    "yer": "ButtonMarket/onTrade@531",
+    "argsayisi": 4
+   }
+  ],
+  "unit_collections_completed": [
+   {
+    "yer": "PopupAllUnits/getCollectionReward@222",
+    "argsayisi": 1
+   }
+  ],
+  "unlock_building": [
+   {
+    "yer": "PopupUnlockBuilding/onYes@142",
+    "argsayisi": 1
+   }
+  ],
+  "unlock_skin": [
+   {
+    "yer": "PopupWeather/onUnlock@150",
+    "argsayisi": 1
+   }
+  ],
+  "unqueue_unit": [
+   {
+    "yer": "BuildingQueueData/removeUnit@138",
+    "argsayisi": 2
+   }
+  ],
+  "upgrade": [
+   {
+    "yer": "IsoInteractiveElement/doUpgrade@94",
+    "argsayisi": 3
+   }
+  ],
+  "use_magic": [
+   {
+    "yer": "MagicManager/castMagic@289",
+    "argsayisi": 1
+   }
+  ],
+  "weekly_reward": [
+   {
+    "yer": "MondayBonusPopUp/_collectClickHandler@491",
+    "argsayisi": 2
+   }
+  ],
+  "win_bonus": [
+   {
+    "yer": "PopupNewDaily/onGetPrize@676",
+    "argsayisi": 5
+   }
+  ]
+ },
+ "kullanilmayan_sabitler": {
+  "CMD_ALLY_ASSIST": "ally_assist",
+  "CMD_BAHAMUT_SUPREME_INVOCATION_TEMPLE_ADD_UNIT": "add_unit_temple",
+  "CMD_BUY_ATTACKS": "buy_attacks",
+  "CMD_BUY_OFFER": "buy_offer",
+  "CMD_BUY_SPYINGS": "buy_spyings",
+  "CMD_BUY_WAREHOUSE_CAPACITY": "buy_warehouse_capacity",
+  "CMD_BUY_WONDER_FRIENDS": "buy_wonder_friends",
+  "CMD_DEFAULT_TOWN": "set_default_town",
+  "CMD_END_SURVIVAL": "end_survival",
+  "CMD_EXCHANGE_CASH": "exchange_cash_new",
+  "CMD_EXPLORE": "explore",
+  "CMD_GIVE_BONUS_REWARD": "give_bonus_reward",
+  "CMD_HIRE_WORKER": "hire_worker",
+  "CMD_KOMPU_HURRY_UP": "kompu_hurry_up",
+  "CMD_PAY_WONDER": "pay_wonder",
+  "CMD_PVP_BUY_ISLAND": "buy_pvp_island",
+  "CMD_REPORT_BUG": "report_bug",
+  "CMD_RESET_DRAGON": "reset_dragon",
+  "CMD_RESET_MONSTER": "reset_monster",
+  "CMD_RESET_RIDER": "rider_reset",
+  "CMD_SET_DEFAULT_MAP": "set_default_map",
+  "CMD_SET_IPHONE_BOX_POPUP_SHOWED": "set_iphone_box_popup_showed",
+  "CMD_SET_RESOURCES_TRADED": "set_resources_traded",
+  "CMD_START_CAMPAIGN": "start_campaign",
+  "CMD_TIME_MACHINE_FF": "time_ff",
+  "CMD_TOURNAMENT_WIN_REWARD": "win_reward_tournament",
+  "CMD_UNIT_COLLECTION_REMOVE": "remove_unit_collection",
+  "CMD_WIN_TROPHY": "win_trophy"
+ }
+}

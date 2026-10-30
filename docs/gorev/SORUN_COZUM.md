@@ -39,6 +39,7 @@ Oturum başında göz gezdirilir. Yeni bir sorunla karşılaşınca ya da bir so
 | S-16 | "A script in this movie has taken too long to execute" | ~5 MB config tek olayda işleniyor | Ruffle `maxExecutionDuration` 60 sn (DAG-08) | ◐ |
 | S-17 | İmza anahtarını depoya koyan commit durduruldu | Otomatik güvenlik denetimi kimlik bilgisi sızıntısı saydı | Anahtar GitHub sırrında (`ANDROID_IMZA`), depoda asla (KAR-07) | ◐ |
 | S-18 | CI çıktısı (APK) indirilemiyor | GitHub Actions artifact'leri giriş ister | Tablete link verirken GitHub girişini hatırlat; doğrudan indirme için sürüm (v*) | ◐ |
+| S-24 | Sahibinin bilgisayarındaki proje yolu `C:\Users\Avukat Emre Aydoğdu\Desktop\socialempires-tr`: boşluk ve "ğ" içeriyor | Android derleme araçları (SDK, emülatör, Gradle) bu tür yollarda bazen hata verir (?, ölçülmedi); oyun sunucusu etkilenmez | Sahibinin kararı (30.10.2026): yol şimdilik değişmez, en sona bakılır. Gerekirse araçlar `C:\Android` gibi düz bir yola kurulur | ? 30.10.2026 |
 
 ## Çalışma biçimi dersleri
 

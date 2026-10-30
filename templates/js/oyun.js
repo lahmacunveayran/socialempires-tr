@@ -3,6 +3,66 @@
 (function () {
   "use strict";
   var AYAR = window.OYUN_AYARI;
+  var HAREKETSIZ = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var SAYI = new Intl.NumberFormat("tr-TR");
+
+  function el(etiket, sinif, metin) {
+    var e = document.createElement(etiket);
+    if (sinif) e.className = sinif;
+    if (metin !== undefined) e.textContent = metin;
+    return e;
+  }
+
+  // Sayan sayı (NumberTicker): 0'dan hedefe yavaşlayarak sayar.
+  function say(e, hedef, sure) {
+    hedef = Number(hedef) || 0;
+    if (HAREKETSIZ) { e.textContent = SAYI.format(hedef); return; }
+    var bas = performance.now(); sure = sure || 1400;
+    (function adim(t) {
+      var k = Math.min(1, (t - bas) / sure);
+      e.textContent = SAYI.format(Math.round(hedef * (1 - Math.pow(2, -10 * k))));
+      if (k < 1) requestAnimationFrame(adim); else e.textContent = SAYI.format(hedef);
+    })(bas);
+  }
+  document.querySelectorAll("[data-say]").forEach(function (e) { say(e, e.dataset.say); });
+  var xpDolum = document.querySelector(".xp-dolum");
+  if (xpDolum) requestAnimationFrame(function () { xpDolum.style.width = xpDolum.dataset.oran + "%"; });
+
+  // "3 dk önce"
+  var GORELI = new Intl.RelativeTimeFormat("tr", { numeric: "auto" });
+  function once(zaman) {
+    var fark = Math.round(zaman - Date.now() / 1000);
+    if (fark > -45) return "az önce";
+    if (fark > -3600) return GORELI.format(Math.round(fark / 60), "minute");
+    if (fark > -86400) return GORELI.format(Math.round(fark / 3600), "hour");
+    return GORELI.format(Math.round(fark / 86400), "day");
+  }
+
+  // Fareyi izleyen ışık (MagicCard)
+  document.addEventListener("pointermove", function (o) {
+    var panel = o.target.closest && o.target.closest(".panel");
+    if (!panel) return;
+    var k = panel.getBoundingClientRect();
+    panel.style.setProperty("--mx", (o.clientX - k.left) + "px");
+    panel.style.setProperty("--my", (o.clientY - k.top) + "px");
+  });
+
+  // Başlığın çevresinde ışıltılar (SparklesText)
+  var isiltili = document.getElementById("isiltili");
+  if (isiltili && !HAREKETSIZ) {
+    for (var n = 0; n < 7; n++) {
+      var y = el("i", "isilti");
+      var yerlestir = function (y) {
+        y.style.left = (Math.random() * 100) + "%";
+        y.style.top = (Math.random() * 100) + "%";
+        y.style.animationDuration = (1.2 + Math.random() * 1.2) + "s";
+      };
+      yerlestir(y);
+      y.style.animationDelay = (Math.random() * 1.5) + "s";
+      y.addEventListener("animationiteration", yerlestir.bind(null, y));
+      isiltili.appendChild(y);
+    }
+  }
   var GEN = 760, YUK = 600, EN_BUYUK_OLCEK = 1.5;
 
   // --- Çerçeve ölçeği: oyun EXACT_FIT ile kutuya esner, oran tam 760:600 kalmalı.
@@ -10,7 +70,7 @@
   var alan = document.querySelector(".oyun-alani");
   function olcekle() {
     var stil = getComputedStyle(document.documentElement);
-    var baslik = parseFloat(stil.getPropertyValue("--baslik-yuksekligi")) || 0;
+    var baslik = document.querySelector(".baslik").offsetHeight;
     var bosluk = parseFloat(stil.getPropertyValue("--bosluk")) || 0;
     var arma = parseFloat(stil.getPropertyValue("--arma-payi")) || 0;
     var cerceve = 38; // ahşap çerçeve ve altın kenar
@@ -104,26 +164,27 @@
     return t.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Istanbul" });
   }
   var HABER_SIMGELERI = { savas: "⚔️", seviye: "⭐", ekonomi: "🛡️", lonca: "🔨", dunya: "🌍" };
+  var HABER_TURLERI = { savas: "Savaş", seviye: "Seviye", ekonomi: "Ordu", lonca: "Lonca", dunya: "Dünya" };
   function satirEkle(olay, yeni) {
-    var bos = liste.querySelector(".bos");
+    var bos = liste.querySelector(".bos-haber");
     if (bos) bos.remove();
-    var li = document.createElement("li");
+    var li = el("li", "haber" + (yeni ? " yeni" : ""));
     li.dataset.tur = olay.tur;
-    if (yeni) li.className = "yeni";
-    var ikon = document.createElement("span");
-    ikon.className = "rozet-ikon";
-    ikon.textContent = HABER_SIMGELERI[olay.tur] || "📜";
-    var metin = document.createElement("span");
-    metin.textContent = olay.metin;
-    var zaman = document.createElement("time");
+    var govde = el("div");
+    var ust = el("div", "ust");
+    var zaman = el("time", "", once(olay.zaman));
     zaman.dateTime = new Date(olay.zaman * 1000).toISOString();
-    zaman.textContent = saat(olay.zaman);
-    metin.appendChild(zaman);
-    li.append(ikon, metin);
+    zaman.dataset.zaman = olay.zaman;
+    ust.append(el("span", "tur", HABER_TURLERI[olay.tur] || "Haber"), zaman);
+    govde.append(ust, el("p", "", olay.metin));
+    li.append(el("span", "ikon", HABER_SIMGELERI[olay.tur] || "📜"), govde);
     liste.insertBefore(li, liste.firstChild);
     while (liste.children.length > EN_COK_SATIR) liste.removeChild(liste.lastChild);
     ozet.textContent = "Son haber: " + olay.metin;
   }
+  setInterval(function () {
+    liste.querySelectorAll("time[data-zaman]").forEach(function (t) { t.textContent = once(Number(t.dataset.zaman)); });
+  }, 30000);
   function yokla() {
     fetch("/dunya/olaylar?sonra=" + sonId, { cache: "no-store" })
       .then(function (r) { return r.json(); })
@@ -149,27 +210,50 @@
   yokla();
   setInterval(yokla, 15000);
 
-  // --- Şeref Kürsüsü: dakikada bir.
+  // --- Şeref Kürsüsü: ilk üç podyumda, kalanlar kabartma satırlarda.
   var kursu = document.getElementById("kursu");
-  var kursuBen = document.getElementById("kursu-ben");
+  function portre(o) {
+    var img = el("img"); img.src = o.resim || "/img/profile/1025.png"; img.alt = ""; img.loading = "lazy";
+    return img;
+  }
+  function levhaSatiri(o, i, deger) {
+    var li = el("li", o.ben ? "ben" : "");
+    li.style.setProperty("--i", i);
+    var ad = el("span", "ad", o.ad);
+    if (o.rutbe) ad.appendChild(el("small", "", o.rutbe));
+    li.append(el("span", "no", o.sira), portre(o), ad, deger);
+    return li;
+  }
+  function kalkan(ust, sayi) {
+    var k = el("span", "kalkan-rozet yazi-altin");
+    k.append(el("small", "", ust), document.createTextNode(sayi));
+    return k;
+  }
   function kursuYukle() {
     fetch("/dunya/kursu", { cache: "no-store" })
       .then(function (r) { return r.json(); })
       .then(function (v) {
         kursu.textContent = "";
-        v.ilk.forEach(function (o) {
-          var li = document.createElement("li");
-          if (o.ben) li.className = "ben";
-          var no = document.createElement("span"); no.className = "no"; no.textContent = o.sira;
-          var ad = document.createElement("span"); ad.className = "ad"; ad.textContent = o.ad;
-          var rutbe = document.createElement("small"); rutbe.textContent = o.rutbe; ad.appendChild(rutbe);
-          var sv = document.createElement("span"); sv.className = "sv"; sv.textContent = "sv. " + o.seviye;
-          li.append(no, ad, sv);
-          kursu.appendChild(li);
+        var podyum = el("div", "podyum");
+        [1, 0, 2].forEach(function (i) {
+          var o = v.ilk[i];
+          if (!o) return;
+          var b = el("div", "basamak b" + (i + 1));
+          var p = el("div", "portre");
+          p.appendChild(portre(o));
+          if (i === 0) p.appendChild(el("span", "tac", "👑"));
+          var blok = el("div", "blok");
+          blok.append(el("span", "no yazi-oyun", i + 1), el("span", "ad", o.ad), el("span", "sv", "sv. " + o.seviye));
+          b.append(p, blok, el("span", "rt", o.rutbe));
+          podyum.appendChild(b);
         });
-        kursuBen.textContent = v.ben && !v.ilk.some(function (o) { return o.ben; })
-          ? "Sen " + v.toplam + " imparatorluk içinde " + v.ben.sira + ". sıradasın (" + v.ben.rutbe + ")."
-          : "";
+        var levha = el("ol", "levha");
+        v.ilk.slice(3).forEach(function (o, i) { levha.appendChild(levhaSatiri(o, i, kalkan("sv", o.seviye))); });
+        if (v.ben && !v.ilk.some(function (o) { return o.ben; })) {
+          levha.appendChild(el("li", "ayrac", "• • •"));
+          levha.appendChild(levhaSatiri(Object.assign({}, v.ben, { ben: true }), 8, kalkan("sv", v.ben.seviye)));
+        }
+        kursu.append(podyum, levha);
       })
       .catch(function () {});
   }
@@ -179,38 +263,66 @@
   // --- Haftalık turnuva: ilk 10 hafta bitince ödül alır.
   var hafta = document.getElementById("hafta");
   var haftaBilgi = document.getElementById("hafta-bilgi");
+  var reyting = document.getElementById("reyting");
+  var haftaSonu = null;
   function haftaYukle() {
     fetch("/dunya/hafta", { cache: "no-store" })
       .then(function (r) { return r.json(); })
       .then(function (v) {
         hafta.textContent = "";
-        v.ilk.forEach(function (o) {
-          var li = document.createElement("li");
-          if (o.ben) li.className = "ben";
-          var no = document.createElement("span"); no.className = "no"; no.textContent = o.sira;
-          var ad = document.createElement("span"); ad.className = "ad"; ad.textContent = o.ad;
-          var puan = document.createElement("span"); puan.className = "sv"; puan.textContent = Math.round(o.puan) + " p";
-          li.append(no, ad, puan);
-          hafta.appendChild(li);
+        v.ilk.forEach(function (o, i) {
+          var puan = el("span", "puan yazi-altin");
+          say(puan, Math.round(o.puan), 1000 + i * 80);
+          hafta.appendChild(levhaSatiri(o, i, puan));
         });
+        reyting.innerHTML = "Reyting <b>" + SAYI.format(v.reyting) + "</b>";
         var bitis = new Date(v.hafta + "T00:00:00+03:00");
         bitis.setDate(bitis.getDate() + 7);
         haftaSonu = bitis;
-        haftaBilgi.textContent = "Reytingin: " + v.reyting + (v.ben ? " · Bu hafta " + v.ben.sira + ". sıradasın" : "") +
-          " · Hafta " + bitis.toLocaleDateString("tr-TR", { day: "numeric", month: "long", timeZone: "Europe/Istanbul" }) + " 00.00'da kapanır; ilk 10 ödül alır.";
+        haftaBilgi.textContent = (v.ben ? "Bu hafta " + v.ben.sira + ". sıradasın. " : "") +
+          "Hafta " + bitis.toLocaleDateString("tr-TR", { day: "numeric", month: "long", timeZone: "Europe/Istanbul" }) +
+          " 00.00'da kapanır; ilk 10 ödül alır.";
       })
       .catch(function () {});
   }
-  var haftaSonu = null;
+
+  // Dönen rakamlar (SplitFlap): değişen her rakam ikiye bölünüp döner.
   var geriSayim = document.getElementById("geri-sayim");
+  var flaplar = {};
+  function flapKur(birim, etiket) {
+    var kutu = el("div", "birim");
+    var dizi = el("div", "flaplar");
+    flaplar[birim] = [0, 1].map(function () {
+      var f = el("span", "flap");
+      f.innerHTML = "<span class='u'><i>0</i></span><span class='a'><i>0</i></span>";
+      f.dataset.deger = "0";
+      dizi.appendChild(f);
+      return f;
+    });
+    kutu.append(dizi, el("small", "", etiket));
+    geriSayim.appendChild(kutu);
+  }
+  [["g", "gün"], ["s", "saat"], ["d", "dk"], ["n", "sn"]].forEach(function (b) { flapKur(b[0], b[1]); });
+  function flapYaz(f, yeni) {
+    var eski = f.dataset.deger;
+    if (eski === yeni) return;
+    f.dataset.deger = yeni;
+    if (HAREKETSIZ) { f.innerHTML = "<span class='u'><i>" + yeni + "</i></span><span class='a'><i>" + yeni + "</i></span>"; return; }
+    f.innerHTML = "<span class='u'><i>" + yeni + "</i></span><span class='a'><i>" + eski + "</i></span>" +
+      "<span class='ku'><i>" + eski + "</i></span><span class='ka'><i>" + yeni + "</i></span>";
+    setTimeout(function () {
+      if (f.dataset.deger === yeni) f.innerHTML = "<span class='u'><i>" + yeni + "</i></span><span class='a'><i>" + yeni + "</i></span>";
+    }, 600);
+  }
   function sayac() {
     if (!haftaSonu) return;
     var kalan = Math.max(0, Math.floor((haftaSonu - Date.now()) / 1000));
-    var parcalar = [[Math.floor(kalan / 86400), "gün"], [Math.floor(kalan % 86400 / 3600), "saat"],
-                    [Math.floor(kalan % 3600 / 60), "dk"], [kalan % 60, "sn"]];
-    geriSayim.innerHTML = parcalar.map(function (p) {
-      return "<span>" + String(p[0]).padStart(2, "0") + "<small>" + p[1] + "</small></span>";
-    }).join("");
+    var degerler = { g: Math.floor(kalan / 86400), s: Math.floor(kalan % 86400 / 3600), d: Math.floor(kalan % 3600 / 60), n: kalan % 60 };
+    Object.keys(degerler).forEach(function (b) {
+      var metin = String(Math.min(99, degerler[b])).padStart(2, "0");
+      flapYaz(flaplar[b][0], metin[0]);
+      flapYaz(flaplar[b][1], metin[1]);
+    });
   }
   haftaYukle();
   setInterval(haftaYukle, 60000);
@@ -226,10 +338,10 @@
       var yakin = v.etkinlikler.filter(function (e) { return !e.aktif; })[0];
       var olay = function (simge, icerik) { return "<div class='olay'><span class='simge'>" + simge + "</span>" + icerik + "</div>"; };
       var parcalar = aktif.map(function (e) {
-        return olay(e.simge, "<b>" + e.ad + "</b> sürüyor! " + e.setler.join(", ") +
+        return olay(e.simge, "<b class='yazi-oyun'>" + e.ad + "</b>" + e.setler.join(", ") +
           " setleri mağazada.<small>" + tarih(e.son_gun) + " gün sonuna dek</small>");
       });
-      if (yakin) parcalar.push(olay(yakin.simge, "Sıradaki şenlik: <b>" + yakin.ad + "</b><small>" + tarih(yakin.baslangic) + "</small>"));
+      if (yakin) parcalar.push(olay(yakin.simge, "Sıradaki şenlik: " + yakin.ad + "<small>" + tarih(yakin.baslangic) + "</small>"));
       if (parcalar.length) { etkinlik.innerHTML = parcalar.join(""); etkinlik.hidden = false; }
     })
     .catch(function () {});
@@ -258,15 +370,19 @@
       gunler.style.setProperty("--ilerleme", String(alinan / (v.oduller.length - 1 || 1)));
       v.oduller.forEach(function (o, i) {
         var li = document.createElement("li");
+        li.style.setProperty("--i", i);
         if (i === v.oduller.length - 1) li.classList.add("efsane");
         if (i < alinan) li.classList.add("alindi");
         if (v.alinabilir && i === v.sira) li.classList.add("bugun");
-        var gun = document.createElement("span"); gun.className = "gun"; gun.textContent = o.gun + ". gün";
+        var gun = el("span", "gun yazi-oyun", o.gun + ". Gün");
         var resim = document.createElement("img"); resim.src = o.resim; resim.alt = ""; resim.loading = "lazy";
         var ad = document.createElement("span"); ad.className = "adi"; ad.textContent = o.adet + " × " + o.ad;
         li.append(gun, resim, ad);
         gunler.appendChild(li);
       });
+      var seri = document.getElementById("seri");
+      seri.hidden = alinan < 2;
+      seri.textContent = "🔥 " + alinan + " günlük seri";
       alDugmesi.disabled = !v.alinabilir;
       alDugmesi.textContent = v.alinabilir ? "Sandığı Aç" : "Yarın yine gel";
       if (!v.alinabilir) ileti.textContent = "Bugünün hediyesini aldın. Sandık yarın yeniden dolacak!";

@@ -33,7 +33,7 @@ class OyunSayfasiTestleri(unittest.TestCase):
 
     def test_statik_dosyalar(self):
         for yol in ("/js/oyun.js", "/js/gokyuzu.js", "/css/oyun.css", "/hazine",
-                    "/fonts/cinzel-latin-900-normal.woff2"):
+                    "/fonts/baloo-2-latin-800-normal.woff2"):
             cevap = self.istemci.get(yol)
             self.assertEqual(cevap.status_code, 200, yol)
             cevap.close()

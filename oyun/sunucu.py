@@ -134,6 +134,16 @@ STATIK_YOL = "/default01.static.socialpointgames.com/static/socialempires/"
 DINAMIK_YOL = "/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/"
 
 
+def _xp_araligi(bilgi):
+    """Başlıktaki XP çubuğu için (şimdiki, seviye başı, sonraki seviye)."""
+    from oyun.config import get_game_config
+    seviyeler = get_game_config()["levels"]
+    sv = max(0, min(int(bilgi.get("level", 0)), len(seviyeler) - 1))
+    bas = int(seviyeler[sv]["exp_required"])
+    son = int(seviyeler[sv + 1]["exp_required"]) if sv + 1 < len(seviyeler) else bas
+    return {"simdi": int(bilgi.get("xp", 0)), "bas": bas, "son": son}
+
+
 def _oyun_sayfasi(sablon, ruffle_js=None):
     uid, surum = session.get("USERID"), session.get("GAMEVERSION")
     if not uid or not surum or uid not in all_saves_userid():
@@ -148,7 +158,8 @@ def _oyun_sayfasi(sablon, ruffle_js=None):
                            friendsInfo=fb_friends_str(uid), version=version_name,
                            GAMEVERSION=surum, SERVERIP=HOST, ruffle_js=ruffle_js,
                            statik=kok + STATIK_YOL, dinamik=kok + DINAMIK_YOL,
-                           rutbe=rutbe(bilgi.get("level", 0)), varlik=STATIK_YOL)
+                           rutbe=rutbe(bilgi.get("level", 0)), varlik=STATIK_YOL,
+                           xp=_xp_araligi(bilgi))
 
 
 @app.route("/play.html")

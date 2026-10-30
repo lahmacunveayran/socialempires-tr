@@ -14,6 +14,15 @@ from oyun import dunya as Dunya
 from oyun.kayit import all_saves_userid, session as kayit_oturumu
 from oyun.sunucu import app
 
+VARSAYILAN_PORTRE = "/img/profile/1025.png"
+
+
+def portre(kayit):
+    """Oyuncunun portresi (botların gerçek portreleri var)."""
+    resim = str(kayit.get("playerInfo", {}).get("pic") or "")
+    return resim if resim.startswith("/img/") else VARSAYILAN_PORTRE
+
+
 KURSU_SURESI = 60  # saniye: 100 kayıt dosyası her istekte taranmasın
 KURSU_BOYU = 10
 YOKLAMA_SANIYE = 15
@@ -35,6 +44,7 @@ def _siralama():
             "seviye": int(harita.get("level", 1)),
             "xp": int(harita.get("xp", 0)),
             "bot": bool(kayit["playerInfo"].get("bot")),
+            "resim": portre(kayit),
         })
     sira.sort(key=lambda o: (-o["seviye"], -o["xp"]))
     for i, o in enumerate(sira, 1):
@@ -79,6 +89,8 @@ def hafta_ucu():
     from oyun import elo, turnuva
     turnuva.haftayi_guncelle()
     tablo = elo.tablo(turnuva.bot_reytingleri())
+    for satir in tablo[:elo.ODULLU_SIRA + 1]:
+        satir["resim"] = portre(kayit_oturumu(satir["id"]) or {})
     uid = session.get("USERID")
     kayit = kayit_oturumu(uid) if uid else None
     reyting = (kayit or {}).get("privateState", {}).get("elo", {}).get("puan", elo.BASLANGIC)

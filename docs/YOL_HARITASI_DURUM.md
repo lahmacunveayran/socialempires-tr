@@ -95,5 +95,16 @@ kılıçlı arma ve bayraklar, parşömen ve başlık şeridi, günlük ödül
 parşömeni, hazine sandığı, hediyeli köylü kız, Kral Arthur, haftalık turnuva
 afişi ve hediye günlerindeki birim resimleri (`buildingthumbs/`). Yalnızca
 gökyüzü (Güneş, Ay, bulutlar, yıldızlar) CSS ile çizilir, çünkü Güneş'in
-gerçek konumuna göre değişir. Yazı tipleri Cinzel ve Alegreya (OFL,
-`templates/fonts/`).
+gerçek konumuna göre değişir.
+
+Yazı: başlıklar oyunun kendi başlıkları gibi beyaz dolgu, kalın kahverengi
+dış çizgi ve koyu gölgeyle Baloo 2 (800); metin Nunito. İkisi de OFL ve
+`templates/fonts/` altında. Seçim ölçülerek yapıldı: Lilita One, Fredoka,
+Sniglet, Bowlby One, Changa One ve Bubblegum Sans'ta ğ, İ, ş harfleri yok;
+Titan One'da İ yok. Baloo 2, Paytone One, Rubik ve Grandstander tam.
+
+Etkileşimli bileşenler Magic UI, Eldora UI, Kokonut UI ve Animata'daki
+React bileşenlerinin (AnimatedList, NumberTicker, MagicCard, ShineBorder,
+SparklesText, SplitFlapText) kaynak kodu okunarak saf CSS ve küçük JS ile
+yeniden yazıldı; React, Tailwind ya da Framer Motion gerekmez. Yay
+hareketi CSS `linear()` eğrisiyle, dönen kenar ışığı `@property` ile.

@@ -568,16 +568,16 @@
     },
     {
       "id": "OYN-04",
-      "baslik": "Bot adları ve portreleri oyunun birimlerinden; seviye atladıkça portre üst birime geçer",
+      "baslik": "Bot adları ve portreleri oyunun kendi birimlerinden: oyundaki adı ve resmi",
       "sinif": "ozellik",
       "onem": "Düşük",
       "durum": "ci_bekliyor",
       "isaret": "✔",
-      "kanit": "Sahibi tarihî komutan adlarının saygısızlık olabileceğini söyledi ve Öneri 1'i seçti (30 Ekim 2026). 50 bot 13 birim ailesinden unvan taşıyor (Kara Şövalye, Gezgin Büyücü, Fırtına Kanadı...); portre ailenin buildingthumbs resmi, 12/24/36/48. seviyelerde üst birime geçer (oyun/bot_kimlik.py; dunya.py seviye atlamada tazeler). Bütün resimler çevrimdışı temel pakette. Eski tarihî adlı kayıtlar ve raporlardaki adlar açılışta aynı sıradaki yeni ada geçer: yerel 53 kayıtlık kopyada 50 kayıt güncellendi, ikinci açılışta 0. Sıfırdan üretimde 50 yeni ad. Gerçek kişi fotoğrafları (templates/img/profile/bot_*.jpg, pp_*.jpg; 2 yaşayan kişi, kostümlü kişi ×4, paralar, yazıtlar, 6 kopya) depodan kaldırıldı. Tarayıcıda denendi: Şeref Kürsüsü, Haftalık Turnuva ve oyun içi komşu şeridinde yeni ad ve birim resimleri. Aynı denemede kürsü hatası bulundu: basamak yüksekliği sabit olduğundan ad satırı sıkışıp kayboluyordu (3. sıra adsız, 2. sıra 'Şafak B'); basamak içeriğe göre uzar, ad iki satıra iner.",
-      "test": "tests/test_sistemler.py (BotKimlikTestleri)",
+      "kanit": "Sahibi tarihî komutan adlarının saygısızlık olabileceğini söyledi ve Öneri 1'i seçti (30 Ekim 2026). İlk uygulamada adlar uyduruldu (Kara Şövalye, Kalkan Kızı...) ve portre seviyeyle ailenin üst birimine geçiyordu; ad ile resim uyuşmadı ('Kalkan Kızı' Thor resmiyle). Sahibi: 'Normal oyun içi birlik olarak adı thor ise thor olsun'. Son hâl: her bot oyundaki bir birimin oyun içi Türkçe adını ve resmini taşır (oyun/bot_kimlik.py, birim kimliğiyle); liste can × saldırıya göre sıralı, zayıf bota zayıf birim (Hafif Okçu sv 3 ... Fırtına Ejderhası sv 59). Bütün resimler çevrimdışı temel pakette. Eski tarihî adlı kayıtlar ve raporlardaki adlar açılışta aynı sıradaki yeni ada geçer: yerel kayıt kopyasında 50 kayıt güncellendi, ikinci açılışta 0. Gerçek kişi fotoğrafları (templates/img/profile/bot_*.jpg, pp_*.jpg) depodan kaldırıldı. Tarayıcıda Şeref Kürsüsü, turnuva ve oyun içi komşu şeridinde denendi; aynı denemede kürsü hatası bulundu: basamak yüksekliği sabit olduğundan ad satırı sıkışıp kayboluyordu; basamak içeriğe göre uzar, ad iki satıra iner.",
+      "test": "tests/test_sistemler.py (BotKimlikTestleri: ad ve resim oyundaki birimle aynı, güç sırası, eski kayıt dönüşümü)",
       "pr": null,
       "onay": "Sahibi, 30 Ekim 2026",
-      "notlar": "Sahibinin önce istediği ünlü adları ve internetten fotoğrafları (Ata Demirer, Cem Yılmaz, Manifest, DJ Dikkat) sahibi sonra bıraktı ('uğraşmayalım'); depoya girmedi. Kuşatma makineleri ailesi yüz olmadığı için dışarıda. Sahibinin uyarısıyla düzeltildi: ad sabit, portre kademeyle değiştiği için kademeye özgü adlar uyuşmuyordu ('Kalkan Kızı' 57. seviyede Thor resmiyle görünüyordu). 'Kalkan Kızı' -> 'Thor' (oyunun birim adı; bot en üst kademede başlar), 'Yengeç Şövalye' -> 'Dalga Beyi' (36. seviyede portre denizatına geçiyordu). Adlar artık ailenin bütün kademelerine uyar."
+      "notlar": "Sahibinin önce istediği ünlü adları ve internetten fotoğrafları sahibi sonra bıraktı ('uğraşmayalım'); depoya girmedi. Ders: sahibinin onayladığı öneriyi harfiyen uygula; 'birimin adı' denmişken ad uydurma."
     }
   ]
 }

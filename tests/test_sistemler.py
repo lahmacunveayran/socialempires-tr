@@ -323,7 +323,7 @@ class CeviriTestleri(unittest.TestCase):
 
 
 class BotKimlikTestleri(unittest.TestCase):
-    """Bot adları ve portreleri oyunun birimlerinden; eski tarihî adlı kayıtlar yenilerine geçer."""
+    """Bot adı ve portresi oyundaki bir birimin adı ve resmi; eski tarihî adlı kayıtlar yenilerine geçer."""
 
     def setUp(self):
         from oyun import bot_kimlik
@@ -338,41 +338,46 @@ class BotKimlikTestleri(unittest.TestCase):
         self.assertEqual(len(self.b.ESKI_ISIMLER), 50)
         self.assertFalse(set(self.b.ESKI_ISIMLER) & set(self.b.ISIMLER))
 
-    def test_portreler_oyunun_kendi_resmi_ve_temel_pakette(self):
+    def test_ad_ve_resim_oyunun_kendi_birimi_temel_pakette(self):
+        from oyun.config import get_client_game_config
+        birimler = {i["id"]: (i["name"], i["img_name"]) for i in get_client_game_config("tr")["items"]}
         temel = set()
         with open(os.path.join(KOK, "config", "onindirme.tsv"), encoding="utf-8") as f:
             for satir in f:
                 p = satir.rstrip("\n").split("\t")
                 if len(p) >= 3 and not satir.startswith("#") and int(p[2]) <= 1:
                     temel.add(p[0])
-        for aile in self.b.AILELER.values():
-            self.assertEqual(len(aile), len(self.b.KADEMELER) + 1)
-            for resim in aile:
-                self.assertIn(f"buildingthumbs/{resim}.jpg", temel)
+        for ad, resim, kimlik in self.b.BOTLAR:
+            self.assertEqual(birimler[kimlik], (ad, resim))  # oyundaki adı neyse o (ör. Thor)
+            self.assertIn(f"buildingthumbs/{resim}.jpg", temel)
+        self.assertIn("Thor", self.b.ISIMLER)
 
-    def test_seviye_atladikca_ust_birim(self):
-        resimler = [self.b.portre("Kara Şövalye", s) for s in (1, 11, 12, 30, 48, 99)]
-        self.assertEqual([r.rsplit("/", 1)[1] for r in resimler],
-                         ["caballo1.jpg", "caballo1.jpg", "caballo2.jpg", "caballo3.jpg", "caballo5.jpg", "caballo5.jpg"])
-        self.assertEqual(self.b.portre("Bilinmeyen", 30), self.b.VARSAYILAN_PORTRE)
+    def test_guclu_bota_guclu_birim(self):
+        from oyun.config import get_client_game_config
+        guc = {i["id"]: int(i.get("life") or 0) * int(i.get("attack") or 0)
+               for i in get_client_game_config("tr")["items"]}
+        sira = [guc[kimlik] for _, _, kimlik in self.b.BOTLAR]
+        self.assertEqual(sira, sorted(sira))
+        self.assertEqual(self.b.portre("Bilinmeyen"), self.b.VARSAYILAN_PORTRE)
 
     def test_eski_adli_bot_ve_raporlar_yenilenir(self):
         oyuncu = {"playerInfo": {"name": "Attila"}, "maps": [{"level": 5}], "privateState": {"attacksSent": [
-            {"description": {"oponent": {"name": "Cengiz Han", "level": 31, "pic": "/img/profile/bot_cengiz_han.jpg"}}}]}}
+            {"description": {"oponent": {"name": "Cengiz Han", "level": 31,
+                                         "pic": "/img/profile/bot_cengiz_han.jpg"}}}]}}
         kayitlar = {"b": self._bot("Kara Han", 40), "o": oyuncu}
         self.assertEqual(self.b.adlari_yenile(kayitlar), {"b", "o"})
         pi = kayitlar["b"]["playerInfo"]
-        self.assertEqual((pi["name"], pi["map_names"]), ("Kara Şövalye", ["Kara Şövalye Kalesi"]))
-        self.assertEqual(pi["pic"], self.b.portre("Kara Şövalye", 40))
+        self.assertEqual((pi["name"], pi["map_names"]), ("Hafif Okçu", ["Hafif Okçu Kalesi"]))
+        self.assertEqual(pi["pic"], self.b.portre("Hafif Okçu"))
         rakip = oyuncu["privateState"]["attacksSent"][0]["description"]["oponent"]
         yeni = self.b.ISIMLER[self.b.ESKI_ISIMLER.index("Cengiz Han")]
-        self.assertEqual((rakip["name"], rakip["pic"]), (yeni, self.b.portre(yeni, 31)))
+        self.assertEqual((rakip["name"], rakip["pic"]), (yeni, self.b.portre(yeni)))
         self.assertEqual(oyuncu["playerInfo"]["name"], "Attila")  # bot olmayan kayıt adı değişmez
         self.assertEqual(self.b.adlari_yenile(kayitlar), set())  # ikinci açılışta yazacak bir şey yok
 
     def test_diyar_portresi_birim_resmini_kabul_eder(self):
         from oyun.diyar import portre
-        resim = self.b.portre("Gezgin Büyücü", 20)
+        resim = self.b.portre("Thor")
         self.assertEqual(portre({"playerInfo": {"pic": resim}}), resim)
         self.assertEqual(portre({"playerInfo": {"pic": "https://ornek.com/x.jpg"}}), self.b.VARSAYILAN_PORTRE)
 

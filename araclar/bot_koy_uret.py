@@ -178,7 +178,7 @@ def bot_uret(adet=50):
         pi.update({
             "pid": pid,
             "name": isim,
-            "pic": portre(isim, seviye),
+            "pic": portre(isim),
             "cash": 0,
             "completed_tutorial": 1,
             "default_map": 0,

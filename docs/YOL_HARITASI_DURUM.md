@@ -113,11 +113,13 @@ Yol haritasının açık soruları yanıtlandı:
   karşıdır; çok oyunculu haftalık düzen ve Tailscale ile HTTPS gerekmez.
 - **Günlük ödül yalnızca oyunun kendi ödülüdür.** Sayfadaki 7 günlük hediye
   sandığı ve "Ücretsiz Hediyeler" düğmesi kaldırıldı.
+- **Oyun 1.4.07 istemcisine tam geçer** (KAR-08). Aşamalar, kabul kapıları ve
+  tahminler: [YOL_HARITASI_1407.md](YOL_HARITASI_1407.md).
 
 ## Açık işler
 
-- `fx/p.miniFireball2.swf` arşivde yok (404); karşılığı bulunup
-  `oyun/varliklar.py` → `ESDEGERLER`'e eklenmeli.
+- ~~`fx/p.miniFireball2.swf` arşivde yok (404)~~: kapandı (VAR-01, PR #9).
+  `oyun/fx_yama.py` efekti oyunun kendi `p.fireBall` efektinden türetiyor.
 - ~~Yükleyicideki İspanyolca "Cargando" yazısı~~: masaüstünde görülmemişti ama
   tablette görünüyordu (VAR-03). Oyun kodundaki dize "Yükleniyor" olarak yamalanıyor.
 - Gerçek Windows 11 sanal makinesi, Android telefon ve iPad ile kabul sınaması.

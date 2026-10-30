@@ -137,7 +137,8 @@ biçimindedir; istemci yalnızca `data`'yı okur.
   turnuva savaşları bu yüzden Ruffle'da oynanamıyor; Flash Player'da sorun yok.
 - Oyuncu fotoğrafları boş görünür (istemci Facebook adresinden yüklüyor).
 - Haftalık turnuva (tür 8) kapalı.
-- `fx/p.miniFireball2.swf` orijinal arşivde de yok.
+- `fx/p.miniFireball2.swf` orijinal arşivde de yok; `oyun/fx_yama.py` onu oyunun
+  kendi `p.fireBall` efektinden türetir (VAR-01).
 
 ## Görseller
 

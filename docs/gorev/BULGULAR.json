@@ -2,9 +2,9 @@
   "surum": "0.05a",
   "guncelleme": "2026-10-30",
   "devam_noktasi": {
-    "faz": "1.4.07'ye geçiş kararı",
-    "madde": "KYN-05",
-    "sonraki_adim": "Sahibi aşamalı geçişi onaylarsa Aşama 0 (istemci seçimi, config hattı, varlık sabitleme) ayrı PR'la"
+    "faz": "1.4.07'ye tam geçiş (KAR-08)",
+    "madde": "GEC-01",
+    "sonraki_adim": "PR #19 birleşince GEC-01: araclar/abc_okur.py ve 1.4.07 komut imza tablosu"
   },
   "maddeler": [
     {
@@ -304,7 +304,7 @@
       "test": null,
       "pr": "#10",
       "onay": null,
-      "notlar": "Yapmak için istemcinin AS3 bayt kodunu değiştirmek gerekir. 30.10.2026: 0926'da görev tablosu Constants sınıfında (228 kayıt, ~70 MISSION_ türü), kod gizlenmiş. 1.4.07'de hedefler config'ten (goals) okunuyor; upstream nerroth-rewrite 206 hedefle bunu kullanıyor (KYN-01). 0926'da kalınırsa yol: sunucu tarafında takip ve var olan görevlerin metin/ödülünü değiştirmek."
+      "notlar": "Yapmak için istemcinin AS3 bayt kodunu değiştirmek gerekir. 30.10.2026: 0926'da görev tablosu Constants sınıfında (228 kayıt, ~70 MISSION_ türü), kod gizlenmiş. 1.4.07'de hedefler config'ten (goals) okunuyor; upstream nerroth-rewrite 206 hedefle bunu kullanıyor (KYN-01). 0926'da kalınırsa yol: sunucu tarafında takip ve var olan görevlerin metin/ödülünü değiştirmek. 30.10.2026: sahibi 1.4.07'ye tam geçişi seçti (KAR-08); bu madde GEC-07'de (bayram hedefleri) çözülecek."
     },
     {
       "id": "KAR-01",
@@ -454,91 +454,91 @@
       "baslik": "Ruffle'ın wgpu çizicisi 256 köşe uniform sınırlı GPU'larda çöküyor, oyun açılmıyor",
       "sinif": "hata",
       "onem": "Yüksek",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "Android 15 emülatöründe (WebView Chrome 124) 'Krallığa Gir' sonrası oyun 7 dk açılmadı; WebView konsolu: 'Vertex shader active uniforms exceed GL_MAX_VERTEX_UNIFORM_VECTORS (256)', 'wgpu error: Validation Error', 'Uncaught RuntimeError: unreachable (ruffle_web.wasm)'. Birçok mobil GPU da 256 verir; tablette de olabilirdi. Düzeltme: oyun.js GPU sınırını okur, ≤256 ise Ruffle preferredRenderer='webgl'. Yerelde sınır 256'ya taklit edilerek: Ruffle 'Used renderer: webgl', panik yok, oyun 129b-init ve 200-tut1'e ulaştı; 4096'da eski davranış (wgpu-webgl) (✔). PR #15 emülatörü: 'Used renderer: webgl', çökme yok, oyun yüklendi (✔).",
       "test": "tests/test_android.py (KisitliGpu); android/sinama.sh + sinama_oyun.js (emülatör)",
       "pr": "#15",
       "onay": null,
-      "notlar": "Sınama betiği artık başarısızlıkta WebView konsolunu döküyor."
+      "notlar": "Sınama betiği artık başarısızlıkta WebView konsolunu döküyor. 30.10.2026: #15 master'a birleşti (git log master), ci_bekliyor'dan düzeltildi'ye."
     },
     {
       "id": "DAG-08",
       "baslik": "Yavaş cihazda oyun açılışta Ruffle'ın 15 sn betik sınırına takılıyor",
       "sinif": "hata",
       "onem": "Yüksek",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "◐",
       "kanit": "Android 15 emülatörü (2 çekirdek, yazılım GPU): oyun yüklendi, 100-config'ten sonra durdu; konsol: 'Error dispatching event \"complete\": A script in this movie has taken too long to execute and has been terminated.' Oyun ~5 MB'lık yapılandırmayı tek olayda işliyor; düşük güçlü tablette de aşılabilir. Düzeltme: Ruffle maxExecutionDuration 60 sn; emülatör 4 çekirdek.",
       "test": "android/sinama.sh + sinama_oyun.js (129b-init şartı)",
       "pr": "#15",
       "onay": null,
-      "notlar": null
+      "notlar": "30.10.2026: #15 master'a birleşti (git log master), ci_bekliyor'dan düzeltildi'ye."
     },
     {
       "id": "DAG-09",
       "baslik": "Çevrimdışı paket: oyun varlıklarını bir kerede indirme",
       "sinif": "ozellik",
       "onem": "Orta",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "Arşiv 4.479 dosya / 1,3 GB; bu sürümde kullanılmayanlar (başka sürümlerin SWF'leri, yapılandırmada geçmeyen çizimler, boş ve ESDEGERLER adlı dosyalar) atılınca 4.408 dosya / 1,07 GB. Temel paket (öncelik 0-1) 174 MB. Yerelde temel paket indirildi (3.081 dosya), sunucu ölü vekille internetsiz açılıp yeni imparatorlukla oyuna girildi: tek eksik 'jinetePerdido.swf' (haritada rastgele beliren kayıp eşya, alt kategori 91) çıktı; kayıp eşyalar temel pakete alındı. Ölçüm: HEAD istekleriyle 4.479 dosyanın boyutu.",
       "test": "tests/test_onindirme.py",
-      "pr": null,
+      "pr": "#15",
       "onay": "Sahibi, 30 Ekim 2026: 'Tablet için (en çok fayda) bunları yap'",
-      "notlar": "Liste: araclar/onindirme_listesi.py -> config/onindirme.tsv. Başlat/durdur yalnızca bu cihazdan; disk boşluğu denetlenir."
+      "notlar": "Liste: araclar/onindirme_listesi.py -> config/onindirme.tsv. Başlat/durdur yalnızca bu cihazdan; disk boşluğu denetlenir. 30.10.2026: #15 master'a birleşti (git log master), ci_bekliyor'dan düzeltildi'ye."
     },
     {
       "id": "DAG-10",
       "baslik": "Wi-Fi ile taşı: imparatorluğu bilgisayar ile tablet arasında aktarma",
       "sinif": "ozellik",
       "onem": "Orta",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "Gönderen cihaz 10 dk'lığına ayrı bir sunucu (5051) açar, yalnızca liste ve yedek zarfını 6 haneli kodla verir; 10 yanlış kodda kapanır; asıl sunucu ev ağına açılmaz. Alan cihaz yalnızca özel IPv4 adresine bağlanır; kayıt yedek yüklemedeki denetimlerden geçer, eski hâli .bak. Yerelde aynı makinede ev ağı adresiyle gönderilip alındı; yanlış kod, 127.0.0.1 ve kapattıktan sonraki bağlantı reddedildi (✔).",
       "test": "tests/test_tasima.py",
-      "pr": null,
+      "pr": "#15",
       "onay": "Sahibi, 30 Ekim 2026",
-      "notlar": "Tek kişilik: aynı kişinin kendi cihazları arasında."
+      "notlar": "Tek kişilik: aynı kişinin kendi cihazları arasında. 30.10.2026: #15 master'a birleşti (git log master), ci_bekliyor'dan düzeltildi'ye."
     },
     {
       "id": "DAG-11",
       "baslik": "Dokunmatik: iki parmakla yakınlaştırma, ikinci parmak ve dokunuş konumu",
       "sinif": "ozellik",
       "onem": "Orta",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "Oyun fare tekerleğiyle yakınlaşıyor (masaüstünde tekerlekle doğrulandı). İki parmak hareketi Ruffle tuvaline tekerlek olayı olarak gönderiliyor; CDP dokunma olaylarıyla yakınlaşma ve uzaklaşma görüldü. İkinci parmağın işaretçi olayları Ruffle'a ulaşmıyor; dokunuştan önce aynı noktaya pointermove (ruffle-rs/ruffle#23184). Ruffle 'unreachable' ile çökerse sayfa bir kez WebGL çizicisiyle yeniden açılıyor.",
       "test": "elle (CDP dokunma benzetimi); gerçek tablet sahibinde",
-      "pr": null,
+      "pr": "#15",
       "onay": "Sahibi, 30 Ekim 2026",
-      "notlar": "Bilinen: ilk parmağın altındaki bina seçilebilir. Kaynak taraması: Android'de Ruffle/WebView/Chaquopy/Samsung (Auto Blocker, uyutma) bulguları ANDROID.md'ye işlendi."
+      "notlar": "Bilinen: ilk parmağın altındaki bina seçilebilir. Kaynak taraması: Android'de Ruffle/WebView/Chaquopy/Samsung (Auto Blocker, uyutma) bulguları ANDROID.md'ye işlendi. 30.10.2026: #15 master'a birleşti (git log master), ci_bekliyor'dan düzeltildi'ye."
     },
     {
       "id": "OYN-01",
       "baslik": "Bot dünyası: değişen ittifaklar ve intikam seferleri (Diyar Haberleri)",
       "sinif": "ozellik",
       "onem": "Orta",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "İttifaklar artık kayıtta (bot_hafiza.ittifak), 15 turda bir bot kalabalık ittifaktan en küçüğüne geçebiliyor (haber). Başka ittifaktan bir bota yenilen botun ittifakı intikam seferi ilan ediyor; sefer 12 turda en çok 3 akın, her turda ittifakın en güçlü uygun üyesi (saldırı hakkı, aynı hedef 6 saat kuralı ve aralıklar korunur); sonucu haber olur. Oyuncu bir bota saldırınca o botun ittifakı oyuncuya sefer ilan edebilir; oyuncuya akınlar kalkana ve aralığa saygılı. Yerelde 5 sn'lik turla: 'Yeşil Birlik, Modu Han için Tardu köyüne intikam seferi ilan etti' ardından 'Timur → Tardu: kazandı' (✔). Ayrıca: saldıran botun kaydı her akında yazılıyor (önce yalnızca ekonomisi değişince yazılıyordu).",
       "test": "tests/test_sistemler.py (IttifakSeferTestleri)",
-      "pr": null,
+      "pr": "#15",
       "onay": "Sahibi, 30 Ekim 2026",
-      "notlar": "Ayarlar: dunya.intikam_olasiligi (0,35), dunya.oyuncuya_intikam (0,5). Haber türü 'ittifak', simge oyunun kendi arması b_8.png."
+      "notlar": "Ayarlar: dunya.intikam_olasiligi (0,35), dunya.oyuncuya_intikam (0,5). Haber türü 'ittifak', simge oyunun kendi arması b_8.png. 30.10.2026: #15 master'a birleşti (git log master), ci_bekliyor'dan düzeltildi'ye."
     },
     {
       "id": "OYN-02",
       "baslik": "İmparatorluk günlüğü: savaş geçmişi, ganimet ve seviye ilerlemesi tek sayfada",
       "sinif": "ozellik",
       "onem": "Düşük",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "/gunluk yalnızca kayıttan okur (attacksSent, attacksReceived, onur; günlük yedeklerden 14 güne kadar seviye/XP/onur/kaynak). Simgeler oyunun kendi armaları (b_4 saldırı, b_10 savunma, b_7 kayıp) ve collect_g0.jpg; portreler oyunun/deponun profil resimleri. Gerçek bir kayıtla Galaxy Tab S9 yatay benzetiminde denendi; iki hata bulunup düzeltildi: 'arma' sınıfı başlık armasının konumunu devralıyordu, savunma satırı yanlış okunuyordu ('X köyüne saldırdı' -> 'X sana saldırdı').",
       "test": "tests/test_gunluk.py",
-      "pr": null,
+      "pr": "#15",
       "onay": "Sahibi, 30 Ekim 2026",
-      "notlar": "Bot akınlarının eski 'gönderilen' kayıtlarında açıklama yok: sonuç '—'."
+      "notlar": "Bot akınlarının eski 'gönderilen' kayıtlarında açıklama yok: sonuç '—'. 30.10.2026: #15 master'a birleşti (git log master), ci_bekliyor'dan düzeltildi'ye."
     },
     {
       "id": "REG-03",
@@ -558,104 +558,104 @@
       "baslik": "Çeviri taraması: oyun baştan oynanıp İngilizce kalan metinler bulundu",
       "sinif": "ozellik",
       "onem": "Düşük",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "Oyun yerelde Chromium + Ruffle ile oynandı (köy, inşa, dünya, hedefler, ayarlar, hediye, küre, günlük ödül); ekran görüntüleri tek tek okundu. Eklenen: büyüler (magics, 10. bölüm), onur rütbeleri (honor_levels), turnuva türleri (tournament_type) tr.json'a (+53), 20 SWF metin alanı arayuz_tr.json'a (savaş, sınır, müttefik pazarı yardımları, Element Tanrıları anlatısı, casuslar, dalga, kalan birim...). Varsayılan harita adı 'My Empire' -> 'İmparatorluğum' (yeni köy ve eski kayıtlar). SWF yaması 581 alanı değiştiriyor.",
       "test": "tests/test_sistemler.py (CeviriTestleri, SwfYamaTestleri)",
       "pr": "#15",
       "onay": "Sahibi, 30 Ekim 2026",
-      "notlar": "Kalan İngilizce: 'world' (küre vektör çizimi), BUILD/ADD ALLY (resim), 'Add Cash' (SWF metin alanlarında yok, resim ya da başka parça); resimlerdeki yazılar karar gereği kalır. Açık (?): günlük ödül penceresinin başlık kutusu boş görünüyor ve '250 altın' etiketi kutuya sığmıyor ('250 al'); 2. ve 4. gün ödülü yalnızca '1'. Bunlar istemcinin kendi kodunda kuruluyor; doğrulanmadı."
+      "notlar": "Kalan İngilizce: 'world' (küre vektör çizimi), BUILD/ADD ALLY (resim), 'Add Cash' (SWF metin alanlarında yok, resim ya da başka parça); resimlerdeki yazılar karar gereği kalır. Açık (?): günlük ödül penceresinin başlık kutusu boş görünüyor ve '250 altın' etiketi kutuya sığmıyor ('250 al'); 2. ve 4. gün ödülü yalnızca '1'. Bunlar istemcinin kendi kodunda kuruluyor; doğrulanmadı. 30.10.2026: #15 master'a birleşti (git log master), ci_bekliyor'dan düzeltildi'ye. 30.10.2026: günlük ödül başlığı ve sığmayan etiket ayrı madde oldu: OYN-11."
     },
     {
       "id": "OYN-04",
       "baslik": "Bot adları ve portreleri oyunun kendi birimlerinden: oyundaki adı ve resmi",
       "sinif": "ozellik",
       "onem": "Düşük",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "Sahibi tarihî komutan adlarının saygısızlık olabileceğini söyledi ve Öneri 1'i seçti (30 Ekim 2026). İlk uygulamada adlar uyduruldu (Kara Şövalye, Kalkan Kızı...) ve portre seviyeyle ailenin üst birimine geçiyordu; ad ile resim uyuşmadı ('Kalkan Kızı' Thor resmiyle). Sahibi: 'Normal oyun içi birlik olarak adı thor ise thor olsun'. Son hâl: her bot oyundaki bir birimin oyun içi Türkçe adını ve resmini taşır (oyun/bot_kimlik.py, birim kimliğiyle); liste can × saldırıya göre sıralı, zayıf bota zayıf birim (Hafif Okçu sv 3 ... Fırtına Ejderhası sv 59). Bütün resimler çevrimdışı temel pakette. Eski tarihî adlı kayıtlar ve raporlardaki adlar açılışta aynı sıradaki yeni ada geçer: yerel kayıt kopyasında 50 kayıt güncellendi, ikinci açılışta 0. Gerçek kişi fotoğrafları (templates/img/profile/bot_*.jpg, pp_*.jpg) depodan kaldırıldı. Tarayıcıda Şeref Kürsüsü, turnuva ve oyun içi komşu şeridinde denendi; aynı denemede kürsü hatası bulundu: basamak yüksekliği sabit olduğundan ad satırı sıkışıp kayboluyordu; basamak içeriğe göre uzar, ad iki satıra iner.",
       "test": "tests/test_sistemler.py (BotKimlikTestleri: ad ve resim oyundaki birimle aynı, güç sırası, eski kayıt dönüşümü)",
-      "pr": null,
+      "pr": "#16",
       "onay": "Sahibi, 30 Ekim 2026",
-      "notlar": "Sahibinin önce istediği ünlü adları ve internetten fotoğrafları sahibi sonra bıraktı ('uğraşmayalım'); depoya girmedi. Ders: sahibinin onayladığı öneriyi harfiyen uygula; 'birimin adı' denmişken ad uydurma."
+      "notlar": "Sahibinin önce istediği ünlü adları ve internetten fotoğrafları sahibi sonra bıraktı ('uğraşmayalım'); depoya girmedi. Ders: sahibinin onayladığı öneriyi harfiyen uygula; 'birimin adı' denmişken ad uydurma. 30.10.2026: #16 master'a birleşti (git log master), ci_bekliyor'dan düzeltildi'ye."
     },
     {
       "id": "OYN-05",
       "baslik": "Profil resmi: oyuncu kendi fotoğrafını koyar",
       "sinif": "ozellik",
       "onem": "Düşük",
-      "durum": "ci_bekliyor",
+      "durum": "onay_bekliyor",
       "isaret": "◐",
       "kanit": "Sahibinin isteği (30 Ekim 2026). /profil sayfası: fotoğraf tarayıcıda ortasından kare kırpılıp 256×256 JPEG'e küçültülür (Python'da resim kütüphanesi gerekmez), sunucu JPEG başı/sonu ve 300 KB sınırını denetler. Resim kaydın içinde, oyuna giden get_player_info'da olmayan profil_resmi alanında saklanır; yedek zarfı ve Wi-Fi taşıma onu da götürür. playerInfo.pic /profil/resim/<uid>.jpg?v=... olur: oyun içi komşu şeridi, Şeref Kürsüsü ve günlük bunu kullanır; resim değişince kürsü önbelleği boşaltılır. Tarayıcıda denendi (Chromium, 1280×800): 1288×900'lük PNG seçildi, 26 KB JPEG kaydedildi, sunuldu, kürsüde göründü. Aynı denemede iki hata bulunup düzeltildi: düğmelerin CSS'i hidden özniteliğini eziyordu (Kaydet/Kaldır baştan görünüyordu), kürsü 60 sn önbellekten eski resmi gösteriyordu. Android: dosya seçici sayfa yalnızca resim isteyince galeriyi açar (accept image/*); emülatörde ve tablette denenmedi.",
       "test": "tests/test_profil.py",
-      "pr": null,
+      "pr": "#16",
       "onay": "Sahibi, 30 Ekim 2026",
-      "notlar": "Android'de galeri seçimi gerçek tablette doğrulanacak (?)."
+      "notlar": "Android'de galeri seçimi gerçek tablette doğrulanacak (?). 30.10.2026: kod master'da (#16 birleşti). Tablette doğrulanmadı; sahibi PR #18 APK'sını denemeyecek, denemeyi 1.4.07'ye tam geçişten sonra yeni sürümde yapacak (KAR-08, GEC-09)."
     },
     {
       "id": "DAG-12",
       "baslik": "Android'de oyun tam ekran olmuyordu; Android kalite denetimi",
       "sinif": "hata",
       "onem": "Yüksek",
-      "durum": "ci_bekliyor",
+      "durum": "onay_bekliyor",
       "isaret": "✔",
       "kanit": "Sahibi: 'Androidde tam ekran olmuyordu' (30 Ekim 2026). Kodda bulunanlar: (1) oyun sayfasında tam ekran yoktu; oyun başlık ve panellerle bir çerçevede duruyordu (tablet 1280×800'de 793×626); (2) MainActivity çubukları Android 11'den beri eskimiş SYSTEM_UI_FLAG_* ile gizliyordu, uygulama Android 15'i hedefliyor; (3) WebChromeClient onShowCustomView yoktu, oyunun/Ruffle'ın tam ekran isteği WebView'da hiçbir şey yapmıyordu. Düzeltme: sayfada oyun modu (başlık/paneller gizli, oyun 760:600 oranla ekranı doldurur, sol üstte Çık, başlıkta Tam Ekran; seçim hatırlanır, uygulamada varsayılan açık, kullanıcı ajanındaki SocialEmpiresTR-Android işaretiyle); Android 11+ WindowInsetsController ile çubuklar, kamera çentiği kaplanır; onShowCustomView/onHideCustomView. Tarayıcıda Android ajanıyla 1280×800'de ölçüldü: oyun 1013×800 (önce 793×626, %63 büyük), Çık sonrası eski düzen, yeniden yüklemede kapalı kalır, dikey 800×1280'de 800×632 taşmadan; normal tarayıcıda varsayılan kapalı, düğme gerçek tam ekranı da ister. Aynı denetimde: Android yazı boyutu WebView'ı büyütüyordu (setTextZoom 100); geri tuşu oyundan giriş sayfasına dönüyordu (oyunda iki basış, uygulama arka plana); arka planda zamanlayıcılar ve müzik sürüyordu (pauseTimers/resumeTimers); uygulama yatay kilitlendi (sensorLandscape); sunucu açılışta kayıt dosyalarını kapatmıyordu (Android günlüğünde her kayıtta ResourceWarning; yollar.json_oku). Emülatör sınaması artık oyun modunun açık olduğunu ve oyunun pencereyi doldurduğunu da denetler. Java burada derlenemedi (Android SDK yok): CI derler. Sahibinin tablet ekran görüntüsünden (uygulama açıldı, durum çubuğu gizli): giriş sayfası oyuncuya '1.1.5 (deneysel)' ve '1.4.07 (bozuk)' sürümlerini sunuyordu. Bu iki SWF çevrimdışı pakette ve Türkçe yamada yok; sunucu formdaki GAMEVERSION'ı denetlemeden oyun sayfasına koyuyordu. Seçici kaldırıldı, sunucu 0.9.26b'ye sabit (sunucu.OYUN_SWF; test_http.test_oyun_surumu_sabit). CI (PR #16): APK derlendi; emülatörde uygulama yatay açıldı (pencere 640×320), oyun modu açık, oyun 405×320 ile yüksekliği doldurdu, açılış 129b-init'e ulaştı (53 sn). Bir önceki çalıştırmada sayfa 0×0'a düştü ve oyun aşama bildirmedi: zaman çizelgesine göre emülatör tam o aralıkta BOOT_COMPLETED işlemesini bitirdi ve bir sistem ekranı uygulamayı arka plana itti; arka planda oyun artık duruyor (pauseTimers). Sınama bunu ayırt eder: uygulama arka plandaysa yeniden öne getirir ve yazar. Uygulama yaşam döngüsünü (onPause/onResume/onStop, yön, odak, tam ekran isteği) SocialEmpires etiketiyle günlüğe yazar.",
       "test": "tests/test_android.py (Proje.test_tam_ekran), android/sinama_oyun.js",
-      "pr": null,
+      "pr": "#16",
       "onay": null,
-      "notlar": "Gerçek tablette doğrulanacak (?): çubukların gizlenmesi, Çık/Tam Ekran, geri tuşu, arka planda müziğin durması."
+      "notlar": "Gerçek tablette doğrulanacak (?): çubukların gizlenmesi, Çık/Tam Ekran, geri tuşu, arka planda müziğin durması. 30.10.2026: kod master'da (#16 birleşti). Tablette doğrulanmadı; sahibi PR #18 APK'sını denemeyecek, denemeyi 1.4.07'ye tam geçişten sonra yeni sürümde yapacak (KAR-08, GEC-09)."
     },
     {
       "id": "OYN-06",
       "baslik": "Arka plan: boş gökyüzü yerine oyunun kendi manzarası; tam ekranda oyunun yanlarında da",
       "sinif": "ozellik",
       "onem": "Düşük",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "Sahibi: 'arkaplan bomboş' (giriş sayfası ve tam ekran kenarları). Oyunun seviye atlama penceresinin manzarası (externalized/PopupLevelUp/background.png: gökyüzü, bulutlar, deniz, çayır) ağaçların ardına kondu; Güneş'e göre ağaçlar gibi kararır (--gun-isigi). Resmin kendi pencere çerçevesi (ince kenar, üst köşe süsleri) ekran dışına taşındı. Oyun modunda manzara gizlenmez, oyunun yanlarında görünür. Tarayıcıda 1280×800'de gündüz, gece ve oyun modunda bakıldı. Aynı denemede bir hata bulundu: oyuncunun devraldığı eski bot köyleri (bot işareti kalkmış) silinen gerçek kişi fotoğraflarına bağlı kalıyor, giriş sayfasında bozuk resim görünüyordu; bot_kimlik.adlari_yenile bunları varsayılan portreye çevirir (yerel kopyada 2 kayıt).",
       "test": "tests/test_sistemler.py (BotKimlikTestleri.test_devralinan_eski_bot_koyu_silinen_fotografi_gostermez)",
       "pr": "#16",
       "onay": "Sahibi, 30 Ekim 2026",
-      "notlar": "Yalnızca oyunun kendi resmi kullanıldı (CLAUDE.md görsel kuralı)."
+      "notlar": "Yalnızca oyunun kendi resmi kullanıldı (CLAUDE.md görsel kuralı). 30.10.2026: #16 master'a birleşti (git log master), ci_bekliyor'dan düzeltildi'ye."
     },
     {
       "id": "DNT-01",
       "baslik": "Denetim (cihazdaki sunucu): bozuk kayıt açılışı durduruyordu; CSRF, DNS yeniden bağlama; kayıt ve kaynak sorunları",
       "sinif": "hata",
       "onem": "Yüksek",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "Sahibinin isteği: 'Tamamen bağımsız ve üst seviye profesyonel denetle' (30 Ekim 2026). Üç bağımsız denetçi (benim bulgularımı bilmeden, yalnızca kod ve kurallarla) ayrı alanları okudu; her bulgu burada yeniden üretildi ya da kodda doğrulandı, sonra düzeltildi. Yeniden üretildi: sürümsüz bir kayıt 'import oyun.sunucu'yu KeyError ile düşürdü (Android'de 'açılıyor'da kalır). Düzeltme: okunamayan kayıt .bozuk olarak kenara alınır, .bak okunuyorsa yerine konur; yedekten/Wi-Fi'dan gelen kayıt bir kopyada göç+özetle denenir (kayit.kaydi_dogrula). .bak artık kopyalanır, tek os.replace (önce iki taşıma arasında kayıt yok olabiliyordu). Başka siteden POST ve GET /new.html reddedilir (Origin/Sec-Fetch-Site); yerel istek yerel Host taşımalı (DNS yeniden bağlama ile hile paneli, kayıt indirme ve taşıma kodu okunabiliyordu). Oturum anahtarı sabit 'SECRET_KEY' idi, artık rastgele (.oturum_anahtari); MAX_CONTENT_LENGTH 40 MB. Wi-Fi gönderici her açıp kapatmada 3 iş parçacığı bırakıyordu (ölçüldü: 5->14; şimdi sabit), alan taraf yönlendirme izliyordu, yanlış kod sayacı kilitsizdi. Bot dünyası dakikada ~48 kaydı girintili yazıyordu (~2,4 MB/dk): girintisiz yazım (~5 kat küçük), bot kayıtları 5 turda bir, giriş sayfasında yeniden okumadan önce yazılır. Başarısız varlık indirmesi her istekte 2×30 sn deneniyordu: 10 dk beklenir, zaman aşımı 15 sn. Android ilk açılış kopyası geçici adla, tek adımda. Açılış hatasında input() Android'de EOFError verip asıl hatayı gizliyordu.",
       "test": "tests/test_denetim.py, tests/test_tasima.py (TasimaKaynaklari), tests/test_diyar.py",
-      "pr": null,
+      "pr": "#17",
       "onay": "Sahibi, 30 Ekim 2026",
-      "notlar": "Karar bekleyenler DNT-04'te."
+      "notlar": "Karar bekleyenler DNT-04'te. 30.10.2026: #17 master'a birleşti (git log master), ci_bekliyor'dan düzeltildi'ye."
     },
     {
       "id": "DNT-02",
       "baslik": "Denetim (Android kabuğu ve dağıtım): yedek kotası, klavye, sunucu hatasında takılma, sızıntılar, CI yolları",
       "sinif": "hata",
       "onem": "Orta",
-      "durum": "ci_bekliyor",
+      "durum": "onay_bekliyor",
       "isaret": "◐",
       "kanit": "Sahibinin isteği: 'Tamamen bağımsız ve üst seviye profesyonel denetle' (30 Ekim 2026). Üç bağımsız denetçi (benim bulgularımı bilmeden, yalnızca kod ve kurallarla) ayrı alanları okudu; her bulgu burada yeniden üretildi ya da kodda doğrulandı, sonra düzeltildi. Yüksek bulgu yok. Düzeltilenler: 14 günlük kopyalar Android'in 25 MB bulut yedeği sınırını ~1 haftada aşıp bütün yedeği düşürecekti (gunluk_yedek dışarıda); tam ekranda ekran klavyesi Wi-Fi taşıma alanlarını örtüyordu (Android 11+ IME boşluğu); sunucu açılamazsa ekran takılı kalıyordu ve yeniden denenemiyordu (dokununca yeniden dener); onDestroy yoktu (WebView sızıntısı), yazı boyutu/dil değişince etkinlik yeniden kuruluyordu (configChanges); çizim süreci çökünce ölü tam ekran görünümü kalıyordu, çökme döngüsü sınırsızdı; seçici açıkken uygulama kapanırsa ya da yazma başarısızsa boş yedek dosyası kalıyordu, yazma ana iş parçacığındaydı; file:/intent: bağlantıları uygulamayı düşürebilirdi; pauseTimers Android 7-9 bölünmüş ekranda görünür oyunu durduruyordu (onStop'a taşındı); CI yol süzgeci config/, villages/, ceviri/, mods/, araclar/, ayarlar.json değişikliklerinde emülatör sınamasını çalıştırmıyordu; sınama Ruffle sürümünü sabit yazıyordu, node süresi 600 sn'den kısa kalabiliyordu.",
       "test": "tests/test_android.py (Proje.test_denetim_duzeltmeleri), android/sinama.sh",
-      "pr": null,
+      "pr": "#17",
       "onay": "Sahibi, 30 Ekim 2026",
-      "notlar": "Java bu ortamda derlenemiyor; APK ve emülatör sınaması CI'da. Klavye ve yedek davranışı tablette doğrulanacak (?)."
+      "notlar": "Java bu ortamda derlenemiyor; APK ve emülatör sınaması CI'da. Klavye ve yedek davranışı tablette doğrulanacak (?). 30.10.2026: kod master'da (#17 birleşti). Tablette doğrulanmadı; sahibi PR #18 APK'sını denemeyecek, denemeyi 1.4.07'ye tam geçişten sonra yeni sürümde yapacak (KAR-08, GEC-09)."
     },
     {
       "id": "DNT-03",
       "baslik": "Denetim (tablet arayüzü): oyunun tam ekranı oyun modunu bozuyordu, Çık 4:3'te oyunun üstündeydi, taşıma listesi, yoklamalar",
       "sinif": "hata",
       "onem": "Orta",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "Sahibinin isteği: 'Tamamen bağımsız ve üst seviye profesyonel denetle' (30 Ekim 2026). Üç bağımsız denetçi (benim bulgularımı bilmeden, yalnızca kod ve kurallarla) ayrı alanları okudu; her bulgu burada yeniden üretildi ya da kodda doğrulandı, sonra düzeltildi. Tarayıcıda yeniden üretilip düzeltildi: oyunun kendi tam ekranı (Ruffle, oyun kutusundaki öğe) masaüstünde oyun modunu kapatıp '0' kaydediyordu -> yalnızca tam ekran bütünüyle bitince kapanır (ölçüm: öğe tam ekranken ve çıkınca mod açık kaldı); 1024×768'de Çık 28×32 px oyunun altın sayacının üstündeydi -> dar yatay ekranlarda oyun Çık kadar daralır, Çık 56×44 px (1024×768: çakışma yok; 1280×800 değişmedi 1013×800); Wi-Fi taşıma listesinde ad 24 px sütuna sıkışıp 'İ…' oluyordu -> 547 px; oyun modunda/arka planda 6 zamanlayıcı yoklamaya devam ediyordu -> 16 sn'de 0 istek, görünür olunca tazelenir; haber yoklaması üst üste binip aynı haberi iki kez kuyruğa koyabiliyordu; taşıma durum yoklaması hata alınca kalıcı duruyordu; profil sayfası JSON olmayan hatada ham ayrıştırma hatası gösteriyordu, aynı fotoğraf ikinci kez seçilemiyordu, önizleme bellekte kalıyordu; IP alanı inputmode=decimal (Türkçe klavyede nokta yok) -> url; dokunmatik bağlantılar 16 px yüksekti -> 36 px; küçük yazılarda kontrast 2,97-4,35:1 -> 4,5:1 üstü; Tam Ekran/Çık sonrası odak oyuna döner.",
       "test": "tarayıcı ölçümü (scratchpad/ui_dogrula.js), tests/js",
-      "pr": null,
+      "pr": "#17",
       "onay": "Sahibi, 30 Ekim 2026",
-      "notlar": "Kalan küçükler (karar gerekmez, sıradaki işe): üst bilgi oyun içinde seviye atlayınca yenilenmiyor; /hazine sayfası diğerleri gibi biçimlenmemiş; 'yedek yükle' etiketleri klavyeyle odaklanmıyor; 1024×768 tarayıcıda (uygulama değil) üst bilgi kutusunun üst kenarı kırpılıyor."
+      "notlar": "Kalan küçükler (karar gerekmez, sıradaki işe): üst bilgi oyun içinde seviye atlayınca yenilenmiyor; /hazine sayfası diğerleri gibi biçimlenmemiş; 'yedek yükle' etiketleri klavyeyle odaklanmıyor; 1024×768 tarayıcıda (uygulama değil) üst bilgi kutusunun üst kenarı kırpılıyor. 30.10.2026: #17 master'a birleşti (git log master), ci_bekliyor'dan düzeltildi'ye."
     },
     {
       "id": "DNT-04",
@@ -675,78 +675,78 @@
       "baslik": "Kalite seçimi; dokunulan yerlerde kalan koyu yeşil izler",
       "sinif": "hata",
       "onem": "Orta",
-      "durum": "ci_bekliyor",
+      "durum": "onay_bekliyor",
       "isaret": "?",
       "kanit": "Sahibi tablette ekran görüntüsü gönderdi: çimende dokunduğu yerlerde koyu yeşil piksel izleri kalıyor ve geçmiyor. Ruffle günlüğü telefon/tablette 'Running on a mobile device; defaulting to low quality' diyor; masaüstü (yüksek kalite) görüntülerde iz görülmedi. Başsız tarayıcıda dokunma taklidiyle yeniden üretilemedi (hedef penceresi açıldı). Önlem: Ruffle kalitesi varsayılan 'yüksek' (masaüstüyle aynı); sahibinin isteğiyle başlıkta Kalite seçimi (Düşük/Orta/Yüksek/En iyi), seçim hatırlanır, oyun açıksa yeniden açılır.",
       "test": "tarayıcı (seçim kaydı ve Ruffle config.quality)",
       "pr": "#18",
       "onay": "Sahibi, 30 Ekim 2026",
-      "notlar": "Doğrulanmadı (?): izlerin yüksek kalitede kaybolduğu tablette görülmeli; kaybolmazsa sebep başka (Ruffle'ın dokunma/çizim kırıntısı) ve ayrı incelenir. PR #18 CI: emülatörde (SwiftShader, -gpu swangle_indirect) yüksek kalitede WebGL 'GL_INVALID_FRAMEBUFFER_OPERATION: framebuffer incomplete' uyarıları çıkıyor; 9f0e404'te oyun yüklendikten hemen sonra emülatör kapandı, aynı ayarlarla b4e2e26'da sınama geçti. Emülatörün yazılım GPU'suna özgü görünüyor; tablette yüksek kalitede bir sorun olursa ilk bakılacak yer burası."
+      "notlar": "Doğrulanmadı (?): izlerin yüksek kalitede kaybolduğu tablette görülmeli; kaybolmazsa sebep başka (Ruffle'ın dokunma/çizim kırıntısı) ve ayrı incelenir. PR #18 CI: emülatörde (SwiftShader, -gpu swangle_indirect) yüksek kalitede WebGL 'GL_INVALID_FRAMEBUFFER_OPERATION: framebuffer incomplete' uyarıları çıkıyor; 9f0e404'te oyun yüklendikten hemen sonra emülatör kapandı, aynı ayarlarla b4e2e26'da sınama geçti. Emülatörün yazılım GPU'suna özgü görünüyor; tablette yüksek kalitede bir sorun olursa ilk bakılacak yer burası. 30.10.2026: kod master'da (#18 birleşti). Tablette doğrulanmadı; sahibi PR #18 APK'sını denemeyecek, denemeyi 1.4.07'ye tam geçişten sonra yeni sürümde yapacak (KAR-08, GEC-09)."
     },
     {
       "id": "OYN-08",
       "baslik": "Görüntü: Doldur, oyun esnetilmeden ekranın tamamını kaplar (Android'de varsayılan)",
       "sinif": "ozellik",
       "onem": "Orta",
-      "durum": "ci_bekliyor",
+      "durum": "onay_bekliyor",
       "isaret": "✔",
       "kanit": "Sahibi: 'halen tam ekran istiyorum'; 'Samsung Tab S9+ ona da tam otursun'. Oyun 760:600 oranını korumak için kenarlarda boşluk bırakıyordu; germek oyunu yatayda ~%26 basık gösterirdi (oyun EXACT_FIT). Ruffle scale=noScale + forceScale ile sahne kutunun gerçek boyutunu alır; oyun haritayı genişletip menülerini yerleştirir (orijinal oyunun tam ekranı gibi). Başlıkta Görüntü: Doldur/Sığdır; uygulamada Doldur, tarayıcıda Sığdır varsayılan. Ekran 760×600'den küçükse (telefon, CI emülatörü 640×320) Doldur kendiliğinden Sığdır olur. Çık Doldur'da sağ üstte (sol üstte oyunun kaynak sayaçları). En yüksek seviyeli bot hesabıyla (Fırtına Ejderhası, sv 59; sahibinin önerisi) denendi: 1280×800'de kutu 1280×800, Çık (1216,8); Tab S9+ boyutunda (1400×876, DPR 2) kutu 1400×876, oyun pencereleri ortada.",
       "test": "tarayıcı (scratchpad/bottest.js, s9test.js); android/sinama_oyun.js (oyun modu ve pencereyi doldurma)",
       "pr": "#18",
       "onay": "Sahibi, 30 Ekim 2026",
-      "notlar": "Oyun açıkken pencere boyutu değişirse oyunun bazı pencereleri yeniden ortalanmıyor; uygulama yatay kilitli olduğundan tablette etkisiz."
+      "notlar": "Oyun açıkken pencere boyutu değişirse oyunun bazı pencereleri yeniden ortalanmıyor; uygulama yatay kilitli olduğundan tablette etkisiz. 30.10.2026: kod master'da (#18 birleşti). Tablette doğrulanmadı; sahibi PR #18 APK'sını denemeyecek, denemeyi 1.4.07'ye tam geçişten sonra yeni sürümde yapacak (KAR-08, GEC-09)."
     },
     {
       "id": "OYN-09",
       "baslik": "Sayfanın bütün süsleri oyunun kendi resimlerinden: çerçeve, pencere, düğme, çubuk, gökyüzü",
       "sinif": "karar",
       "onem": "Orta",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "Sahibi: 'dış çerçeveleri sen kendin yaptın, varsa oyunun kendi görsellerini kullan'; 'komple ne varsa oyunun kendi görsel kaynaklarından yapacağız'. Oyunun düğme ve pencere parçaları dış klasörlerde değil, ana SWF'nin içinde gömülü. araclar/swf_resimleri.py (kendi yazdığımız küçük okuyucu; indirilen JPEXS'i çalıştırmak engellendi) SWF'deki 365 resmi çıkarır, seçilen 10'unu olduğu gibi templates/img/oyun/'a yazar (yalnızca SWF'nin önceden çarpılmış alfası düz alfaya çevrilir). Paneller, üst kutu, yükleme kartı: oyunun açılır penceresi (ahşap kenar, parşömen iç; border-image). Oyun çerçevesi: aynı pencerenin kenarı. Üst düğmeler: altın kutu; ana düğmeler: kahverengi eylem düğmesi (ATTACKING/SPYING zemini). XP, yükleme ve çevrimdışı çubukları: oyunun ilerleme çubuğu. Satırlar ve kartlar: altın kenarlı beyaz hap, 'sen' satırı altın kutu; CANLI ve SEN: kırmızı hap. Podyum: altın kutu, beyaz hap, kahverengi; portreler oyunun bronz ve altın resim çerçevesinde. Gökyüzü: oyunun gökyüzü resmi. Kaldırılanlar: CSS gökyüzü, sis, gece/gündüz karartması (templates/js/gokyuzu.js ve testi), panel kenarında dönen ışık, fareyi izleyen ışık, parıltı süpürmeleri, gölge halkaları. İlk deneme (hediye penceresi bg.png) kenarlarına sandık taştığı için bırakıldı. 1920×1080, 1280×800, 900×480, 700×420 ve bütün sayfalarda (giriş, oyun, hile, günlük, taşıma, çevrimdışı, profil, hazine) ekran görüntüsüyle bakıldı; 700×420'de başlık taşıyordu, bağlantılar tek satıra alındı.",
       "test": "tests/js/gorsel_kurali.test.js (CSS yalnızca /img/ ve oyunun statik adreslerine başvurur, degradeyle çizim yok); tarayıcı (scratchpad/cerceve.js, sayfalar.js)",
       "pr": "#18",
       "onay": "Sahibi, 30 Ekim 2026",
-      "notlar": "Kalan CSS: yazı boyaları (altın başlık yazısı, yazı çizgisi), kaydırma maskesi, gölgeli düz renkler. Hazine sayfası da manzara ve şerit başlık aldı (DNT-03 notundaki 'stilsiz' kalıntı)."
+      "notlar": "Kalan CSS: yazı boyaları (altın başlık yazısı, yazı çizgisi), kaydırma maskesi, gölgeli düz renkler. Hazine sayfası da manzara ve şerit başlık aldı (DNT-03 notundaki 'stilsiz' kalıntı). 30.10.2026: #18 master'a birleşti (git log master), ci_bekliyor'dan düzeltildi'ye."
     },
     {
       "id": "OYN-10",
       "baslik": "Milli bayramlarda oyunun Türk bayrağı (29 Ekim, 23 Nisan, 19 Mayıs, 30 Ağustos)",
       "sinif": "ozellik",
       "onem": "Düşük",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "Sahibi: 'oyunun içinde Türk bayrağı varsa onu da kullan, 29 Ekim için mesela'. Oyunda 'Turkey Flag' süsü var (öğe 174, img flagtr; ayrıca Türk Kılıççı/Baltacı/Okçu/Atlı birimleri). buildingsprites/flagtr.swf içindeki saydam resim çıkarıldı (templates/img/oyun/bayrak-tr.png). config/takvim.json'da milli bayramlar 'bayrak: true'; /dunya/takvim bu etkinliklerde haber simgesi olarak bayrağı verir, oyun çerçevesinin armasındaki iki sancak bayram süresince Türk bayrağı olur (sol sancak aynalanmaz; ay yıldız ters dönmesin). 30 Ekim'de Diyar Haberleri'nde ve armada görüldü.",
       "test": "tests/test_icerik.py test_milli_bayramda_turk_bayragi",
       "pr": "#18",
       "onay": "Sahibi, 30 Ekim 2026",
-      "notlar": ""
+      "notlar": "30.10.2026: #18 master'a birleşti (git log master), ci_bekliyor'dan düzeltildi'ye."
     },
     {
       "id": "VAR-03",
       "baslik": "Yükleme perdesinde İspanyolca 'Cargando' (VAR-02'nin çürütülmesi yanlıştı)",
       "sinif": "hata",
       "onem": "Düşük",
-      "durum": "ci_bekliyor",
+      "durum": "onay_bekliyor",
       "isaret": "✔",
       "kanit": "Sahibi tablette 'halen Cargando yükleme yeri duruyor' dedi. VAR-02 masaüstünde 200 ms arayla çekilen karelerde görülmediği için çürütülmüştü; masaüstünde açılış hızlı, tablette yavaş. Kaynak: oyun kodunda (DoABC) StageBlockerMC kurucusu defaultText = (Main.localization == Language.LANGUAGE_ENGLISH) ? 'Loading' : 'Cargando'; dil İngilizce olmadığından İspanyolca çıkıyor. 'Cargando' dizesi kodda tek yerde (pushstring, sabit havuz no 18616) kullanılıyor, karşılaştırılmıyor. swf_yama artık DoABC sabit havuzundaki dizeleri de çeviriyor (ceviri/arayuz_tr.json as3_dizeleri: Cargando → Yükleniyor; YAMA_SURUMU 7). Yamalı SWF'de 'Cargando' kalmadı; oyun Ruffle'da sv 59 hesabıyla hatasız açıldı. Gömülü yazı tiplerine ü zaten ekleniyor (swf_font.TURKCE_HARFLER).",
       "test": "tests/test_sistemler.py test_oyun_kodundaki_dize_degisir; tarayıcı (scratchpad/yukleme.js)",
       "pr": "#18",
       "onay": null,
-      "notlar": "Perde masaüstünde kareye girmedi; tablette görünüşü sahibi doğrular. Koddaki öteki İspanyolca dizeler hata günlüğü ('*** Error cargando asset') ya da ekranda görüldüğü kanıtlanmamış adlar ('Ataque Súbito'); dokunulmadı."
+      "notlar": "Perde masaüstünde kareye girmedi; tablette görünüşü sahibi doğrular. Koddaki öteki İspanyolca dizeler hata günlüğü ('*** Error cargando asset') ya da ekranda görüldüğü kanıtlanmamış adlar ('Ataque Súbito'); dokunulmadı. 30.10.2026: kod master'da (#18 birleşti). Tablette doğrulanmadı; sahibi PR #18 APK'sını denemeyecek, denemeyi 1.4.07'ye tam geçişten sonra yeni sürümde yapacak (KAR-08, GEC-09)."
     },
     {
       "id": "KYN-01",
       "baslik": "Upstream ile karşılaştırma: çatalımız 0.04a tabanlı; yeni iş yayımlanmamış nerroth-rewrite dalında, oyunun 1.4.07 istemcisiyle",
       "sinif": "karar",
       "onem": "Yüksek",
-      "durum": "onay_bekliyor",
+      "durum": "karar_verildi",
       "isaret": "✔",
       "kanit": "Sahibi: 'bizim dosyalar eski mi, fark ne? iki kez, ikincisi bağımsız tara'. İki bağımsız tarama (docs/inceleme/2026-10-30-upstream-tarama1.md ve -tarama2.md) aynı sonuca vardı: temiz başlangıç ağacının 84 dosyası upstream 0.04a (f642e0b, 26.09.2025) ile bayt bayt aynı; oyun SWF'miz upstream'deki 0926bsec ile aynı. Upstream main 0.04a'dan beri değişmedi; yeni iş nerroth-rewrite dalında (0.04a'dan sonra 429 commit, son 16.08.2026, yayımlanmamış). O dal yamalı 1.4.07 istemcisini (SocialEmpires1.4.07sec_fixed.swf) çalıştırıyor. Derleme tarihleri ProductInfo etiketinden (kendim doğruladım): 0926b 05.12.2012, 1.4.07 31.01.2014; arada 56-58 derleme. 1.4.07: +570/−145 sınıf, 29 yeni komut, görev sistemi config'ten (goals, 43 tür kullanılmış, 206 hedef), Soul Mixer, yeni PvP, birim paketleri, Forge adası. Bizim upstream'de olmayan işlerimiz: Türkçe (config, SWF metin alanları, AS3 dizeleri, yazı tipi harfleri), Android, bot dünyası, turnuva/kompu/dünya haritası uçları (upstream'de 404), testler ve CI, sağlam kayıt, güvenlik. Kod ortaklığı düşük (bizim kodun 0.04a ile ortak satırı %6). Uyumluluk: kayıtlarımız upstream sunucusunda zarar görür (mezarlık, sayaçlar sıfırlanır); Türkçe SWF yamamız 1.4.07'de metin alanlarının %88,8'ini (404/455) eşliyor, ~130 yeni metin çıkar.",
       "test": "tarama betikleri (oturum çalışma klasörü); ProductInfo okuması",
       "pr": null,
-      "onay": null,
-      "notlar": "Karar sahibinde. İki taramanın önerisi: 0926'da kal, upstream'den 0926 ile çalışan düzeltmeleri atıfla al, Türkçe araçları upstream'e katkı olarak öner; 1.4.07'ye geçiş ancak yamalı SWF'nin Ruffle 0.7.1'de açıldığı sınandıktan sonra konuşulsun (bu sınama upstream kodunu çalıştırmayı gerektirdiği için sahibinin iznini bekliyor). Tarama 2: 1.4.07 istemcisinde hedefin uygunluğunu soran işlev hep 'evet' döndürüyor, kayıtta tarih alanı yok; etkinliğe özel hedef ancak sunucunun hedef listesini tarihe göre değiştirmesiyle olur (◐). web.archive.org bu oturumda bağlanmadı; dosyaların kaynağı (Wayback mi) doğrulanmadı."
+      "onay": "Sahibi, 30 Ekim 2026: 'tam ve net geçiş olacak. Hatasız hesaplamalı denklemli mühendislik çerçevesinde sağlam kaliteli bir iş ortaya konacak.'",
+      "notlar": "Karar sahibinde. İki taramanın önerisi: 0926'da kal, upstream'den 0926 ile çalışan düzeltmeleri atıfla al, Türkçe araçları upstream'e katkı olarak öner; 1.4.07'ye geçiş ancak yamalı SWF'nin Ruffle 0.7.1'de açıldığı sınandıktan sonra konuşulsun (bu sınama upstream kodunu çalıştırmayı gerektirdiği için sahibinin iznini bekliyor). Tarama 2: 1.4.07 istemcisinde hedefin uygunluğunu soran işlev hep 'evet' döndürüyor, kayıtta tarih alanı yok; etkinliğe özel hedef ancak sunucunun hedef listesini tarihe göre değiştirmesiyle olur (◐). web.archive.org bu oturumda bağlanmadı; dosyaların kaynağı (Wayback mi) doğrulanmadı. Karar: 1.4.07'ye tam geçiş; çift istemcili plan geçersiz. Yol haritası docs/YOL_HARITASI_1407.md (GEC-01 … GEC-09, KAR-08)."
     },
     {
       "id": "KYN-02",
@@ -759,20 +759,20 @@
       "test": null,
       "pr": null,
       "onay": null,
-      "notlar": "Oyunda tıklanınca ne olduğu görülmedi (?). Seçenek: mağazadan kaldırmak."
+      "notlar": "Oyunda tıklanınca ne olduğu görülmedi (?). Seçenek: mağazadan kaldırmak. 30.10.2026: 1.4.07'de PopupSoulMixer ve soulmixer_mix_unit var; tam geçişle (KAR-08) işlev kazanır. Soul Mixer komutları GEC-03'te, oynanış betiğinde sınanır."
     },
     {
       "id": "KYN-03",
       "baslik": "Varlık indirme kaynağı upstream'in değişebilir main dalı",
       "sinif": "hata",
       "onem": "Düşük",
-      "durum": "acik",
+      "durum": "ci_bekliyor",
       "isaret": "✔",
       "kanit": "oyun/varliklar.py satır 30: raw.githubusercontent.com/AcidCaos/socialemperors/main/assets/{path}. Upstream main değişirse indirilen dosyalar sessizce değişir; f642e0b commit'ine sabitlenmeli.",
-      "test": null,
-      "pr": null,
+      "test": "tests/test_onindirme.py (Kaynak)",
+      "pr": "#19",
       "onay": null,
-      "notlar": ""
+      "notlar": "30.10.2026: oyun/kaynaklar.py tek sabit (COMMIT f642e0bae5a341f48e73b58f2e6d33a8436992c1); oyun/varliklar.py, varliklari_indir.py (git init + fetch commit; 'clone -b' commit almaz), araclar/onindirme_listesi.py, araclar/turkce_font_uret.py ona bağlandı. Ham adres commit'le 200 ve aynı boyut (SELoader.swf 65.819 bayt) ✔; sabit commit'ten git listesi 4.479 dosya ✔. Geçişte (GEC-02) commit 54df29e olur: varlık ağacı f642e0b'nin içerik olarak üst kümesi (ortak 4.478 dosyada blob farkı 0, +347, −1 temp.png) ✔."
     },
     {
       "id": "KYN-04",
@@ -783,22 +783,243 @@
       "isaret": "✔",
       "kanit": "Tarama 2: mission_goals, viral_offers, viral_icons, new_daily_bonus, level_up_tips yamaları yalnızca 1.x istemciler için; 0926 bunları okumuyor. Tarama 1: VAR-01 (fx_yama) kapandığı hâlde docs/YOL_HARITASI_DURUM.md:119, docs/GELISTIRME.md:140, docs/FAZ0_OLCUMLER.md:32 hâlâ açık iş diyor.",
       "test": null,
-      "pr": null,
+      "pr": "#19",
       "onay": null,
-      "notlar": "Temizlik işi; davranış değiştirmez."
+      "notlar": "Temizlik işi; davranış değiştirmez. 30.10.2026: bayat belgelerin üçü düzeltildi (#19). Ölü yamalar silinmedi: 1.4.07'ye geçişte (KAR-08) mission_goals, viral_offers, viral_icons, new_daily_bonus, level_up_tips istemcide canlanabilir; hangisinin kalacağı GEC-01'de ölçülür."
     },
     {
       "id": "KYN-05",
       "baslik": "1.4.07 deneyi: yamalı istemci bizim sunucuyla Ruffle 0.7.1'de açılıyor, eski kayıt ve Türkçe yama çalışıyor",
       "sinif": "karar",
       "onem": "Yüksek",
-      "durum": "onay_bekliyor",
+      "durum": "karar_verildi",
       "isaret": "✔",
       "kanit": "Sahibi: '1.4.07 muhakkak bir yolu vardır, hesapla, bir yolunu bul'. Yalıtılmış kopyada (gerçek depo değişmedi; upstream kodu çalıştırılmadı): OYUN_SWF=SocialEmpires1.4.07sec_fixed.swf, upstream'in üç veri yaması (0-language_en, 1-mega_patch, 2-unit_patch) ve goals.json (206). Sonuç: yeni imparatorluk 8 sn'de, sv 59 bot kaydı 6 sn'de açıldı; kaynak/seviye/nüfus yerinde; istemci hedef 1, 7, 12'yi kendisi tamamladı (complete_mission/reward_mission sırası bizim işleyicilerle aynı); yeni günlük ödül penceresi açıldı; Türkçe SWF yaması 521 metin alanını çevirdi ve oyun açıldı. Bilinmeyen komut ya da sunucu hatası yok. Eksik: yeni PvP havuz adresi 404, yeni metinler İngilizce. 1.4.07'nin 29 yeni komutu, upstream'de sürüme bağlı 11 nokta. Plan ve kıyas tabloları: docs/inceleme/2026-10-30-1407-gecis-plani.md.",
       "test": "tarayıcı (oturum çalışma klasörü: deney107_ac.js, deney107_bot.js, deney107_bot2.js)",
       "pr": null,
+      "onay": "Sahibi, 30 Ekim 2026: 'tam ve net geçiş olacak. Hatasız hesaplamalı denklemli mühendislik çerçevesinde sağlam kaliteli bir iş ortaya konacak.'",
+      "notlar": "Bulunan iki küçük şey: reward_mission ödülü config['missions']'tan okuyor (1.4.07'de goals); varliklar._oyun_swf_mi nokta/alt çizgili sürüm adını kabul etmiyor. Emek tahmini ~13-22 iş günü (?). Karar sahibinde: çift istemcili aşamalı geçiş. Karar: 1.4.07'ye tam geçiş; çift istemcili plan geçersiz. Yol haritası docs/YOL_HARITASI_1407.md (GEC-01 … GEC-09, KAR-08)."
+    },
+    {
+      "id": "KAR-08",
+      "baslik": "1.4.07'ye tam geçiş; tablet denemesi yeni sürümde; küçük işler ve dört öneri yol haritasında",
+      "sinif": "karar",
+      "onem": "Yüksek",
+      "durum": "karar_verildi",
+      "isaret": "✔",
+      "kanit": "Sahibi 30.10.2026: (1) 'tam ve net geçiş olcak. Hatasız hesaplamalı denklemli mühendislik çerçevesinde sağlam kaliteli bir iş ortaya konacak.' (2) İlk PR önerisine 'evet öyle yap'. (3) 'hayır yeni sürüme tam geçiş olsun öyle deneyeceğim' (PR #18 APK'sı denenmeyecek). (4) İmza anahtarı: 'anlat'. (5) Küçük işler: 'evet koy'. (6) Öneriler: 'hepsini istiyorum. yol haritası oluştur öyle başlayalım.' Ayrıca: sorunlar ve çözümler bir yere kaydedilsin; 'Kesinlikle kendin yapay zeka üretimi yapmayacaksın yeni bir şey üretilcekse kesinlikle ve kesinlikle oyunun kendi görsel ve resimleri kullanılacak ve dosyları kullanılacak.'",
+      "test": null,
+      "pr": "#19",
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Yol haritası: docs/YOL_HARITASI_1407.md. Sorun kaydı: docs/gorev/SORUN_COZUM.md. v0.1.0 için ayrı onay bekleniyor (GEC-09)."
+    },
+    {
+      "id": "GEC-01",
+      "baslik": "Ölçüm altyapısı: AS3 bayt kodu okuyucusu, 1.4.07 komut imzaları, çeviri kapsamı, config hattı ölçümü",
+      "sinif": "ozellik",
+      "onem": "Yüksek",
+      "durum": "acik",
+      "isaret": "?",
+      "kanit": "Plan: docs/YOL_HARITASI_1407.md §3; kabul kapısı orada yazılı. Başlangıç ölçümleri KYN-05 ve bu PR'da.",
+      "test": null,
+      "pr": null,
       "onay": null,
-      "notlar": "Bulunan iki küçük şey: reward_mission ödülü config['missions']'tan okuyor (1.4.07'de goals); varliklar._oyun_swf_mi nokta/alt çizgili sürüm adını kabul etmiyor. Emek tahmini ~13-22 iş günü (?). Karar sahibinde: çift istemcili aşamalı geçiş."
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026)."
+    },
+    {
+      "id": "GEC-02",
+      "baslik": "İstemcinin 1.4.07'ye geçmesi: SWF, sabit kaynak 54df29e ve SHA-256, config hattı, goals, Türkçe yama, kayıt sürümü; 0926'nın kaldırılması",
+      "sinif": "ozellik",
+      "onem": "Yüksek",
+      "durum": "acik",
+      "isaret": "?",
+      "kanit": "Plan: docs/YOL_HARITASI_1407.md §3; kabul kapısı orada yazılı. Başlangıç ölçümleri KYN-05 ve bu PR'da.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026)."
+    },
+    {
+      "id": "GEC-03",
+      "baslik": "1.4.07'nin yeni komutları: kuyruk, teklif ve satın alma, collect_game, diğerleri; formül defteri",
+      "sinif": "ozellik",
+      "onem": "Yüksek",
+      "durum": "acik",
+      "isaret": "?",
+      "kanit": "Plan: docs/YOL_HARITASI_1407.md §3; kabul kapısı orada yazılı. Başlangıç ölçümleri KYN-05 ve bu PR'da.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026)."
+    },
+    {
+      "id": "GEC-04",
+      "baslik": "Kayıt: ~30 yeni alan, şema ve değişmezlikli göç",
+      "sinif": "ozellik",
+      "onem": "Yüksek",
+      "durum": "acik",
+      "isaret": "?",
+      "kanit": "Plan: docs/YOL_HARITASI_1407.md §3; kabul kapısı orada yazılı. Başlangıç ölçümleri KYN-05 ve bu PR'da.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026)."
+    },
+    {
+      "id": "GEC-05",
+      "baslik": "Yeni PvP (yalnızca botlara karşı), kalkan, onur; bot dünyası ve turnuvanın bağlanması",
+      "sinif": "ozellik",
+      "onem": "Yüksek",
+      "durum": "acik",
+      "isaret": "?",
+      "kanit": "Plan: docs/YOL_HARITASI_1407.md §3; kabul kapısı orada yazılı. Başlangıç ölçümleri KYN-05 ve bu PR'da.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026)."
+    },
+    {
+      "id": "GEC-06",
+      "baslik": "Türkçe: yeni SWF metinleri, 428 config adı, 206 hedef",
+      "sinif": "ozellik",
+      "onem": "Yüksek",
+      "durum": "acik",
+      "isaret": "?",
+      "kanit": "Plan: docs/YOL_HARITASI_1407.md §3; kabul kapısı orada yazılı. Başlangıç ölçümleri KYN-05 ve bu PR'da.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026)."
+    },
+    {
+      "id": "GEC-07",
+      "baslik": "Bayram hedefleri: sunucu goals listesini tarihe göre değiştirir (ICR-01)",
+      "sinif": "ozellik",
+      "onem": "Yüksek",
+      "durum": "acik",
+      "isaret": "?",
+      "kanit": "Plan: docs/YOL_HARITASI_1407.md §3; kabul kapısı orada yazılı. Başlangıç ölçümleri KYN-05 ve bu PR'da.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026)."
+    },
+    {
+      "id": "GEC-08",
+      "baslik": "Android, çevrimdışı paket listesi ve açılış süresi 1.4.07 ile",
+      "sinif": "ozellik",
+      "onem": "Yüksek",
+      "durum": "acik",
+      "isaret": "?",
+      "kanit": "Plan: docs/YOL_HARITASI_1407.md §3; kabul kapısı orada yazılı. Başlangıç ölçümleri KYN-05 ve bu PR'da.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026)."
+    },
+    {
+      "id": "GEC-09",
+      "baslik": "Kabul: uçtan uca oynanış betiği, sahibinin tablet denemesi, v0.1.0 (onayla)",
+      "sinif": "ozellik",
+      "onem": "Yüksek",
+      "durum": "acik",
+      "isaret": "?",
+      "kanit": "Plan: docs/YOL_HARITASI_1407.md §3; kabul kapısı orada yazılı. Başlangıç ölçümleri KYN-05 ve bu PR'da.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026)."
+    },
+    {
+      "id": "OYN-11",
+      "baslik": "Günlük ödül penceresinin başlığı boş, '250 altın' etiketi sığmıyor",
+      "sinif": "hata",
+      "onem": "Düşük",
+      "durum": "acik",
+      "isaret": "◐",
+      "kanit": "OYN-03 çeviri taramasında ekran görüntüsünde görüldü (PR #15); başlık istemcinin kendi kodunda kuruluyor, nedeni doğrulanmadı.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "1.4.07'nin 5 günlük yeni penceresi eskisinin yerini alıyor (KYN-05); GEC-02'den sonra yeniden ölçülür."
+    },
+    {
+      "id": "OYN-12",
+      "baslik": "Seviye atlayınca sayfanın üstündeki seviye/XP bilgisi yenilenmiyor",
+      "sinif": "hata",
+      "onem": "Düşük",
+      "durum": "acik",
+      "isaret": "?",
+      "kanit": "Önceki oturumun devrinde bildirildi; bu oturumda yeniden üretilmedi.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "Önce yeniden üretilecek (S-19: görmeden çürütme yok)."
+    },
+    {
+      "id": "OYN-13",
+      "baslik": "'Yedek yükle' düğmesine klavyeyle ulaşılamıyor",
+      "sinif": "hata",
+      "onem": "Düşük",
+      "durum": "acik",
+      "isaret": "?",
+      "kanit": "Önceki oturumun devrinde bildirildi; bu oturumda yeniden üretilmedi.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "Önce yeniden üretilecek."
+    },
+    {
+      "id": "ONR-01",
+      "baslik": "Hız seçici: oyun hızı (zaman_olcegi) sayfadan seçilir",
+      "sinif": "ozellik",
+      "onem": "Orta",
+      "durum": "acik",
+      "isaret": "?",
+      "kanit": "Sahibi 30.10.2026 'hepsini istiyorum' dedi (KAR-08). Önerinin önceki oturumdaki metni depoda yok; taslak tanım docs/YOL_HARITASI_1407.md §5.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "Uygulamadan önce taslak tanım sahibine onaylatılır (önerinin harfiyen uygulanması kuralı). Görseller yalnızca oyunun kendi dosyaları."
+    },
+    {
+      "id": "ONR-02",
+      "baslik": "'Sen yokken' özeti: dönüşte yokken olanların listesi",
+      "sinif": "ozellik",
+      "onem": "Orta",
+      "durum": "acik",
+      "isaret": "?",
+      "kanit": "Sahibi 30.10.2026 'hepsini istiyorum' dedi (KAR-08). Önerinin önceki oturumdaki metni depoda yok; taslak tanım docs/YOL_HARITASI_1407.md §5.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "Uygulamadan önce taslak tanım sahibine onaylatılır (önerinin harfiyen uygulanması kuralı). Görseller yalnızca oyunun kendi dosyaları."
+    },
+    {
+      "id": "ONR-03",
+      "baslik": "Bildirimler: Android'de inşaat/eğitim bitti, saldırı, kalkan bitiyor",
+      "sinif": "ozellik",
+      "onem": "Orta",
+      "durum": "acik",
+      "isaret": "?",
+      "kanit": "Sahibi 30.10.2026 'hepsini istiyorum' dedi (KAR-08). Önerinin önceki oturumdaki metni depoda yok; taslak tanım docs/YOL_HARITASI_1407.md §5.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "Uygulamadan önce taslak tanım sahibine onaylatılır (önerinin harfiyen uygulanması kuralı). Görseller yalnızca oyunun kendi dosyaları."
+    },
+    {
+      "id": "ONR-04",
+      "baslik": "Oyunun Türk birimleri (öğe 880, 881, 882, 885) oyunda kullanılabilir",
+      "sinif": "ozellik",
+      "onem": "Orta",
+      "durum": "acik",
+      "isaret": "?",
+      "kanit": "Sahibi 30.10.2026 'hepsini istiyorum' dedi (KAR-08). Önerinin önceki oturumdaki metni depoda yok; taslak tanım docs/YOL_HARITASI_1407.md §5. Config'te ✔: 880 Turkish Swordsman (880_tk_sword), 881 Turkish Axeman, 882 Turkish Archer, 885 Turkish Horseman; tür 'u'.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "Uygulamadan önce taslak tanım sahibine onaylatılır (önerinin harfiyen uygulanması kuralı). Görseller yalnızca oyunun kendi dosyaları."
     }
   ]
 }

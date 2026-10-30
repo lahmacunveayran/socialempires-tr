@@ -54,8 +54,7 @@ pid=$(timeout 20 adb shell pidof "$PAKET" | tr -d '\r') || true
 [ -n "$pid" ] || { echo "Uygulama kapanmış"; exit 1; }
 
 adim "WebView'a DevTools ile bağlanılıyor (pid $pid)"
-timeout 20 adb forward tcp:9222 "localabstract:webview_devtools_remote_${pid}" || exit 1
-timeout 600 node "$(dirname "$0")/sinama_oyun.js" http://127.0.0.1:9222 "$OYUN_EKRANI"
+timeout 600 node "$(dirname "$0")/sinama_oyun.js" "$PAKET" "$OYUN_EKRANI"
 oyun=$?
 echo "--- oyunun sunucuya bildirdiği aşamalar ---"
 timeout 30 adb logcat -d -s python.stdout:V | grep -o "track_game_status: .*" | uniq | tail -30

@@ -1,21 +1,24 @@
 // Emülatördeki gerçek WebView'u sürer: yeni imparatorluk, "Krallığa Gir", Ruffle oyunu yükler mi?
-// sinama.sh, uygulamayı "sinama" bayrağıyla açar (WebView hata ayıklaması) ve DevTools soketini 9222'ye yönlendirir.
+// sinama.sh uygulamayı "sinama" bayrağıyla açar (WebView hata ayıklaması); Playwright'ın Android arayüzü adb
+// üzerinden uygulamanın WebView'una bağlanır (genel CDP bağlantısı WebView'da çalışmıyor).
 //
-// Kullanım: node android/sinama_oyun.js [cdp-adresi] [ekran.png]
+// Kullanım: node android/sinama_oyun.js <paket> [ekran.png]
 // Çıkış kodu 0: oyun yüklendi (Ruffle "loadeddata", yükleme perdesi kalktı), sayfa hatası yok.
 
-const { chromium } = require("playwright-core");
+const { _android: android } = require("playwright-core");
 
-const CDP = process.argv[2] || "http://127.0.0.1:9222";
+const PAKET = process.argv[2];
 const EKRAN = process.argv[3] || "oyun.png";
 const ADRES = "http://127.0.0.1:5050";
 const sure = () => `${((Date.now() - BASLANGIC) / 1000).toFixed(1)} sn`;
 const BASLANGIC = Date.now();
 
 (async () => {
-  const tarayici = await chromium.connectOverCDP(CDP, { timeout: 60000 });
-  const baglam = tarayici.contexts()[0];
-  const sayfa = baglam.pages()[0] || (await baglam.newPage());
+  const [cihaz] = await android.devices({ omitDriverInstall: true });
+  if (!cihaz) throw new Error("adb cihazı bulunamadı");
+  console.log(`Cihaz: ${cihaz.model()} (${cihaz.serial()})`);
+  const webview = await cihaz.webView({ pkg: PAKET }, { timeout: 60000 });
+  const sayfa = await webview.page();
   const hatalar = [];
   const konsol = [];
   sayfa.on("pageerror", (h) => hatalar.push(h.message));
@@ -50,7 +53,7 @@ const BASLANGIC = Date.now();
   console.log("--- konsol (son 25) ---");
   konsol.slice(-25).forEach((s) => console.log(s));
   if (hatalar.length) console.log(`--- sayfa hataları ---\n${hatalar.join("\n")}`);
-  await tarayici.close().catch(() => {});
+  await cihaz.close().catch(() => {});
   if (!durum.swf) throw new Error("Ruffle SWF bilgisini vermedi");
   if (hatalar.length) throw new Error(`${hatalar.length} sayfa hatası`);
   console.log("Tamam: oyun Android WebView'da yüklendi.");

@@ -120,3 +120,16 @@ class DagitimTestleri(unittest.TestCase):
 
     def test_yerel_ag_adresi(self):
         self.assertRegex(server.yerel_ag_adresi(), r"^\d+\.\d+\.\d+\.\d+$")
+
+
+class HilePaneliTestleri(unittest.TestCase):
+    def test_panel_oyunun_kaynak_resimleriyle(self):
+        istemci = server.app.test_client()
+        istemci.post("/", data={"USERID": server.new_village(), "GAMEVERSION": "SocialEmpires0926bsec.swf"})
+        sayfa = istemci.get("/cheat").get_data(as_text=True)
+        self.assertIn("/css/oyun.css", sayfa)
+        for resim in ("collect_g0.jpg", "collect_w0.jpg", "collect_s0.jpg", "collect_f0.jpg"):
+            self.assertIn(f"images_new/{resim}", sayfa)
+        cevap = istemci.post("/cheat/uygula", json={"islem": "kaynak", "tur": "wood", "miktar": 1000})
+        self.assertEqual(cevap.status_code, 200)
+        self.assertIn("odun", cevap.get_json()["ozet"])

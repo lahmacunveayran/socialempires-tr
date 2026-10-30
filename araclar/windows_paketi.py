@@ -36,6 +36,8 @@ ATLANAN = ("__pycache__", ".pyc", ".log")
 
 BASLATICI = r"""@echo off
 chcp 65001 >nul
+set PYTHONIOENCODING=utf-8
+set PYTHONUTF8=1
 cd /d "%~dp0"
 title Social Empires Sunucusu
 echo ============================================
@@ -148,12 +150,13 @@ def main():
     ap.add_argument("--surum", default="3.12.10", help="gömülü Python sürümü")
     ap.add_argument("--python-zip", help="önceden indirilmiş python-*-embed-amd64.zip")
     ap.add_argument("--cikti", default=os.path.join(KOK, "dist"))
+    ap.add_argument("--ad", help="zip adı (varsayılan: SocialEmpiresTR-<sürüm>-windows)")
     arg = ap.parse_args()
     gecici = tempfile.mkdtemp(prefix="se-paket-")
     try:
         veri = python_zip(arg.surum, arg.python_zip)
         zip_yolu, ozet = paketle(veri, tekerlekler(gecici, arg.surum), arg.cikti,
-                                 f"SocialEmpiresTR-{version_code}-windows")
+                                 arg.ad or f"SocialEmpiresTR-{version_code}-windows")
     finally:
         shutil.rmtree(gecici, ignore_errors=True)
     print(f"[+] {zip_yolu} ({os.path.getsize(zip_yolu) / 1e6:.1f} MB)")

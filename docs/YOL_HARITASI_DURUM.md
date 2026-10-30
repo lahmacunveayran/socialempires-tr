@@ -61,6 +61,11 @@ Yapılmayanlar: Arthur'un etkinliğe özel hedefleri; 2030 sonrası için
 
 ## Faz 4: Dağıtım
 
+- `.github/workflows/windows.yml`: `v*` etiketi gönderilince paket üretilir,
+  GitHub'ın temiz Windows makinesinde açılıp gömülü Python ile başlatılır
+  (60 saniye içinde `/saglik/hazir` yanıt vermezse iş başarısız olur) ve
+  SHA-256 özetiyle GitHub sürümüne yüklenir. Paket betiği değişen PR'larda
+  yalnızca üretilip sınanır.
 - `python araclar/windows_paketi.py`: gömülü Python 3.12 + Windows
   tekerlekleri + oyun + Ruffle + `Social Empires.bat` → zip ve `.sha256`.
   Bu ortamda python.org'a erişim kapalı olduğu için yalnızca sahte bir
@@ -89,9 +94,9 @@ Yol haritasının açık soruları yanıtlandı:
 
 - `fx/p.miniFireball2.swf` arşivde yok (404); karşılığı bulunup
   `oyun/varliklar.py` → `ESDEGERLER`'e eklenmeli.
-- Yükleyicideki İspanyolca "Cargando" yazısı SELoader'da düz metin olarak
-  geçmiyor (glif olarak çizilmiş olabilir). Sayfanın kendi yükleme ekranı bu
-  aşamayı Türkçe nasihatlerle örtüyor.
+- ~~Yükleyicideki İspanyolca "Cargando" yazısı~~: artık görünmüyor. Yükleme
+  ekranı kare kare çekildi (her 200 ms); yalnızca küre logo ve Türkçe "Oyun
+  beta sürümünde. Lütfen sabırlı olun." yazısı çıkıyor.
 - Lighthouse (LCP, CLS) ölçümü yapılmadı.
 - Gerçek Windows 11 sanal makinesi, Android telefon ve iPad ile kabul sınaması.
 

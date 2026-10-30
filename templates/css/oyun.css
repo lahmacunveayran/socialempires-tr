@@ -51,6 +51,7 @@
   --altin-koyu: #b07d18;
   --baslik-yuksekligi: 181px; /* sabit: web yazı tipi geç inse de çerçeve kaymasın */
   --arma-payi: 58px;
+  --cerceve-pay: 38px; /* çerçevenin iki yandaki kalınlığı (dolgu, kenar, altın çizgi) */
   --bosluk: 16px;
   --baslik-yazi: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
   --metin-yazi: "Nunito", "Segoe UI", system-ui, sans-serif;
@@ -220,7 +221,7 @@ img { -webkit-user-drag: none; }
 
 /* ================= Oyun çerçevesi ================= */
 .cerceve {
-  position: relative; padding: 14px; border-radius: 14px;
+  position: relative; padding: var(--cerceve-dolgu, 14px); border-radius: 14px;
   background:
     repeating-linear-gradient(92deg, rgba(0, 0, 0, .09) 0 2px, transparent 2px 7px, rgba(255, 255, 255, .04) 7px 8px, transparent 8px 13px),
     linear-gradient(160deg, #b27c45, #7a4c22 40%, #4a2c12);
@@ -242,10 +243,10 @@ img { -webkit-user-drag: none; }
    Boyutu CSS hesaplar (ilk çizimde doğru boyut: sayfa kaymaz):
    s = min(genişlik / 760, yükseklik / 600, 1,5); çok alçak ekranda en az 342 px. */
 .oyun-kutusu {
-  --g: calc(100cqw - 38px);
+  --g: calc(100cqw - var(--cerceve-pay));
   --y: calc((100vh - var(--ust-pay)) * 760 / 600);
   --y: calc((100dvh - var(--ust-pay)) * 760 / 600);
-  --ust-pay: calc(var(--baslik-yuksekligi) + var(--arma-payi) + 2 * var(--bosluk) + 38px);
+  --ust-pay: calc(var(--baslik-yuksekligi) + var(--arma-payi) + 2 * var(--bosluk) + var(--cerceve-pay));
   position: relative; width: max(min(var(--g), var(--y), 1140px), min(var(--g), 342px));
   aspect-ratio: 760 / 600; height: auto;
   background: #669c2c; border-radius: 6px; overflow: hidden; container-type: size;
@@ -663,3 +664,36 @@ img { -webkit-user-drag: none; }
 #kursu { min-height: 727px; }
 #hafta { min-height: 534px; }
 #etkinlik { min-height: 216px; }
+
+/* ================= Kısa ekranlar =================
+   Türkiye'de masaüstlerin ~%18'i 1536×864 ya da 1366×768 (StatCounter, Temmuz 2026); tarayıcı çubukları düşünce
+   pencere 650-750 px kalır. Başlık tek satıra iner, alan oyuna kalır. iPad yatay da buraya düşer. */
+@media (max-height: 820px) and (min-width: 600px) {
+  :root { --baslik-yuksekligi: 76px; --arma-payi: 40px; --bosluk: 10px; }
+  .baslik .logo img { height: 58px; }
+  .oturum { grid-template-columns: auto minmax(0, 1fr) auto; gap: 0 12px; padding: 6px 10px 6px 6px; min-width: 0; }
+  .muhur-seviye { grid-row: 1; width: 48px; height: 48px; font-size: 21px; }
+  .ust-dugmeler { grid-column: 3; grid-row: 1; margin: 0; flex-wrap: nowrap; }
+  .imparatorluk { display: inline; font-size: 17px; }
+  .rutbe-cip { margin: 0 0 0 6px; font-size: 11px; vertical-align: 2px; }
+  .xp { height: 14px; margin-top: 3px; }
+  .xp-yazi { font-size: 10.5px; line-height: 14px; }
+  .baglantilar { margin-top: 2px; font-size: 11px; }
+  .arma .kalkan { width: 84px; }
+  .arma .bayrak { width: 24px; margin-bottom: 18px; }
+}
+/* Telefon yatay: oyun ekran yüksekliğini doldursun; başlık ince bir şerit. */
+@media (max-height: 500px) and (min-width: 600px) {
+  :root { --baslik-yuksekligi: 44px; --arma-payi: 0px; --bosluk: 6px; --cerceve-pay: 18px; --cerceve-dolgu: 4px; }
+  .baslik { padding: 4px var(--bosluk); }
+  .baslik .logo { display: none; }
+  .oturum { margin-left: auto; padding: 2px 8px 2px 3px; border-width: 2px; box-shadow: 0 2px 0 var(--ahsap-koyu); }
+  .muhur-seviye { width: 32px; height: 32px; font-size: 14px; -webkit-text-stroke-width: 3px; }
+  .muhur-seviye small { display: none; }
+  .imparatorluk { font-size: 14px; }
+  .rutbe-cip, .xp { display: none; }
+  .baglantilar { display: inline; margin: 0 0 0 8px; }
+  .ust-dugme { padding: 3px 8px 2px; font-size: 12px; -webkit-text-stroke-width: 3px; }
+  .ust-dugme img { height: 16px; }
+  .arma { display: none; }
+}

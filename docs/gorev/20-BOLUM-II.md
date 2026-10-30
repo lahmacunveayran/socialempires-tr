@@ -10,7 +10,7 @@
 | Madde  | Durum           | Ne gerekiyor                                                                      |
 | ------ | --------------- | --------------------------------------------------------------------------------- |
 | DAG-04 | onay_bekliyor   | Sahibi gerçek Android telefon ve iPad'de dener (§7.1)                             |
-| HIZ-03 | onay_bekliyor   | Sahibinin kararı: 1366×768'de daha büyük çerçeve için başlık kartı sıkıştırılsın mı |
+| HIZ-03 | ci_bekliyor     | Karar verildi: kısa ekranlarda başlık sıkışık düzene geçer (alan oyuna)            |
 | HIZ-02 | ertelendi       | Mobil LCP 3,7 sn (yavaş 4G benzetimi); ev ağında sorun beklenmiyor                 |
 | ICR-01 | engelli         | İstemcinin AS3 bayt kodunu değiştirmeden yapılamaz                                 |
 | VAR-01 | duzeltildi (◐)  | Ateş topu efektinin ekrandaki görünüşü gözle denetlenmedi (§7.2)                   |
@@ -19,6 +19,10 @@
 ## 7. Sahibinin elle yapacağı testler
 
 ### 7.1 Telefon ve tablet (DAG-04)
+
+Benzetimde (`node araclar/cihaz_denemesi.js <USERID> klasor --dokun`) iPhone, Pixel ve iPad dik/yatayda düzen
+doğru; gerçek Safari ve gerçek parmakla deneme yine de gerekli.
+
 
 1. Bilgisayarda `ayarlar.json` dosyasında `"ev_agi": true` yapın ve oyunu başlatın.
 2. Sunucunun açılışta yazdığı `http://192.168.x.x:5050/` adresini telefonda açın (aynı Wi-Fi).

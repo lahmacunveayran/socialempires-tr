@@ -39,6 +39,7 @@ Sunucu açıkken (`python server.py`) çalıştırılır; oyun varlıkları ilk 
 | Sayfa ekranları ve oran  | `node araclar/sayfa_goruntuleri.js <USERID> klasor --oyna`             | ✔ 3 ekranda oran 1,2667, Ruffle 0.7.1 açılıyor    |
 | Kayma karşılaştırması    | `python araclar/goruntu_farki.py once.png sonra.png`                   | (deneyin parçası)                                 |
 | Haber yoğunluğu          | `python araclar/haber_olcumu.py 30`                                    | ✔ Λ = 1,63 olay/dk                                |
+| Cihaz benzetimi          | `node araclar/cihaz_denemesi.js <USERID> klasor --dokun`               | ✔ 9 cihazda sığıyor, oran 1,2667                  |
 | Lighthouse               | `npx lighthouse@12 http://127.0.0.1:5050/play.html --preset=desktop`   | ✔ masaüstü 100 / LCP 0,7 sn / CLS 0               |
 
 Lighthouse giriş yapılmış sayfayı ölçmek için oturum çerezini `--extra-headers` ile alır (ayrıntı: devir notu).

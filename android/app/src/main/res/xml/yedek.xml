@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android yedeğine yalnızca kayıtlar girer (indirilen ~60 MB varlık girmez, yeniden indirilir). Android 12+ -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="socialempires/saves/" />
+        <include domain="file" path="socialempires/ayarlar.json" />
+        <exclude domain="file" path="socialempires/saves/backups/" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="socialempires/saves/" />
+        <include domain="file" path="socialempires/ayarlar.json" />
+        <exclude domain="file" path="socialempires/saves/backups/" />
+    </device-transfer>
+</data-extraction-rules>

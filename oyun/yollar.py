@@ -19,7 +19,10 @@ CONFIG_DIR = os.path.join(_VERI, "config")
 CONFIG_PATCH_DIR = os.path.join(CONFIG_DIR, "patch")
 CEVIRI_DIR = os.path.join(_VERI, "ceviri")
 
-BASE_DIR = os.path.dirname(sys.executable) if getattr(sys, "frozen", False) else KOK
+# SE_TABAN_DIZINI: kayıt, mod, ayar ve indirilenlerin yazılabilir klasörü (Android uygulaması kullanır;
+# orada oyun dosyaları salt okunur bir klasöre açılır)
+BASE_DIR = os.environ.get("SE_TABAN_DIZINI") or (
+    os.path.dirname(sys.executable) if getattr(sys, "frozen", False) else KOK)
 MODS_DIR = os.path.join(BASE_DIR, "mods")
 # SE_KAYIT_DIZINI: kayıtları başka klasörde tutmak için (testler kullanır)
 SAVES_DIR = os.environ.get("SE_KAYIT_DIZINI") or os.path.join(BASE_DIR, "saves")

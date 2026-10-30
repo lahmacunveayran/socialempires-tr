@@ -1,0 +1,133 @@
+name: android
+
+# Android uygulaması (android/): oyunun Python sunucusu Chaquopy ile uygulamanın içinde çalışır, oyun tam
+# ekran WebView'da açılır. APK üretilir, emülatörde açılış sınanır; etiket (v*) gönderilince GitHub
+# sürümüne eklenir.
+
+on:
+  push:
+    tags: ["v*"]
+  pull_request:
+    paths:
+      - android/**
+      - araclar/android_paketi.py
+      - oyun/**
+      - templates/**
+      - requirements.txt
+      - .github/workflows/android.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      ad: ${{ steps.ad.outputs.ad }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      # Chaquopy, uygulamanın Python sürümüyle aynı sürümü derleme makinesinde ister. 3.11: Chaquopy'de
+      # 32 bit Android'i (armeabi-v7a, eski Galaxy Tab A gibi) destekleyen son sürüm
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Testler (uygulamanın Python sürümünde)
+        run: |
+          pip install -r requirements.txt
+          python -m unittest discover -s tests
+      - uses: gradle/actions/setup-gradle@v5
+        with:
+          gradle-version: "8.14.3"
+      - name: Ad
+        id: ad
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then surum="${GITHUB_REF_NAME}"; else surum="${GITHUB_SHA::7}"; fi
+          echo "surum=${surum}" >> "$GITHUB_OUTPUT"
+          echo "ad=SocialEmpiresTR-${surum}-android" >> "$GITHUB_OUTPUT"
+      - name: Oyun dosyaları
+        run: python araclar/android_paketi.py
+      - name: İmza anahtarı (varsa)
+        env:
+          ANDROID_IMZA: ${{ secrets.ANDROID_IMZA }}
+        run: |
+          if [ -n "${ANDROID_IMZA}" ]; then
+            printf '%s' "${ANDROID_IMZA}" | base64 -d > "${RUNNER_TEMP}/imza.jks"
+            echo "SE_IMZA_DOSYASI=${RUNNER_TEMP}/imza.jks" >> "$GITHUB_ENV"
+            echo "Sahibin anahtarıyla imzalanacak"
+          else
+            echo "::warning::ANDROID_IMZA sırrı yok; APK geçici anahtarla imzalanacak (güncellemede eski uygulama kaldırılmalı). ANDROID.md: İmza anahtarı"
+          fi
+      - name: APK
+        env:
+          SE_SURUM: ${{ steps.ad.outputs.surum }}
+          SE_IMZA_SIFRESI: ${{ secrets.ANDROID_IMZA_SIFRESI }}
+        run: gradle -p android :app:assembleRelease --stacktrace
+      - name: Ad ve özet
+        run: |
+          mkdir dist
+          cp android/app/build/outputs/apk/release/app-release.apk "dist/${{ steps.ad.outputs.ad }}.apk"
+          cd dist && sha256sum "${{ steps.ad.outputs.ad }}.apk" > "${{ steps.ad.outputs.ad }}.apk.sha256"
+          ls -la
+      - uses: actions/upload-artifact@v7
+        with:
+          name: android-apk
+          path: dist/
+          if-no-files-found: error
+
+  sinama:
+    # Kabul kapısı: gerçek bir Android (emülatör) üzerinde uygulama açılır ve içindeki sunucu hazır olur
+    needs: apk
+    runs-on: ubuntu-latest
+    # Varsayılan 6 saat; takılan bir adım PR'ı saatlerce bekletmesin
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v7
+        with:
+          name: android-apk
+          path: dist
+      - name: KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: bash android/sinama.sh "dist/${{ needs.apk.outputs.ad }}.apk" ekran.png
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: android-ekran
+          path: ekran.png
+          if-no-files-found: ignore
+
+  surum:
+    if: github.ref_type == 'tag'
+    needs: [apk, sinama]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: android-apk
+          path: dist
+      - name: GitHub sürümüne ekle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Windows iş akışı da aynı sürümü kurar; hangisi önce biterse o kurar, öteki ekler
+          gh release view "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1 || \
+            gh release create "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" \
+              --title "Social Empires Türkçe ${GITHUB_REF_NAME}" --notes "Windows: zip'i açın, \"Social Empires.bat\" dosyasına çift tıklayın (Python gerekmez). SmartScreen uyarısında \"Ek bilgi\" > \"Yine de çalıştır\". Android: .apk dosyasını telefona/tablete indirip kurun (ANDROID.md). Dosyaların SHA-256 özetleri yanlarındaki .sha256 dosyalarında." || true
+          gh release upload "${GITHUB_REF_NAME}" dist/* --repo "${GITHUB_REPOSITORY}" --clobber

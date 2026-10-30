@@ -65,6 +65,12 @@ değişmediğini yanındaki `.sha256` dosyasıyla denetleyebilirsiniz
 (PowerShell: `Get-FileHash dosya.zip -Algorithm SHA256`). Her paket
 yayınlanmadan önce temiz bir Windows makinesinde açılıp sınanır.
 
+## Android telefon ve tablet
+
+Oyunun tamamı tek bir uygulamada; bilgisayar gerekmez. Sürümler sayfasındaki
+`SocialEmpiresTR-...-android.apk` dosyasını kurun. Ayrıntılar ve kayıtları taşıma:
+[ANDROID.md](ANDROID.md).
+
 ## Kurulum (Windows, kaynak koddan)
 
 1. **Python 3.12+** kurulu olsun.
@@ -152,7 +158,8 @@ Testler gerçek `saves/` klasörüne dokunmaz; geçici bir klasör kullanır.
 | `oyun/pvp.py`, `oyun/dunya.py`, `oyun/denge.py` | PvP, bot dünyası, denge ayarları |
 | `oyun/turnuva.py`, `oyun/ada.py` | Turnuvalar, dünya haritası ve fetih |
 | `oyun/hile.py` | Yerel hile paneli (`/cheat`) |
-| `araclar/` | Bot köyü üretimi, çeviri ve birim yaması araçları |
+| `araclar/` | Bot köyü üretimi, çeviri ve birim yaması araçları, Windows ve Android paketleri |
+| `android/` | Android uygulaması (Chaquopy + WebView) |
 | `config/`, `villages/`, `templates/`, `ceviri/` | Oyun verisi, köyler, sayfalar, çeviriler |
 | `tests/` | Testler |
 

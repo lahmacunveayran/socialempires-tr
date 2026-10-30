@@ -10,7 +10,6 @@
 import json
 import os
 import socket
-import sys
 import time
 import traceback
 
@@ -24,7 +23,7 @@ from oyun.kayit import (all_saves_info, all_saves_userid, fb_friends_str, load_s
                         new_village, save_info, save_lock, save_session, gecerli_uid,
                         session as kayit_oturumu)
 from oyun.surum import version_code, version_name
-from oyun.yollar import BASE_DIR, SAVES_DIR, STUB_DIR, TEMPLATES_DIR
+from oyun.yollar import SAVES_DIR, STUB_DIR, TEMPLATES_DIR
 
 print(" [+] Kayitlar yukleniyor...")
 load_saved_villages()
@@ -56,8 +55,8 @@ def _botlari_hazirla():
         return
     print(" [+] Bot koyleri bulunamadi; ilk calistirma icin uretiliyor...")
     try:
-        sys.path.insert(0, os.path.join(BASE_DIR, "araclar"))
-        from bot_koy_uret import bot_uret
+        # Paket olarak alınır: Android'de araclar/ salt okunur oyun dosyalarının yanındadır, yazılabilir klasörde değil
+        from araclar.bot_koy_uret import bot_uret
         bot_uret()
     except Exception:
         traceback.print_exc()

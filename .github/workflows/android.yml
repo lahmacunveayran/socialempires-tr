@@ -23,6 +23,7 @@ permissions:
 jobs:
   apk:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     outputs:
       ad: ${{ steps.ad.outputs.ad }}
     steps:
@@ -83,6 +84,8 @@ jobs:
     # Kabul kapısı: gerçek bir Android (emülatör) üzerinde uygulama açılır ve içindeki sunucu hazır olur
     needs: apk
     runs-on: ubuntu-latest
+    # Varsayılan 6 saat; takılan bir adım PR'ı saatlerce bekletmesin
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v7

@@ -822,7 +822,7 @@
       "isaret": "◐",
       "kanit": "Plan: docs/YOL_HARITASI_1407.md §3. Bu PR'da komut kısmı bitti (✔ çalıştırıldı, 31.10.2026): araclar/abc_okur.py (ABC çözücü, akış izleyen işlem kodu okuma, simgesel yığınla çağrı argümanları) ve araclar/komut_imzalari.py. 1.4.07 (SHA-256 0e4cc178…): 288 addCommand çağrı yeri, 0 çözülemeyen; G = 158 gönderilen komut; Constants'ta 185 CMD_ sabiti, 183 farklı değer = 158 gönderilen + 25 kodda hiç okunmayan (kabul kapısı 'G = 183 ile tutarlı' ✔). H = 128; |G ∖ H| = 31; imza uyumsuzluğu 0. Tablo: docs/inceleme/1407-komutlar.md, makinece: docs/inceleme/1407-komutlar.json ve 0926-komutlar.json.",
       "test": "tests/test_komut_imzalari.py",
-      "pr": null,
+      "pr": "#20",
       "onay": null,
       "notlar": "KAR-08 kararıyla açıldı (30.10.2026). Kalan: araclar/ceviri_kapsami.py ve config hattı ölçümü. Kapsama kapısı tests/test_komut_imzalari.py EKSIK_1407 listesiyle 'yalnızca azalır' biçiminde sınanıyor; GEC-03/05 listeyi boşaltır."
     },
@@ -1043,7 +1043,7 @@
       "isaret": "◐",
       "kanit": "araclar/komut_imzalari.py 0926b üzerinde: G = 131, H = 128, G ∖ H = {time_ff, buy_time_packet, reset_dragon}. time_ff ve buy_time_packet PopupSelectTime/onUse ve onBuy'dan (Zaman Makinesi), reset_dragon AdminPanel/resetPopupDragon'dan (geliştirici paneli). tests/test_komutlar.py'deki elle çıkarılmış 128'lik liste araçla bulunan 131'in alt kümesi; fark tam bu üçü. Önceki not (upstream-tarama1 §5.3) time_ff'yi 'gerçekten gönderilmiyor' sayıyordu; bayt kodu bunu çürütüyor.",
       "test": "tests/test_komut_imzalari.py",
-      "pr": null,
+      "pr": "#20",
       "onay": null,
       "notlar": "Bilinmeyen komut hata vermeden günlüğe düşer; oyunda Zaman Makinesi penceresine ulaşılıp ulaşılmadığı denenmedi (?). 1.4.07'de de eksik; GEC-03'te formülüyle birlikte yazılır."
     },
@@ -1056,7 +1056,7 @@
       "isaret": "✔",
       "kanit": "araclar/komut_imzalari.py: 183 farklı CMD_ değerinin 25'i kodda hiç okunmuyor (ör. give_bonus_reward, explore, hire_worker). 0926b: 154 değer, 131 gönderilen. Çağrı yerinden sayınca 0926 → 1.4.07 farkı: 28 yeni, 1 kalkan (exchange_cash_new), 1 argüman sayısı değişen (set_attack_team 2 → 3). KYN-05'teki 'Diğer (5)' grubundaki give_bonus_reward ölü sabit.",
       "test": "tests/test_komut_imzalari.py",
-      "pr": null,
+      "pr": "#20",
       "onay": null,
       "notlar": "Kapsama kapısı |G ∖ H| = 0, G = 158 üzerinden ölçülür; 25 ölü sabit için işleyici gerekmez."
     }

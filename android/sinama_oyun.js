@@ -43,7 +43,9 @@ function konsoluYaz() {
   console.log(`WebView: ${await sayfa.evaluate(() => navigator.userAgent)}`);
   await sayfa.goto(`${ADRES}/new.html`, { timeout: 120000 });
   await sayfa.waitForSelector("#kralliga-gir", { timeout: 60000 });
-  console.log(`[${sure()}] Oyun sayfası açık: ${sayfa.url()}`);
+  // Pencere boyutu ve görünürlük: uygulama arka plana düşerse ya da WebView küçülürse burada görünür
+  const boyut = () => sayfa.evaluate(() => `pencere ${innerWidth}×${innerHeight}, ${document.visibilityState}`).catch((h) => h.message);
+  console.log(`[${sure()}] Oyun sayfası açık: ${sayfa.url()} ${await boyut()}`);
 
   // Dar ekranda düğme bazen görünür alanın dışında kalıyor; tıklama olayı doğrudan gönderilir
   await sayfa.locator("#kralliga-gir").dispatchEvent("click");
@@ -51,7 +53,7 @@ function konsoluYaz() {
   console.log(`[${sure()}] Ruffle oluşturuldu`);
   // İlk açılışta oyun varlıkları (~60 MB) GitHub'dan iner
   await sayfa.waitForSelector("#yukleme[hidden]", { state: "attached", timeout: 420000 });
-  console.log(`[${sure()}] Oyun yüklendi (yükleme perdesi kalktı)`);
+  console.log(`[${sure()}] Oyun yüklendi (yükleme perdesi kalktı) ${await boyut()}`);
   await sayfa.waitForTimeout(20000);
 
   const durum = await sayfa.evaluate(() => {
@@ -62,14 +64,25 @@ function konsoluYaz() {
       cerceve: (() => { const k = document.getElementById("oyun-kutusu").getBoundingClientRect();
         return `${Math.round(k.width)}×${Math.round(k.height)}`; })(),
       pencere: `${innerWidth}×${innerHeight}`,
+      // Uygulamada oyun modu (tam ekran) açık gelir: oyun pencerenin genişliğini ya da yüksekliğini doldurur
+      oyunModu: document.body.classList.contains("oyun-modu"),
+      dolu: (() => { const k = document.getElementById("oyun-kutusu").getBoundingClientRect();
+        return Math.abs(k.width - innerWidth) <= 2 || Math.abs(k.height - innerHeight) <= 2; })(),
     };
   });
   console.log(`[${sure()}] ${JSON.stringify(durum)}`);
   if (!durum.swf) throw new Error("Ruffle SWF bilgisini vermedi");
+  if (!durum.oyunModu || !durum.dolu) throw new Error("Oyun tam ekran açılmadı (oyun modu)");
 
   // Oyunun kendisi sunucuya aşamalarını bildirir (oyun/istemci.py track_game_status)
   let asamalar = [];
   for (let i = 0; i < 60; i++) {
+    // Emülatör açılışını yeni bitirirken bir sistem ekranı uygulamayı arka plana itebilir; arka planda oyun durur
+    // (pauseTimers). Bu cihazın değil emülatörün gürültüsü: uygulama yeniden öne getirilir ve günlüğe yazılır.
+    if ((await boyut()).includes("hidden")) {
+      console.log(`[${sure()}] Uygulama arka planda (${await boyut()}); öne getiriliyor`);
+      await cihaz.shell(`am start -n ${PAKET}/.MainActivity`);
+    }
     const kayit = (await cihaz.shell("logcat -d -s python.stdout:V")).toString();
     asamalar = [...new Set(kayit.match(/track_game_status: \S+/g) || [])];
     if (asamalar.some((a) => a.endsWith("129b-init"))) break;

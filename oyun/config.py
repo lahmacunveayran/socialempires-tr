@@ -3,11 +3,11 @@ import json
 import os
 import time
 import jsonpatch
-from oyun.yollar import MODS_DIR, CONFIG_DIR, CONFIG_PATCH_DIR
+from oyun.yollar import MODS_DIR, CONFIG_DIR, CONFIG_PATCH_DIR, json_oku
 from oyun.zaman import zaman_olcegi
 from oyun.turkce import turkce_uygula, ascii_uygula
 
-__game_config = json.load(open(os.path.join(CONFIG_DIR, "game_config_20120826.json"), 'r', encoding='utf-8'))
+__game_config = json_oku(os.path.join(CONFIG_DIR, "game_config_20120826.json"))
 
 def remove_duplicate_items():
     indexes = {}
@@ -36,7 +36,7 @@ def remove_duplicate_items():
         break
 
 def apply_config_patch(filename):
-    patch = json.load(open(filename, 'r', encoding='utf-8'))
+    patch = json_oku(filename)
     jsonpatch.apply_patch(__game_config, patch, in_place=True)
 
 def patch_game_config():

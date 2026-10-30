@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Profil Resmi · Social Empires Türkçe</title>
+    <link rel="icon" type="image/gif" href="/img/icon.gif">
+    <link rel="stylesheet" href="/css/oyun.css">
+    <script src="/js/gokyuzu.js" defer></script>
+</head>
+<body>
+    <div class="manzara" aria-hidden="true">
+        <div class="orman orman-uzak"></div>
+        <div class="orman orman-orta"></div>
+        <div class="sis"></div>
+        <div class="orman orman-yakin"></div>
+    </div>
+
+    <main class="giris hile profil">
+        <section class="panel" aria-labelledby="profil-basligi">
+            <h2><span class="serit-baslik" id="profil-basligi">Profil Resmi</span></h2>
+            <div class="icerik">
+                <div class="profil-onizleme">
+                    <img id="onizleme" src="{{ portre }}" alt="Profil resmin">
+                    <b class="yazi-oyun">{{ bilgi.name }}</b>
+                </div>
+                <p class="hile-alt">Kendi fotoğrafını seç; ortasından kare kırpılır. Resim yalnızca bu cihazdaki oyunda
+                    kalır, yedeğe ve Wi-Fi taşımaya girer.</p>
+                <input id="dosya" type="file" accept="image/*" hidden>
+                <div class="hile-dugmeler">
+                    <button class="ust-dugme" type="button" id="sec">Fotoğraf seç</button>
+                    <button class="yesil-dugme" type="button" id="kaydet" hidden>Kaydet</button>
+                    <button class="ust-dugme" type="button" id="kaldir"{% if not kendi %} hidden{% endif %}>Resmi kaldır</button>
+                </div>
+                <p class="hile-ileti" id="ileti" role="status"></p>
+                <div class="giris-dugmeler"><a class="yesil-dugme" href="/play.html">Oyuna Dön</a></div>
+            </div>
+        </section>
+    </main>
+    <script>
+        (function () {
+            var BOYUT = 256;
+            var dosya = document.getElementById("dosya"), onizleme = document.getElementById("onizleme");
+            var kaydet = document.getElementById("kaydet"), kaldir = document.getElementById("kaldir");
+            var ileti = document.getElementById("ileti");
+            var hazir = null;
+
+            document.getElementById("sec").addEventListener("click", function () { dosya.click(); });
+
+            // Fotoğraf ortasından kare kırpılır ve 256×256 JPEG'e küçültülür
+            dosya.addEventListener("change", function () {
+                var f = dosya.files && dosya.files[0];
+                if (!f) return;
+                var resim = new Image(), adres = URL.createObjectURL(f);
+                resim.onload = function () {
+                    var kenar = Math.min(resim.naturalWidth, resim.naturalHeight);
+                    var tuval = document.createElement("canvas");
+                    tuval.width = tuval.height = BOYUT;
+                    tuval.getContext("2d").drawImage(resim, (resim.naturalWidth - kenar) / 2, (resim.naturalHeight - kenar) / 2,
+                                                     kenar, kenar, 0, 0, BOYUT, BOYUT);
+                    URL.revokeObjectURL(adres);
+                    tuval.toBlob(function (blob) {
+                        hazir = blob;
+                        onizleme.src = URL.createObjectURL(blob);
+                        kaydet.hidden = false;
+                        ileti.textContent = "Beğendiysen kaydet.";
+                    }, "image/jpeg", 0.88);
+                };
+                resim.onerror = function () { URL.revokeObjectURL(adres); ileti.textContent = "Bu dosya açılamadı; başka bir fotoğraf deneyin."; };
+                resim.src = adres;
+            });
+
+            function gonder(yol, govde) {
+                return fetch(yol, { method: "POST", body: govde }).then(function (r) {
+                    return r.json().then(function (v) { if (!r.ok) throw new Error(v.hata || "Kaydedilemedi."); return v; });
+                });
+            }
+
+            kaydet.addEventListener("click", function () {
+                if (!hazir) return;
+                var form = new FormData();
+                form.append("resim", hazir, "profil.jpg");
+                kaydet.disabled = true;
+                gonder("/profil/resim", form).then(function (v) {
+                    onizleme.src = v.pic; kaydet.hidden = true; kaldir.hidden = false; hazir = null;
+                    ileti.textContent = "Kaydedildi. Oyunda bir sonraki açılışta görünür.";
+                }).catch(function (h) { ileti.textContent = h.message; }).then(function () { kaydet.disabled = false; });
+            });
+
+            kaldir.addEventListener("click", function () {
+                gonder("/profil/resim/sil").then(function (v) {
+                    onizleme.src = v.pic; kaldir.hidden = true; kaydet.hidden = true; hazir = null;
+                    ileti.textContent = "Resim kaldırıldı.";
+                }).catch(function (h) { ileti.textContent = h.message; });
+            });
+        })();
+    </script>
+</body>
+</html>

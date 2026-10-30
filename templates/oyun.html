@@ -36,13 +36,14 @@
                     <div class="xp-dolum" data-oran="{{ [3, [xp_oran, 100] | min] | max }}"></div>
                     <span class="xp-yazi yazi-oyun"><span data-say="{{ xp.simdi }}">{{ xp.simdi }}</span>&nbsp;/&nbsp;{{ "{:,}".format(xp.son).replace(",", ".") }} XP</span>
                 </div>
-                <div class="baglantilar"><a href="/">çıkış</a> · <a href="/gunluk">günlük</a> · <a href="/cheat">hile paneli</a> ·
+                <div class="baglantilar"><a href="/">çıkış</a> · <a href="/gunluk">günlük</a> · <a href="/profil">profil resmi</a> · <a href="/cheat">hile paneli</a> ·
                     <a href="/kayit/indir">yedek indir</a> ·
                     <a href="/cevrimdisi">çevrimdışı paket</a> ·
                     <a href="/tasima">wi-fi ile taşı</a> ·
                     <label class="yedek-yukle">yedek yükle<input type="file" id="yedek-dosyasi" accept=".json,application/json" hidden></label></div>
             </div>
             <nav class="ust-dugmeler" aria-label="Oyun bağlantıları">
+                <button class="ust-dugme tam-ekran-dugme" id="tam-ekran" type="button">Tam Ekran</button>
                 <a class="ust-dugme" href="/hazine"><img src="/img/cash.png" alt="">Nakit Al</a>
                 <a class="ust-dugme" href="https://discord.gg/zW5gSbQJBw" target="_blank" rel="noopener"><img src="/img/discord.png" alt="">Discord</a>
             </nav>
@@ -145,6 +146,7 @@
             }
         };
     </script>
+    <button class="ust-dugme tam-cik" id="tam-cik" type="button" hidden>Çık</button>
     <script src="/js/oyun.js"></script>
 </body>
 </html>

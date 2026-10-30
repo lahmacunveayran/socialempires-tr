@@ -52,6 +52,7 @@ def bot_mu(uid):
 def _botlari_hazirla():
     """Hiç bot köyü yoksa (ilk çalıştırma) PvP/ada/turnuva için üretir."""
     if any(bot_mu(uid) for uid in all_saves_userid()):
+        _bot_adlarini_yenile()
         return
     print(" [+] Bot koyleri bulunamadi; ilk calistirma icin uretiliyor...")
     try:
@@ -63,6 +64,17 @@ def _botlari_hazirla():
         print(" ! Bot koyleri uretilemedi; elle: python araclar/bot_koy_uret.py")
         return
     load_saved_villages()
+
+
+def _bot_adlarini_yenile():
+    """Eski tarihî adlı botları ve portrelerini oyunun birimlerine geçirir (oyun/bot_kimlik.py)."""
+    from oyun.bot_kimlik import adlari_yenile
+    with save_lock:
+        degisen = adlari_yenile({uid: kayit_oturumu(uid) for uid in all_saves_userid()})
+        for uid in degisen:
+            save_session(uid)
+    if degisen:
+        print(f" [+] Bot adlari/portreleri guncellendi: {len(degisen)} kayit")
 
 
 _botlari_hazirla()
@@ -115,7 +127,8 @@ def login():
         if not gecerli_uid(uid):
             return ("Gecersiz oyuncu kimligi", 400)
         session["USERID"] = uid
-        session["GAMEVERSION"] = request.form.get("GAMEVERSION", "SocialEmpires0926bsec.swf")
+        # Yalnızca 0.9.26b destekli: Türkçe yama, çevrimdışı paket ve sınamalar bu sürüm için (formdaki değere bakılmaz)
+        session["GAMEVERSION"] = OYUN_SWF
         # Bot kaydıyla giriş yapıldıysa oyuncuya devret; yoksa dünya
         # simülasyonu aynı kayda yazarken çakışabilir.
         kayit = kayit_oturumu(uid)
@@ -134,6 +147,7 @@ def login():
     return render_template("login.html", saves_info=kayitlar, version=version_name, varlik=STATIK_YOL)
 
 
+OYUN_SWF = "SocialEmpires0926bsec.swf"
 STATIK_YOL = "/default01.static.socialpointgames.com/static/socialempires/"
 DINAMIK_YOL = "/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/"
 
@@ -205,7 +219,7 @@ def hazine():
 @app.route("/new.html")
 def new():
     session["USERID"] = new_village()
-    session["GAMEVERSION"] = "SocialEmpires0926bsec.swf"
+    session["GAMEVERSION"] = OYUN_SWF
     return redirect("play.html")
 
 
@@ -235,7 +249,7 @@ def js(path):
 
 
 # Diğer uçlar (içe aktarılınca rotalarını kaydeder)
-from oyun import diyar, gunluk, hile, istemci, kayit_yedek, onindirme, tasima, varliklar  # noqa: E402,F401
+from oyun import diyar, gunluk, hile, istemci, kayit_yedek, onindirme, profil, tasima, varliklar  # noqa: E402,F401
 
 
 def yerel_ag_adresi():

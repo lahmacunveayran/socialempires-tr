@@ -54,6 +54,10 @@ timeout 600 node "$(dirname "$0")/sinama_oyun.js" "$PAKET" "$OYUN_EKRANI"
   if [ "$(timeout 10 adb get-state 2>/dev/null)" != device ]; then
     echo "Emülatör kapandı (grafik katmanı çökmüş olabilir); cihaz günlüğü alınamıyor"; exit 1
   fi
+  echo "--- Uygulama yaşam döngüsü ve öndeki pencere ---"
+  timeout 30 adb logcat -d -s SocialEmpires:V | tail -40
+  timeout 20 adb shell dumpsys window | grep -E "mCurrentFocus|mFocusedApp" | head -5
+  timeout 20 adb shell dumpsys activity activities | grep -E "ResumedActivity|topResumed" | head -5
   echo "--- WebView, çökme ve sistem günlüğü ---"
   timeout 30 adb logcat -d -s SocialEmpires:V chromium:V cr_AwContents:V DEBUG:V libc:F ActivityManager:I lowmemorykiller:V \
     | grep -v "Loading save" | tail -120

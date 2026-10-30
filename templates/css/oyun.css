@@ -74,6 +74,15 @@ img { -webkit-user-drag: none; }
 /* ================= Manzara ================= */
 .manzara { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
 
+/* Oyunun kendi manzarası (seviye atlama penceresinin arka planı): gökyüzü, deniz ve çayır; ağaçların ardında
+   kalır, geceleri ağaçlar gibi kararır. Resmin alt köşelerindeki süsler ağaçların altında kalır. */
+.manzara::before {
+  /* Resmin kendi pencere çerçevesi (ince kenar ve üst köşe süsleri) ekranın dışında kalsın */
+  content: ""; position: absolute; inset: -7vh -6vw 60px;
+  background: url("/default01.static.socialpointgames.com/static/socialempires/externalized/PopupLevelUp/background.png") center 30% / cover no-repeat;
+  filter: brightness(calc(.15 + var(--gun-isigi) * .85)) saturate(calc(.5 + var(--gun-isigi) * .5));
+}
+
 /* Oyunun çam ağaçları: üç derinlikte sıra; ışığa göre kararır. */
 .orman {
   position: absolute; left: -60px; right: -60px; bottom: 0;
@@ -502,11 +511,13 @@ img { -webkit-user-drag: none; }
   padding: 14px 4px 6px; border-radius: 12px 12px 6px 6px; color: #fff;
   background: linear-gradient(#e6e9ee, #9aa3af); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .7), 0 4px 0 #5f6670;
 }
-.b1 .blok { height: 98px; background: linear-gradient(#ffe58a, #e3a020); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .8), 0 4px 0 #8a5a08; }
-.b2 .blok { height: 78px; }
-.b3 .blok { height: 64px; background: linear-gradient(#f2b483, #b5672a); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .6), 0 4px 0 #6a3610; }
+.b1 .blok { min-height: 98px; background: linear-gradient(#ffe58a, #e3a020); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .8), 0 4px 0 #8a5a08; }
+.b2 .blok { min-height: 78px; }
+.b3 .blok { min-height: 64px; background: linear-gradient(#f2b483, #b5672a); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .6), 0 4px 0 #6a3610; }
 .blok .no { font-size: 30px; line-height: 1; }
-.basamak .ad { display: block; margin-top: 2px; font: 900 13px/1.1 var(--metin-yazi); color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .55); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 3px; }
+.basamak .ad { display: block; margin-top: 2px; font: 900 13px/1.1 var(--metin-yazi); color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .55); max-width: 100%; padding: 0 3px; flex-shrink: 0;
+  /* uzun ad iki satıra iner; sabit yükseklikte sıkışıp kaybolmaz */
+  overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; }
 .basamak .sv { font: 800 11px var(--metin-yazi); color: #fff; opacity: .95; text-shadow: 0 1px 1px rgba(0, 0, 0, .5); }
 .basamak .rt { display: block; margin-top: 12px; font: 800 11.5px var(--metin-yazi); color: var(--muhur); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
@@ -626,9 +637,6 @@ img { -webkit-user-drag: none; }
 .imparatorluklar .levha .ad { font-size: 16px; }
 .imparatorluklar .xp-kucuk { color: var(--murekkep-soluk) !important; }
 .imparatorluklar .gir { font-size: 16px; padding: 7px 16px 6px; }
-.gelismis { margin: 8px 2px 4px; font: 700 13px var(--metin-yazi); color: var(--murekkep-soluk); }
-.gelismis summary { cursor: pointer; }
-.gelismis select { margin-top: 8px; width: 100%; padding: 6px; border-radius: 8px; border: 1.5px solid #b49464; background: #fffaf0; font: 700 13px var(--metin-yazi); }
 .giris-dugmeler { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; align-items: center; margin-top: 18px; }
 .yedekten { font-size: 16px; padding: 9px 16px 8px; }
 .giris-not { margin: 12px 0 0; text-align: center; font: 700 12px var(--metin-yazi); color: var(--murekkep-soluk); }
@@ -659,8 +667,11 @@ img { -webkit-user-drag: none; }
 .hile-miktar { display: block; margin-top: 10px; font: 700 13px var(--metin-yazi); color: var(--murekkep-soluk); }
 .hile-miktar select { margin-left: 6px; padding: 4px 6px; border-radius: 8px; border: 1.5px solid #b49464; background: #fffaf0; font: 700 13px var(--metin-yazi); }
 .hile-dugmeler { display: flex; flex-wrap: wrap; gap: 8px; }
-.cevrimdisi [hidden], .tasima [hidden] { display: none; }
+.cevrimdisi [hidden], .tasima [hidden], .profil [hidden] { display: none; }
 .gunluk { max-width: 760px; }
+.profil-onizleme { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 6px 0 12px; }
+.profil-onizleme img { width: 128px; height: 128px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 0 0 3px #c2a46c, 0 6px 14px rgba(0, 0, 0, .3); background: #e9d9b0; }
+.profil-onizleme b { font-size: 22px; }
 .gunluk-kimlik { display: flex; align-items: center; gap: 12px; margin: 4px 0 14px; }
 .gunluk-kimlik img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 0 0 2px #c2a46c; }
 .gunluk-kimlik b { display: block; font-size: 22px; }
@@ -729,3 +740,25 @@ img { -webkit-user-drag: none; }
   .ust-dugme img { height: 16px; }
   .arma { display: none; }
 }
+
+/* ================= Oyun modu (tam ekran) =================
+   Oyun ekranın tamamını alır; başlık ve paneller gizlenir. Oran 760:600 kalır (oyun EXACT_FIT ile esner),
+   kalan kenarlar koyu ahşap. Android uygulamasında varsayılan açıktır. */
+.tam-ekran-dugme { cursor: pointer; font: inherit; }
+.tam-cik[hidden] { display: none; }
+body.oyun-modu { overflow: hidden; }
+body.oyun-modu > :not(.yerlesim):not(.tam-cik):not(.manzara):not(script) { display: none; }
+body.oyun-modu .yerlesim { display: block; max-width: none; padding: 0; }
+body.oyun-modu .yerlesim > :not(.oyun-alani) { display: none; }
+body.oyun-modu .oyun-alani { padding: 0; height: 100vh; height: 100dvh; align-items: center; }
+body.oyun-modu .cerceve { padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+body.oyun-modu .arma { display: none; }
+body.oyun-modu .oyun-kutusu {
+  width: min(100vw, 100vh * 760 / 600); width: min(100vw, 100dvh * 760 / 600);
+  border-radius: 0; box-shadow: none;
+}
+.tam-cik {
+  position: fixed; z-index: 50; top: 8px; left: 8px; padding: 4px 12px 3px; font-size: 13px; cursor: pointer;
+  opacity: .55; transition: opacity .2s;
+}
+.tam-cik:hover, .tam-cik:focus-visible { opacity: 1; }

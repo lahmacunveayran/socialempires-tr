@@ -13,7 +13,7 @@ from werkzeug.utils import safe_join, secure_filename
 from oyun import denge
 from oyun.ekonomi import timestamp_now
 from oyun.surum import migrate_loaded_save, version_code
-from oyun.yollar import SAVES_DIR, VILLAGES_DIR
+from oyun.yollar import SAVES_DIR, VILLAGES_DIR, json_oku
 
 # Sunucu çok iş parçacıklı çalıştığı için kayıt değiştiren işlemler bu
 # kilit altında yapılır (aynı anda gelen komutlar birbirini ezmesin).
@@ -42,7 +42,7 @@ __saves = {}  # ALL saved villages
     "USERID_2": {...}
 }'''
 
-__initial_village = json.load(open(os.path.join(VILLAGES_DIR, "initial.json"), encoding="utf-8"))
+__initial_village = json_oku(os.path.join(VILLAGES_DIR, "initial.json"))
 
 # Load saved villages
 
@@ -74,7 +74,7 @@ def _load_saved_villages():
         if file == "initial.json" or not file.endswith(".json"):
             continue
         print(f" * Loading static neighbour {file}... ", end='')
-        village = json.load(open(os.path.join(VILLAGES_DIR, file), encoding="utf-8"))
+        village = json_oku(os.path.join(VILLAGES_DIR, file))
         if not is_valid_village(village):
             print("Invalid neighbour")
             continue
@@ -90,7 +90,7 @@ def _load_saved_villages():
             continue
         print(f" * Loading save at {file}... ", end='')
         try:
-            save = json.load(open(os.path.join(SAVES_DIR, file), encoding="utf-8"))
+            save = json_oku(os.path.join(SAVES_DIR, file))
         except json.decoder.JSONDecodeError as e:
             print("Corrupted JSON.")
             continue

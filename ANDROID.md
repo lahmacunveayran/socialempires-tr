@@ -53,13 +53,18 @@ Oyun sayfasının üstündeki **çevrimdışı paket** bağlantısı:
 
 ## Kullanım
 
+- **Tam ekran:** oyun ekranın tamamını kaplayarak açılır; durum ve gezinme çubukları gizlidir (kenardan
+  kaydırınca bir süre görünür). Haberler, Şeref Kürsüsü ve üst bağlantılar için sol üstteki **Çık**'a basın;
+  yeniden tam ekran için üstteki **Tam Ekran** düğmesi. Seçiminiz hatırlanır. Uygulama yatay ekranda açılır.
 - Oyun fareyle oynanmak için yapıldı; dokunma tıklama gibi çalışır, haritayı parmakla kaydırabilirsiniz.
 - **İki parmakla yakınlaştırma:** parmakları açınca yakınlaşır, kapayınca uzaklaşır (oyunun sağdaki kaydırıcısı
   da çalışır). İlk parmağın altındaki bina seçilebilir; boş yere dokununca seçim kalkar.
 - Oyun açıkken tablet uzun süre başka uygulamadaysa Android uygulamayı kapatabilir; kayıtlar her hamlede
   yazıldığı için bir şey kaybolmaz. Hiç kapanmasın isterseniz: **Ayarlar → Pil → Arka plan kullanım sınırları →
   Asla uyumayan uygulamalar → Social Empires**.
-- Geri tuşu bir önceki sayfaya döner (örneğin hile panelinden oyuna).
+- Geri tuşu bir önceki sayfaya döner (örneğin hile panelinden oyuna). Oyundayken yanlışlıkla çıkılmasın diye
+  iki kez basmak gerekir; uygulama arka plana alınır, oyun kapanmaz. Arka plandayken oyun ve müzik durur.
+- Android'in yazı boyutu ayarı oyun sayfasını büyütmez; düzen her cihazda aynı kalır.
 - Discord gibi dış bağlantılar tarayıcıda açılır.
 
 ## Teknik notlar

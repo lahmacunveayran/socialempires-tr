@@ -37,7 +37,8 @@ function konsoluYaz() {
   await sayfa.waitForSelector("#kralliga-gir", { timeout: 60000 });
   console.log(`[${sure()}] Oyun sayfası açık: ${sayfa.url()}`);
 
-  await sayfa.click("#kralliga-gir", { force: true }); // düğme nabız gibi atıyor
+  // Dar ekranda düğme bazen görünür alanın dışında kalıyor; tıklama olayı doğrudan gönderilir
+  await sayfa.locator("#kralliga-gir").dispatchEvent("click");
   await sayfa.waitForSelector("ruffle-player", { state: "attached", timeout: 60000 });
   console.log(`[${sure()}] Ruffle oluşturuldu`);
   // İlk açılışta oyun varlıkları (~60 MB) GitHub'dan iner

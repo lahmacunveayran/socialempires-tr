@@ -21,3 +21,4 @@ tests/_audit_test.txt
 # Yalnizca Turkce fontlar depoda tutulur.
 assets/*
 !assets/fonts/
+dist/

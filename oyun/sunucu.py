@@ -7,7 +7,9 @@
 - oyun.hile:      yerel hile paneli
 """
 
+import json
 import os
+import socket
 import sys
 import time
 import traceback
@@ -15,7 +17,7 @@ import traceback
 print(" [+] Oyun ayarlari yukleniyor...")
 from flask import Flask, redirect, render_template, request, send_from_directory, session
 
-from oyun import aktarim, ruffle as Ruffle
+from oyun import aktarim, ayarlar, ruffle as Ruffle
 from oyun.dunya import rutbe
 from oyun.ekonomi import timestamp_now
 from oyun.kayit import (all_saves_info, all_saves_userid, fb_friends_str, load_saved_villages,
@@ -167,6 +169,19 @@ def ruffle_deneme():
     return _oyun_sayfasi("oyun.html", ruffle_js=Ruffle.DENEME_URL)
 
 
+@app.route("/manifest.webmanifest")
+def manifest():
+    """Bilgisayarda 'uygulama olarak yükle' (Chrome/Edge service worker istemiyor)."""
+    yanit = app.response_class(json.dumps({
+        "name": "Social Empires Türkçe", "short_name": "Social Empires", "lang": "tr",
+        "start_url": "/", "scope": "/", "display": "standalone",
+        "background_color": "#2f7fd6", "theme_color": "#6e4a2b",
+        "icons": [{"src": "/img/simge-192.png", "sizes": "192x192", "type": "image/png"},
+                  {"src": "/img/simge-512.png", "sizes": "512x512", "type": "image/png"}],
+    }, ensure_ascii=False), mimetype="application/manifest+json")
+    return yanit
+
+
 @app.route("/hazine")
 def hazine():
     return render_template("hazine.html", version=version_name)
@@ -203,6 +218,16 @@ def js(path):
 from oyun import diyar, hediye, hile, istemci, kayit_yedek, varliklar  # noqa: E402,F401
 
 
+def yerel_ag_adresi():
+    """Bu bilgisayarın ev ağındaki adresi (192.168.x.x); bulunamazsa 127.0.0.1."""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("10.255.255.255", 1))  # paket gönderilmez, yalnızca yol seçilir
+            return s.getsockname()[0]
+    except OSError:
+        return "127.0.0.1"
+
+
 def calistir():
     from oyun.dunya import Dunya
     from oyun.yedek import baslat as yedekleri_baslat
@@ -210,15 +235,19 @@ def calistir():
         yedekleri_baslat()
         Dunya().baslat()
         Ruffle.brotli_baslat()
+        dinlenen = HOST
         print(f" [+] Sunucu hazir: http://{HOST}:{PORT}/")
+        if ayarlar.oku().get("ev_agi"):
+            dinlenen = "0.0.0.0"
+            print(f" [+] Ev agindaki telefon ve tabletler icin: http://{yerel_ag_adresi()}:{PORT}/")
         try:
             from waitress import serve
         except ImportError:
             print(" ! waitress kurulu degil; Flask gelistirme sunucusu kullaniliyor"
                   " (pip install -r requirements.txt)")
-            app.run(host=HOST, port=PORT, debug=False, threaded=True, use_reloader=False)
+            app.run(host=dinlenen, port=PORT, debug=False, threaded=True, use_reloader=False)
             return
-        serve(app, host=HOST, port=PORT, threads=IS_PARCACIGI, ident="SocialEmpiresTR")
+        serve(app, host=dinlenen, port=PORT, threads=IS_PARCACIGI, ident="SocialEmpiresTR")
     except Exception:
         try:
             os.makedirs(SAVES_DIR, exist_ok=True)

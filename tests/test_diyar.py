@@ -89,3 +89,16 @@ class HaberTestleri(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DagitimTestleri(unittest.TestCase):
+    def test_manifest(self):
+        cevap = server.app.test_client().get("/manifest.webmanifest")
+        veri = cevap.get_json(force=True)
+        self.assertEqual(veri["display"], "standalone")
+        self.assertEqual({s["sizes"] for s in veri["icons"]}, {"192x192", "512x512"})
+        for simge in veri["icons"]:
+            self.assertEqual(server.app.test_client().get(simge["src"]).status_code, 200)
+
+    def test_yerel_ag_adresi(self):
+        self.assertRegex(server.yerel_ag_adresi(), r"^\d+\.\d+\.\d+\.\d+$")

@@ -112,6 +112,32 @@
     }
   }
 
+  // Oyun fare tekerleğiyle yakınlaşır. Dokunmatik ekranda iki parmağı açıp kapamak tekerleğe çevrilir: olay,
+  // parmakların ortasındaki Ruffle tuvaline (açık gölge DOM) gönderilir. Her %12'lik açılma bir tekerlek adımıdır.
+  var ADIM = 1.12;
+  function ikiParmaklaYakinlastir(oyuncu) {
+    var onceki = null;
+    function aralik(t) { return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY); }
+    kutu.addEventListener("touchstart", function (e) {
+      onceki = e.touches.length === 2 ? aralik(e.touches) : null;
+    }, { passive: true });
+    kutu.addEventListener("touchmove", function (e) {
+      if (e.touches.length !== 2 || !onceki) return;
+      var simdi = aralik(e.touches);
+      var oran = simdi / onceki;
+      if (oran < ADIM && oran > 1 / ADIM) return;
+      onceki = simdi;
+      var x = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      var y = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      var hedef = (oyuncu.shadowRoot && oyuncu.shadowRoot.elementFromPoint(x, y)) || oyuncu;
+      hedef.dispatchEvent(new WheelEvent("wheel", {
+        deltaY: oran > 1 ? -120 : 120, deltaMode: 0, clientX: x, clientY: y,
+        bubbles: true, cancelable: true, composed: true,
+      }));
+    }, { passive: true });
+    kutu.addEventListener("touchend", function (e) { if (e.touches.length < 2) onceki = null; }, { passive: true });
+  }
+
   function oyunuBaslat() {
     window.RufflePlayer = window.RufflePlayer || {};
     window.RufflePlayer.config = {
@@ -123,11 +149,15 @@
       backgroundColor: "#669C2C",
       letterbox: "off",
       logLevel: "warn",
+      // Oyun açılışta ~5 MB'lık yapılandırmayı tek seferde işler; Ruffle'ın 15 sn'lik betik sınırı yavaş
+      // tablette (ve emülatörde) aşılıp oyun "too long to execute" ile durdu (DAG-08).
+      maxExecutionDuration: 60,
     };
     if (kisitliGpu()) window.RufflePlayer.config.preferredRenderer = "webgl";
     var ruffle = window.RufflePlayer.newest();
     var oyuncu = ruffle.createPlayer();
     kutu.appendChild(oyuncu);
+    ikiParmaklaYakinlastir(oyuncu);
     ilerle(35, "Yükleyici indiriliyor...");
     oyuncu.addEventListener("loadedmetadata", function () { ilerle(60, "Oyun dosyası indiriliyor..."); });
     oyuncu.addEventListener("loadeddata", function () {

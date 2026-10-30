@@ -18,7 +18,7 @@ import urllib.request
 from flask import request, send_file, send_from_directory
 from werkzeug.utils import safe_join
 
-from oyun import ruffle as Ruffle
+from oyun import fx_yama, ruffle as Ruffle
 from oyun import swf_yama
 from oyun.sunucu import OYUN_DILI, app
 from oyun.yollar import ASSETS_DIR, INDIRILEN_DIR
@@ -69,9 +69,35 @@ def _indir(path, hedef):
     return False
 
 
+def _turet(path):
+    """Arşivde olmayan efekti oyunun benzer efektinden türetip önbelleğe yazar."""
+    hedef = safe_join(os.path.join(INDIRILEN_DIR, "turetilen"), path)
+    if hedef and os.path.isfile(hedef):
+        return hedef
+    kaynak = varlik_yolu(fx_yama.TURETILEN[path])
+    if kaynak is None or not hedef:
+        return None
+    with open(kaynak, "rb") as f:
+        veri = fx_yama.sinifi_yeniden_adlandir(f.read(), fx_yama.sinif_adi(fx_yama.TURETILEN[path]),
+                                              fx_yama.sinif_adi(path))
+    os.makedirs(os.path.dirname(hedef), exist_ok=True)
+    fd, gecici = tempfile.mkstemp(dir=os.path.dirname(hedef), suffix=".tmp")
+    with os.fdopen(fd, "wb") as f:
+        f.write(veri)
+    os.replace(gecici, hedef)
+    print(f" [+] Eksik efekt turetildi: {path}")
+    return hedef
+
+
 def varlik_yolu(path):
     """Varlığın diskteki yolunu döndürür; gerekirse indirir. Yoksa None."""
     path = ESDEGERLER.get(path, path)
+    if path in fx_yama.TURETILEN:
+        try:
+            return _turet(path)
+        except (OSError, ValueError, IndexError):
+            traceback.print_exc()
+            return None
     # Boşluk gerekli: ör. "swf/music/Spirit of Eternity.mp3"
     if not re.fullmatch(r"[A-Za-z0-9_./\- ]+", path) or ".." in path.split("/"):
         return None

@@ -89,33 +89,15 @@
     return { ust: son.ust, ufuk: son.ufuk };
   }
 
-  // Gökteki yer (yüzde): saat açısı yatayda, yükseklik dikeyde. Ay kabaca
-  // Güneş'in karşısında durur; gösterim içindir, gök mekaniği değildir.
-  function gokYeri(saatAcisi, h) {
-    return { x: Math.max(-10, Math.min(110, 50 + saatAcisi / 110 * 50)),
-             // Oyun çerçevesi ortayı kapladığı için gök cisimleri üst şeritte gezer.
-             y: Math.max(3, Math.min(18, 17 - h / 90 * 14)) };
-  }
-
   function uygula(tarih) {
     var konum = gunesKonumu(tarih);
     var h = konum.h;
     var r = renkler(h);
     var stil = document.documentElement.style;
-    var gunes = gokYeri(konum.saatAcisi, h);
-    var ay = gokYeri(((konum.saatAcisi + 360) % 360) - 180, -h);
-    stil.setProperty("--gunes-x", gunes.x + "%");
-    stil.setProperty("--gunes-y", gunes.y + "%");
-    stil.setProperty("--ay-x", ay.x + "%");
-    stil.setProperty("--ay-y", ay.y + "%");
-    stil.setProperty("--gunes-gorunur", String(Math.max(0, Math.min(1, (h + 3) / 4))));
-    stil.setProperty("--ay-gorunur", String(Math.max(0, Math.min(1, (-h - 2) / 6))));
-    // Bulutlar ve ışık: gündüz parlak, batımda turuncuya, gece koyu maviye çalar.
+    // Işık: oyunun ağaçları ve giriş manzarası gece kararır.
     stil.setProperty("--gun-isigi", String(Math.max(0.12, Math.min(1, (h + 10) / 18))));
     stil.setProperty("--gok-ust", r.ust);
     stil.setProperty("--gok-ufuk", r.ufuk);
-    // Yıldızlar mavi saatte belirmeye başlar, gecede tam görünür.
-    stil.setProperty("--yildiz", String(Math.max(0, Math.min(1, (-h - 6) / 10))));
     document.documentElement.dataset.evre = evre(h);
     return h;
   }

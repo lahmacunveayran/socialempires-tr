@@ -135,3 +135,10 @@ biçimindedir; istemci yalnızca `data`'yı okur.
 - Oyuncu fotoğrafları boş görünür (istemci Facebook adresinden yüklüyor).
 - Haftalık turnuva (tür 8) kapalı.
 - `fx/p.miniFireball2.swf` orijinal arşivde de yok.
+
+## Görseller
+
+Sayfaya ya da oyuna kendi üretilmiş görsel (çizim, SVG illüstrasyon, yapay
+zekâ resmi, emoji, CSS ile çizilmiş figür) eklenmez; oyunun ruhunu bozar.
+Gerekirse yalnızca oyunun kendi görselleri olduğu gibi kullanılır (oyun
+varlıkları ve `templates/img/`).

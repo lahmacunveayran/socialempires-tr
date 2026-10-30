@@ -231,7 +231,7 @@ def js(path):
 
 
 # Diğer uçlar (içe aktarılınca rotalarını kaydeder)
-from oyun import diyar, hediye, hile, istemci, kayit_yedek, varliklar  # noqa: E402,F401
+from oyun import diyar, hile, istemci, kayit_yedek, varliklar  # noqa: E402,F401
 
 
 def yerel_ag_adresi():

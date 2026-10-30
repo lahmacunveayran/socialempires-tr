@@ -16,19 +16,12 @@
     <script src="{{ ruffle_js }}"></script>
 </head>
 <body>
-    <!-- Manzara: gökyüzü CSS ile canlı; ağaçlar oyunun kendi çizimleri -->
+    <!-- Manzara: gökyüzünün rengi Güneş'in konumuna göre değişir; ağaçlar oyunun kendi çizimleri -->
     <div class="manzara" aria-hidden="true">
-        <div class="yildizlar"></div>
-        <div class="yildizlar yildizlar-2"></div>
-        <div class="kayan-yildiz"></div>
-        <div class="gunes"></div>
-        <div class="ay"></div>
-        <div class="bulut b1"></div><div class="bulut b2"></div><div class="bulut b3"></div><div class="bulut b4"></div>
         <div class="orman orman-uzak"></div>
         <div class="orman orman-orta"></div>
         <div class="sis"></div>
         <div class="orman orman-yakin"></div>
-        <div class="atesbocekleri"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     </div>
 
     <header class="baslik">
@@ -48,8 +41,6 @@
                     <label class="yedek-yukle">yedek yükle<input type="file" id="yedek-dosyasi" accept=".json,application/json" hidden></label></div>
             </div>
             <nav class="ust-dugmeler" aria-label="Oyun bağlantıları">
-                <button class="ust-dugme hediye-dugmesi" id="hediye-ac" type="button">
-                    <img src="{{ V }}images_new/cofre.png" alt="">Ücretsiz Hediyeler<span class="rozet" id="hediye-rozet" hidden>!</span></button>
                 <a class="ust-dugme" href="/hazine"><img src="/img/cash.png" alt="">Nakit Al</a>
                 <a class="ust-dugme" href="https://discord.gg/zW5gSbQJBw" target="_blank" rel="noopener"><img src="/img/discord.png" alt="">Discord</a>
             </nav>
@@ -66,7 +57,6 @@
                     <img class="kalkan" src="{{ V }}externalized/popup_elements/popup_pvp/red_shield.png" alt="">
                     <img class="bayrak sag" src="{{ V }}images_new/flag.png" alt="">
                 </div>
-                <i class="kose ks1"></i><i class="kose ks2"></i><i class="kose ks3"></i><i class="kose ks4"></i>
                 <div class="oyun-kutusu" id="oyun-kutusu">
                     <div class="giris-perdesi" id="giris-perdesi">
                         <div class="perde-manzara" style="background-image: url('{{ V }}externalized/PopupLevelUp/background.png')"></div>
@@ -78,7 +68,7 @@
                         <div class="kivilcimlar" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
                         <div class="perde-orta">
                             <p class="perde-ust">Sancağın dalgalanıyor</p>
-                            <div class="perde-baslik-kap" id="isiltili"><h1 class="perde-baslik">{{ save_info.name }}</h1></div>
+                            <div class="perde-baslik-kap"><h1 class="perde-baslik">{{ save_info.name }}</h1></div>
                             <p class="perde-alt">{{ rutbe or "Hükümdar" }} · {{ save_info.level }}. seviye</p>
                             <button class="muhur-dugme" id="kralliga-gir" type="button"><span>Krallığa<br>Gir</span></button>
                         </div>
@@ -127,37 +117,9 @@
         </div>
     </main>
 
-    <dialog class="sandik" id="hediye-penceresi" aria-labelledby="hediye-basligi">
-        <div class="sandik-ic">
-            <img class="kiz" src="{{ V }}images_new/aldeana-regalos.png" alt="">
-            <div class="sandik-ust">
-                <div class="sandik-isik"></div>
-                <img class="cofre" id="cofre" src="{{ V }}images_new/cofre.png" alt="">
-            </div>
-            <h2 class="sandik-baslik yazi-oyun" id="hediye-basligi">Günlük Hediye Sandığı</h2>
-            <p class="sandik-aciklama">Her gün uğra, sandık büyüsün! Bir gün kaçırırsan seri sıfırlanmaz, yalnızca bir adım geri gider.</p>
-            <span class="seri" id="seri" hidden></span>
-            <ol class="gunler" id="hediye-gunleri"></ol>
-            <p class="hediye-ileti" id="hediye-ileti" role="status"></p>
-            <div class="sandik-dugmeler">
-                <button class="yesil-dugme" id="hediye-al" type="button">Sandığı Aç</button>
-                <button class="ust-dugme" id="hediye-kapat" type="button">Kapat</button>
-            </div>
-            <div class="kazanc" id="kazanc" hidden>
-                <div class="kazanc-kart">
-                    <div class="kazanc-isik"></div>
-                    <span class="kazanc-ust yazi-oyun">Kazandın!</span>
-                    <img id="kazanc-resim" alt="">
-                    <b class="yazi-altin" id="kazanc-ad"></b>
-                    <span>deponda seni bekliyor</span>
-                </div>
-            </div>
-            <div class="altinlar" id="altinlar" aria-hidden="true"></div>
-        </div>
-    </dialog>
-
     <script>
         window.OYUN_AYARI = {
+            varlik: {{ V | tojson }},
             swf: {{ (statik ~ "flash/SELoader.swf?swftoload=" ~ statik ~ "flash/" ~ GAMEVERSION) | tojson }},
             parametreler: {
                 spdebug: "notnull",

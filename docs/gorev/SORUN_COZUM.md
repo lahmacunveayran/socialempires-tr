@@ -17,6 +17,9 @@ Oturum başında göz gezdirilir. Yeni bir sorunla karşılaşınca ya da bir so
 | S-04 | `pkill -f "python3 server.py"` kendi kabuğunu da öldürür | Kabuğun komut satırında da aynı metin var | `P=$(pgrep -f "^python3 server.py$"); [ -n "$P" ] && kill $P` | ◐ |
 | S-05 | Değişkenli `rm -rf $S` boş değişkenle tehlikeli | Değişken boşsa kök silinir | Her zaman `rm -rf "${S:?}"` | ◐ |
 | S-06 | Playwright ya da Chromium "yeniden kurulsun mu" | Ortamda hazır kurulu | Yeniden kurma; `require('playwright')` doğrudan çalışır | ◐ |
+| S-26 | Sahibinin Windows'unda `python -c "print(...)"` `UnicodeEncodeError: 'charmap' codec ... '✔'` verir | Konsol kod sayfası cp1254; ✔ ◐ gibi işaretler onda yok | Komuttan önce `PYTHONIOENCODING=utf-8`; araç betikleri `sys.stdout.reconfigure(encoding="utf-8")` yapar | ✔ 31.10.2026 |
+| S-27 | Sahibinin Windows'unda testler `ModuleNotFoundError: waitress` ile 1 hata verir | Bağımlılıklar o Python'a kurulmamış (S-01'in Windows hâli; blinker sorunu yok) | `python -m pip install -q -r requirements.txt`; sonra 214 test geçer | ✔ 31.10.2026 |
+| S-28 | Sahibinin Windows'unda `node` yok: `node --test tests/js/*.test.js` çalışmaz | Node.js kurulu değil | JS testleri CI'da (`tests.yml`) koşar; JS'e dokunan işte yerelde Node kurulması sahibine sorulur | ✔ 31.10.2026 |
 
 ## Ağ, GitHub ve upstream
 
@@ -28,6 +31,7 @@ Oturum başında göz gezdirilir. Yeni bir sorunla karşılaşınca ya da bir so
 | S-10 | `--filter=blob:none` klonda `git ls-tree -r -l` dakikalarca sürer, binlerce indirme yapar | `-l` (boyut) her dosyanın içeriğini tek tek indirtir | Boyut gerekmiyorsa `-l` kullanma; içerik karşılaştırması için blob kimlikleri yeter (`git ls-tree -r <commit>`) | ✔ 30.10.2026 |
 | S-11 | İndirilen kodu (JPEXS FFDec, upstream sunucusu, onların betikleri) çalıştırmak izin sistemine takılır | Güvenlik kuralı | Yalnızca oku; kendi betiklerimizle çalış (`oyun/swf_yama.py`, `araclar/swf_resimleri.py`). SWF'yi Ruffle'da açmak sorun değil | ◐ |
 | S-12 | Varlıklar upstream'in değişebilir `main` dalından iniyordu | Dal adı sabit değil | `oyun/kaynaklar.py`'de sabit commit (KYN-03) | ✔ 30.10.2026 |
+| S-29 | 1.4.07 istemcisini incelemek için tek dosya gerekiyor, bütün varlık ağacı değil | — | `curl -sfL https://raw.githubusercontent.com/AcidCaos/socialemperors/54df29e1bc5905c72a55a5fd0dda449e7a419019/assets/flash/SocialEmpires1.4.07sec_fixed.swf`; SHA-256 `0e4cc178…6a15` (`docs/inceleme/1407-komutlar.json`). Oturumun geçici klasörüne indirilir, depoya girmez | ✔ 31.10.2026 |
 
 ## Android ve CI
 
@@ -51,3 +55,4 @@ Oturum başında göz gezdirilir. Yeni bir sorunla karşılaşınca ya da bir so
 | S-21 | Önce ölç, sonra karar ver | 1.4.07 "imkânsız" sanılıyordu, deneyde açıldı (KYN-05) | ◐ |
 | S-22 | Bağımsız denetimde denetçiye kendi sonucunu verme; her bulguyu kendin yeniden üret | DNT-01 … DNT-04 | ◐ |
 | S-23 | Görsel gerekiyorsa yalnızca oyunun kendi dosyası, olduğu gibi | Sahibi çerçevelerin elle yapıldığını fark etti (OYN-09); 30.10.2026'da kural yeniden ve kesin söylendi | ✔ 30.10.2026 |
+| S-30 | Gizlenmiş bayt kodu doğrusal okunmaz, akışı izlenerek okunur (`araclar/abc_okur.py` `Abc.coz`) | 1.4.07'de atlamayla geçilen anlamsız baytlar geçersiz işlem kodunda okumayı durdurur; akış izleyen okuma onlara hiç uğramaz (GEC-01) | ✔ 31.10.2026 |

@@ -82,6 +82,9 @@ ISLEMLER = {
     0xEF: ("debug", ("u8", "u30", "u8", "u30")), 0xF0: ("debugline", ("u30",)),
     0xF1: ("debugfile", ("u30",)), 0xF2: ("bkptline", ("u30",)), 0xF3: ("timestamp", ()),
 }
+# Ekrana yazı koyan atamalar ve çağrılar (yazi_dizeleri)
+YAZI_ALANLARI = {"text", "htmlText"}
+YAZI_CAGRILARI = {"setHTML", "setText", "appendText", "setHTMLText", "replaceText"}
 KOSULLU = {"ifnlt", "ifnle", "ifngt", "ifnge", "iftrue", "iffalse", "ifeq", "ifne", "iflt", "ifle",
            "ifgt", "ifge", "ifstricteq", "ifstrictne"}
 BITIRIR = {"returnvoid", "returnvalue", "throw"}
@@ -458,6 +461,7 @@ class Abc:
                 # yereldeki nesneye alan yazımı: o.cmd = ...; o.args = [...]
                 anahtar = Sabit(self.ad(x[0]))
                 v[0][:] = [(k, d) for k, d in v[0] if k != anahtar] + [(anahtar, v[1])]
+            return ("atama", self.ad(x[0]), v[0], v[-1])
         elif a in ("deleteproperty", "getsuper", "getdescendants"):
             al(1 + self.calisma_anli(x[0]))
             yigin.append("?")
@@ -525,8 +529,12 @@ class Abc:
             v = al(2)
             isaret = {"add": "+", "subtract": "-", "multiply": "*", "divide": "/", "modulo": "%",
                       "add_i": "+", "subtract_i": "-", "multiply_i": "*"}.get(a)
-            yigin.append("(%s %s %s)" % (_yaz(v[0]), isaret, _yaz(v[1])) if isaret
-                         else "%s(%s, %s)" % (a, _yaz(v[0]), _yaz(v[1])))
+            if a == "add":  # dize birleştirmede sabitler izlenir: "Level " + n
+                yigin.append(Ifade("(%s + %s)" % (_yaz(v[0]), _yaz(v[1])), icindeki_dizeler(v[0])
+                                   + icindeki_dizeler(v[1])))
+            else:
+                yigin.append("(%s %s %s)" % (_yaz(v[0]), isaret, _yaz(v[1])) if isaret
+                             else "%s(%s, %s)" % (a, _yaz(v[0]), _yaz(v[1])))
         elif a in KOSULLU:
             al(2)
         elif a in ("si8", "si16", "si32", "sf32", "sf64"):
@@ -551,38 +559,67 @@ class Abc:
                 baslar.add(isl.sonraki)
         return baslar
 
-    def cagrilar(self, ad: str, yontem: int = None):
-        """`ad` adlı özelliğe yapılan çağrılar (Cagri listesi). Argümanlar simgesel ifadelerdir.
+    def simule(self, g: Govde):
+        """Gövdeyi simgesel yığınla yürütür; her çağrı ve atama için (ofset, sonuç) üretir.
 
+        Sonuç ("cagri", ad, nesne, argümanlar, çalışma_anlı) ya da ("atama", ad, nesne, değer)'dir.
         İşlemler ofset sırasıyla işlenir. Bir bloğun giriş yığını, ona ilk ulaşan dalın ya da düz
         geçişin yığınıdır (ileri dallarda ?: gibi ifadeler böylece korunur); bilinmiyorsa boştur.
         İstisna yakalayıcısı yığında yakalanan hatayla başlar.
         """
+        islemler = self.coz(g)
+        baslar = self.bloklar(islemler)
+        giris = {}
+        for x in g.istisnalar:
+            baslar.add(x[2])
+            giris[x[2]] = ["hata"]
+        yigin, onceki, yereller = [], None, {}
+        for p in sorted(islemler):
+            if p in baslar:
+                duz_gecis = onceki is not None and onceki.sonraki == p and onceki.ad not in BITIRIR                     and onceki.ad not in ("jump", "lookupswitch")
+                if duz_gecis:
+                    giris.setdefault(p, yigin)
+                yigin = list(giris.get(p, []))
+            isl = islemler[p]
+            sonuc = self._yigin_etkisi(isl, yigin, yereller)
+            for h in isl.hedefler:
+                if h > p:
+                    giris.setdefault(h, list(yigin))
+            if sonuc:
+                yield p, sonuc
+            onceki = isl
+
+    def cagrilar(self, ad: str, yontem: int = None):
+        """`ad` adlı özelliğe yapılan çağrılar (Cagri listesi). Argümanlar simgesel ifadelerdir."""
         if ad not in self.dizeler:
             return []
         cikti = []
         govdeler = [self.govdeler[yontem]] if yontem is not None else self.govdeler.values()
         for g in govdeler:
-            islemler = self.coz(g)
-            baslar = self.bloklar(islemler)
-            giris = {}
-            for x in g.istisnalar:
-                baslar.add(x[2])
-                giris[x[2]] = ["hata"]
-            yigin, onceki, yereller = [], None, {}
-            for p in sorted(islemler):
-                if p in baslar:
-                    if onceki is not None and onceki.sonraki == p and onceki.ad not in BITIRIR and                             onceki.ad not in ("jump", "lookupswitch"):
-                        giris.setdefault(p, yigin)
-                    yigin = list(giris.get(p, []))
-                isl = islemler[p]
-                sonuc = self._yigin_etkisi(isl, yigin, yereller)
-                for h in isl.hedefler:
-                    if h > p:
-                        giris.setdefault(h, list(yigin))
-                if sonuc and sonuc[1] == ad:
+            for p, sonuc in self.simule(g):
+                if sonuc[0] == "cagri" and sonuc[1] == ad:
                     cikti.append(Cagri(g.yontem, p, ad, list(sonuc[3])))
-                onceki = isl
+        return cikti
+
+    def yazi_dizeleri(self, alanlar=YAZI_ALANLARI, cagrilar=YAZI_CAGRILARI):
+        """Ekrana yazılan sabit dizeler: [(yöntem, ofset, dize)].
+
+        Bir dize, `tf.text = ...` / `tf.htmlText = ...` atamasına ya da `setHTML(tf, ...)` gibi bir yazı
+        çağrısına doğrudan ya da birleştirmeyle (`"Level " + n`) ulaşıyorsa sayılır. Bir işleve
+        geçirilip dönen değerdeki dize (ör. `Loc.get("ANAHTAR")`) sayılmaz: o bir anahtardır.
+        """
+        cikti = []
+        for g in self.govdeler.values():
+            for p, sonuc in self.simule(g):
+                if sonuc[0] == "atama" and sonuc[1] in alanlar:
+                    degerler = [sonuc[3]]
+                elif sonuc[0] == "cagri" and sonuc[1] in cagrilar:
+                    degerler = sonuc[3]
+                else:
+                    continue
+                for v in degerler:
+                    for d in icindeki_dizeler(v):
+                        cikti.append((g.yontem, p, d))
         return cikti
 
     def sabitler(self, sinif: str) -> dict:
@@ -624,6 +661,24 @@ class Sabit:
 
     def __hash__(self):
         return hash(("Sabit", repr(self.deger)))
+
+
+class Ifade(str):
+    """Okunur ifade; içine birleştirmeyle girmiş sabit dizeleri de taşır."""
+
+    def __new__(cls, metin, dizeler=()):
+        o = super().__new__(cls, metin)
+        o.dizeler = tuple(dizeler)
+        return o
+
+
+def icindeki_dizeler(v):
+    """Değerin kendisi ya da birleştirmesindeki sabit dizeler."""
+    if isinstance(v, Sabit) and isinstance(v.deger, str):
+        return (v.deger,)
+    if isinstance(v, Ifade):
+        return v.dizeler
+    return ()
 
 
 class Bulunan(str):

@@ -16,6 +16,7 @@ print(" [+] Oyun ayarlari yukleniyor...")
 from flask import Flask, redirect, render_template, request, send_from_directory, session
 
 from oyun import aktarim, ruffle as Ruffle
+from oyun.dunya import rutbe
 from oyun.ekonomi import timestamp_now
 from oyun.kayit import (all_saves_info, all_saves_userid, fb_friends_str, load_saved_villages,
                         new_village, save_info, save_lock, save_session, gecerli_uid,
@@ -127,31 +128,48 @@ def login():
     return render_template("login.html", saves_info=kayitlar, version=version_name)
 
 
+STATIK_YOL = "/default01.static.socialpointgames.com/static/socialempires/"
+DINAMIK_YOL = "/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/"
+
+
 def _oyun_sayfasi(sablon, ruffle_js=None):
     uid, surum = session.get("USERID"), session.get("GAMEVERSION")
     if not uid or not surum or uid not in all_saves_userid():
         return redirect("/")
     if ruffle_js is None:
         ruffle_js = f"/ruffle/{Ruffle.SURUM}/ruffle.js"
-    return render_template(sablon, save_info=save_info(uid), serverTime=timestamp_now(),
+    # Oyun adresleri isteğin geldiği adrese göre kurulur: evdeki telefon
+    # 192.168.x.x üzerinden açınca da varlıklar aynı sunucudan iner.
+    kok = request.host_url.rstrip("/")
+    bilgi = save_info(uid)
+    return render_template(sablon, save_info=bilgi, serverTime=timestamp_now(),
                            friendsInfo=fb_friends_str(uid), version=version_name,
-                           GAMEVERSION=surum, SERVERIP=HOST, ruffle_js=ruffle_js)
+                           GAMEVERSION=surum, SERVERIP=HOST, ruffle_js=ruffle_js,
+                           statik=kok + STATIK_YOL, dinamik=kok + DINAMIK_YOL,
+                           rutbe=rutbe(bilgi.get("level", 0)))
 
 
 @app.route("/play.html")
-def play():
-    return _oyun_sayfasi("play.html")
-
-
 @app.route("/ruffle.html")
-def ruffle():
-    return _oyun_sayfasi("ruffle.html")
+def play():
+    return _oyun_sayfasi("oyun.html")
+
+
+@app.route("/flash.html")
+def flash():
+    """Flash Player eklentili tarayıcılar için eski gömme sayfası."""
+    return _oyun_sayfasi("play.html")
 
 
 @app.route("/ruffle-deneme.html")
 def ruffle_deneme():
     """Ruffle'ın gece sürümünü sabitlenmiş sürüme dokunmadan dener."""
-    return _oyun_sayfasi("ruffle.html", ruffle_js=Ruffle.DENEME_URL)
+    return _oyun_sayfasi("oyun.html", ruffle_js=Ruffle.DENEME_URL)
+
+
+@app.route("/hazine")
+def hazine():
+    return render_template("hazine.html", version=version_name)
 
 
 @app.route("/new.html")
@@ -176,8 +194,13 @@ def css(path):
     return send_from_directory(os.path.join(TEMPLATES_DIR, "css"), path)
 
 
+@app.route("/js/<path:path>")
+def js(path):
+    return send_from_directory(os.path.join(TEMPLATES_DIR, "js"), path)
+
+
 # Diğer uçlar (içe aktarılınca rotalarını kaydeder)
-from oyun import hile, istemci, varliklar  # noqa: E402,F401
+from oyun import diyar, hile, istemci, varliklar  # noqa: E402,F401
 
 
 def calistir():

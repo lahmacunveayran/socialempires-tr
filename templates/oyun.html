@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Social Empires</title>
+    <link rel="icon" type="image/gif" href="/img/icon.gif">
+    <link rel="stylesheet" href="/css/oyun.css">
+    <script src="/js/gokyuzu.js"></script>
+    <script src="{{ ruffle_js }}"></script>
+</head>
+<body>
+    <div class="manzara" aria-hidden="true">
+        <div class="yildizlar"></div>
+        <svg class="silueet" viewBox="0 0 1600 400" preserveAspectRatio="xMidYMax slice">
+            <path class="uzak" d="M0 260 L120 190 L210 230 L330 140 L430 210 L520 170 L640 235 L760 150 L880 220 L1000 160 L1110 215 L1230 130 L1350 205 L1470 165 L1600 220 L1600 400 L0 400 Z"/>
+            <path class="yakin" d="M0 330 Q200 280 400 315 T800 300 L800 300
+                L1010 300 L1010 230 L1000 230 L1000 210 L1015 210 L1015 220 L1030 220 L1030 210 L1045 210 L1045 230 L1060 230
+                L1060 250 L1110 250 L1110 190 L1100 190 L1100 170 L1115 170 L1115 180 L1130 180 L1130 170 L1145 170 L1145 180 L1160 180 L1160 170 L1175 170 L1175 190 L1165 190
+                L1165 250 L1215 250 L1215 230 L1205 230 L1205 210 L1220 210 L1220 220 L1235 220 L1235 210 L1250 210 L1250 230 L1240 230 L1240 300
+                Q1420 290 1600 320 L1600 400 L0 400 Z"/>
+            <circle class="mesale" cx="1025" cy="245" r="4"/>
+            <circle class="mesale" cx="1137" cy="205" r="4"/>
+            <circle class="mesale" cx="1228" cy="245" r="4"/>
+        </svg>
+    </div>
+
+    <header class="baslik">
+        <a class="logo" href="/" title="Giriş ekranı"><img src="/img/logo.png" alt="Social Empires"></a>
+        <div class="oturum">
+            <div><b>{{ save_info.name }}</b> · sv. {{ save_info.level }}{% if rutbe %} · <span class="rutbe">{{ rutbe }}</span>{% endif %}</div>
+            <div><a href="/">çıkış</a> · <a href="/cheat">hile paneli</a> · {{ version }}</div>
+            <nav class="ust-dugmeler" aria-label="Oyun bağlantıları">
+                <a class="ust-dugme" href="/hazine"><img src="/img/cash.png" alt="">Nakit Al</a>
+                <a class="ust-dugme" href="https://discord.gg/zW5gSbQJBw" target="_blank" rel="noopener"><img src="/img/discord.png" alt="">Discord</a>
+            </nav>
+        </div>
+    </header>
+
+    <p class="cevir-uyarisi" role="note">Oyun yatay ekranda daha büyük görünür: cihazınızı yan çevirin.</p>
+
+    <main class="yerlesim">
+        <section class="oyun-alani" aria-label="Oyun">
+            <div class="cerceve">
+                <div class="oyun-kutusu" id="oyun-kutusu">
+                    <div class="giris-perdesi" id="giris-perdesi">
+                        <div>
+                            <button class="muhur-dugme" id="kralliga-gir" type="button">Krallığa<br>Gir</button>
+                            <p class="alt-yazi">{{ save_info.name }} seni bekliyor.</p>
+                        </div>
+                    </div>
+                    <div class="yukleme" id="yukleme" hidden role="status">
+                        <b class="asama">Hazırlanıyor...</b>
+                        <div class="cubuk"><div class="dolum"></div></div>
+                        <div class="nasihat"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <aside class="panel panel-haber" aria-labelledby="haber-basligi">
+            <h2><span id="haber-basligi">Diyar Haberleri</span>
+                <button class="durdur" id="haber-durdur" type="button" aria-pressed="false">Durdur</button></h2>
+            <div class="icerik">
+                <p class="gizli" id="haber-ozeti" aria-live="polite"></p>
+                <ul class="haberler" id="haberler"><li class="bos">Diyardan haber bekleniyor...</li></ul>
+            </div>
+        </aside>
+
+        <aside class="panel panel-kursu" aria-labelledby="kursu-basligi">
+            <h2 id="kursu-basligi">Şeref Kürsüsü</h2>
+            <div class="icerik">
+                <ol class="kursu" id="kursu"></ol>
+                <p class="kursu-ben" id="kursu-ben"></p>
+            </div>
+        </aside>
+    </main>
+
+    <script>
+        window.OYUN_AYARI = {
+            swf: {{ (statik ~ "flash/SELoader.swf?swftoload=" ~ statik ~ "flash/" ~ GAMEVERSION) | tojson }},
+            parametreler: {
+                spdebug: "notnull",
+                staticUrl: {{ statik | tojson }},
+                dynamicUrl: {{ dinamik | tojson }},
+                skiphash12341: "notnull",
+                fb_sig_user: {{ save_info.userid | tojson }},
+                user_key: "123456789",
+                language: "tr",
+                accessToken: "local",
+                sex: "m",
+                lastLoggedIn: "1349266517",
+                dailyBonus: "0",
+                friendsInfo: JSON.stringify({{ friendsInfo | tojson }}),
+                serverTime: {{ serverTime | string | tojson }},
+                forceSyncError: "1",
+                forceAttackReload: "0",
+                forceQuestReload: "0"
+            }
+        };
+    </script>
+    <script src="/js/oyun.js"></script>
+</body>
+</html>

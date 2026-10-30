@@ -72,9 +72,9 @@ python varliklari_indir.py
 köyü üretir (PvP, ada fetih ve turnuvalar bunlara ihtiyaç duyar). Yeniden
 üretmek için: `python araclar\bot_koy_uret.py`.
 
-**Flash desteği:** Flash uyumlu bir tarayıcı ya da Ruffle gerekir. Ruffle
-sayfası (`/ruffle.html`) sürümü sabitlenmiş Ruffle 0.7.1'i sunucudan yükler;
-ilk açılışta bir kez indirilir, sonra internet gerekmez.
+**Flash desteği:** Oyun sayfası Flash yerine sürümü sabitlenmiş Ruffle 0.7.1
+ile tarayıcıda çalışır; Ruffle ilk açılışta bir kez indirilir, sonra internet
+gerekmez. Flash eklentili tarayıcılar için eski sayfa: `/flash.html`.
 Ayrıntılar: [FLASH.md](FLASH.md). GNU/Linux: [LINUX.md](LINUX.md).
 
 ---

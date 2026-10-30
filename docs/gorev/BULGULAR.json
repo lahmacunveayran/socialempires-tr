@@ -2,9 +2,9 @@
   "surum": "0.05a",
   "guncelleme": "2026-10-30",
   "devam_noktasi": {
-    "faz": "Yol haritası tamam; kısa ekran düzeni",
-    "madde": "DAG-04",
-    "sonraki_adim": "Sahibi gerçek Android ve iPad'de dener (20-BOLUM-II §7.1)"
+    "faz": "Android uygulaması",
+    "madde": "DAG-05",
+    "sonraki_adim": "CI'da APK ve emülatör sınaması yeşil olunca sahibi Samsung tablette kurar (ANDROID.md)"
   },
   "maddeler": [
     {
@@ -396,6 +396,32 @@
       "pr": "#13",
       "onay": "Sahibi, 30 Ekim 2026: 'Opus etiketlemelerini geri al ve bir daha yapma.'",
       "notlar": "Yeni commit'lerde yok; CLAUDE.md kuralı. Eski commit'lerden silmek master geçmişini yeniden yazmayı (force push) gerektirir; bu ortamda izinli değil, sahibine soruldu."
+    },
+    {
+      "id": "DAG-05",
+      "baslik": "Android uygulaması: sunucu cihazın içinde, oyun tam ekran WebView'da",
+      "sinif": "ozellik",
+      "onem": "Orta",
+      "durum": "ci_bekliyor",
+      "isaret": "◐",
+      "kanit": "Python tarafı yerelde Android düzeniyle çalıştırıldı (✔): oyun dosyaları salt okunur klasörde (chmod a-w), yazılabilir klasör ayrı (SE_TABAN_DIZINI); sunucu 5 sn'de hazır, 51 bot köyü ve Ruffle 0.7.1 (uygulamayla gelen .tgz, SHA-512 denetimli) yazılabilir klasöre kuruldu. Galaxy Tab S9 yatay benzetiminde yeni imparatorluk kuruldu, 'Krallığa Gir' ile oyun Türkçe açıldı, sayfa hatası 0; ilk oyunda ~60 MB varlık indi. APK derlemesi ve emülatör sınaması CI'da (bu oturumda dl.google.com kapalı, Android SDK inmiyor).",
+      "test": "tests/test_android.py; .github/workflows/android.yml (APK + emülatör)",
+      "pr": null,
+      "onay": "Sahibi, 30 Ekim 2026: 'Bunu android uygulaması olarak yap', 'Öyle deneyeceğim'",
+      "notlar": "Chaquopy 17.1 (Python 3.12, AGP 8.13), minSdk 24. Kayıtlar uygulama içinde; kaldırma siler. İmza: sahibin anahtarı GitHub sırrındaysa (ANDROID_IMZA) güncelleme kayıtları korur; yoksa geçici anahtar, güncellemede yedek al-kaldır-kur-yükle (KAR-07). Yedek indir/yükle Android dosya seçicisiyle çalışır."
+    },
+    {
+      "id": "KAR-07",
+      "baslik": "Android imza anahtarı depoya konmaz",
+      "sinif": "karar",
+      "onem": "Orta",
+      "durum": "karar_verildi",
+      "isaret": "✔",
+      "kanit": "Güncellemelerin eskisinin üstüne kurulması için sabit bir anahtar depoya eklenmek istendi; oturumun otomatik güvenlik denetimi commit'i 'kimlik bilgisi sızıntısı' diye durdurdu. Anahtar silindi, commit'e girmedi.",
+      "test": null,
+      "pr": null,
+      "onay": "Sahibine soruldu: anahtarı GitHub sırrı olarak ekler mi (ANDROID.md 'İmza anahtarı')",
+      "notlar": "CI ANDROID_IMZA ve ANDROID_IMZA_SIFRESI sırlarını kullanır; yoksa geçici hata ayıklama anahtarı ve uyarı."
     }
   ]
 }

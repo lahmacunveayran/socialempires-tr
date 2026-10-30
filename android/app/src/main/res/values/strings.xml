@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="uygulama_adi">Social Empires</string>
+    <string name="aciliyor">Oyun sunucusu açılıyor…</string>
+    <string name="acilamadi">Oyun sunucusu açılamadı.</string>
+    <string name="yedek_kaydedildi">Yedek kaydedildi.</string>
+    <string name="yedek_kaydedilemedi">Yedek kaydedilemedi.</string>
+</resources>

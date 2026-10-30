@@ -107,6 +107,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" dist/* --repo "${GITHUB_REPOSITORY}" \
-            --title "Social Empires Türkçe ${GITHUB_REF_NAME}" \
-            --notes "Windows: zip'i açın, \"Social Empires.bat\" dosyasına çift tıklayın (Python gerekmez). SmartScreen uyarısında \"Ek bilgi\" > \"Yine de çalıştır\". Dosyanın SHA-256 özeti yanındaki .sha256 dosyasında."
+          # Android iş akışı da aynı sürümü kurar; hangisi önce biterse o kurar, öteki ekler
+          gh release view "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1 || \
+            gh release create "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" \
+              --title "Social Empires Türkçe ${GITHUB_REF_NAME}" --notes "Windows: zip'i açın, \"Social Empires.bat\" dosyasına çift tıklayın (Python gerekmez). SmartScreen uyarısında \"Ek bilgi\" > \"Yine de çalıştır\". Android: .apk dosyasını telefona/tablete indirip kurun (ANDROID.md). Dosyaların SHA-256 özetleri yanlarındaki .sha256 dosyalarında." || true
+          gh release upload "${GITHUB_REF_NAME}" dist/* --repo "${GITHUB_REPOSITORY}" --clobber

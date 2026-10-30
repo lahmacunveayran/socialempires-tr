@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- yedek.xml'in Android 11 ve öncesi karşılığı -->
+<full-backup-content>
+    <include domain="file" path="socialempires/saves/" />
+    <include domain="file" path="socialempires/ayarlar.json" />
+    <exclude domain="file" path="socialempires/saves/backups/" />
+</full-backup-content>

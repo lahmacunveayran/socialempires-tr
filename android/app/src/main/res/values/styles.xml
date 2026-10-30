@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ahsap">#3B2414</color>
+    <style name="Tema" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/ahsap</item>
+        <item name="android:statusBarColor">@color/ahsap</item>
+        <item name="android:navigationBarColor">@color/ahsap</item>
+    </style>
+</resources>

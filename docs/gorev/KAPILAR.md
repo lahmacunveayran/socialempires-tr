@@ -9,12 +9,13 @@ Son güncelleme: 30 Ekim 2026. Push'tan önce yerel kapılar temiz olur; CI kap�
 | Python / Node    | 3.13 (CI 3.12) / 22.22                                                                  |
 | Tarayıcı         | Playwright Chromium (Ruffle başsız çalışır; GPU yok, "hardware acceleration" uyarısı)   |
 | Ağ               | python.org kapalı; npm, PyPI ve GitHub (git, raw) açık; GitHub REST API kimliksiz sınırlı |
+| Android          | dl.google.com ve chaquo.com kapalı: Android SDK inmez, APK yalnızca CI'da derlenir       |
 
 ## Yerel kapılar (her push'tan önce)
 
 | Kapı                | Komut                                       | Son sonuç                |
 | ------------------- | ------------------------------------------- | ------------------------ |
-| Python testleri     | `python -m unittest discover -s tests`      | ✔ 130 test (30 Ekim)     |
+| Python testleri     | `python -m unittest discover -s tests`      | ✔ 137 test (30 Ekim)     |
 | Tarayıcı JS testleri | `node --test tests/js/*.test.js`           | ✔ 5 test                 |
 | Sözdizimi           | `python -m compileall -q .`                 | ✔                        |
 | JS sözdizimi        | `node --check templates/js/*.js`            | ✔                        |
@@ -28,6 +29,7 @@ Son güncelleme: 30 Ekim 2026. Push'tan önce yerel kapılar temiz olur; CI kap�
 | Testler (Python + JS)    | `tests.yml`               | ✔ PR #11                                     |
 | CodeQL (Python, JS)      | depo ayarı                | ✔ PR #11; PR #8'deki 5 uyarı giderildi       |
 | Windows paketi + sınama  | `windows.yml`             | ✔ PR #11; temiz Windows'ta 1,1 sn'de hazır   |
+| Android APK + emülatör   | `android.yml`             | bekliyor (ilk çalıştırma)                    |
 
 ## Elle kapılar (görsel ya da davranış değişikliğinde)
 

@@ -1,0 +1,5 @@
+plugins {
+    id("com.android.application") version "8.13.0" apply false
+    // Android içinde Python (MIT): https://chaquo.com/chaquopy/
+    id("com.chaquo.python") version "17.1.0" apply false
+}

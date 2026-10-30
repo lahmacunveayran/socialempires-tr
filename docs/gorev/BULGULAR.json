@@ -577,7 +577,7 @@
       "test": "tests/test_sistemler.py (BotKimlikTestleri)",
       "pr": null,
       "onay": "Sahibi, 30 Ekim 2026",
-      "notlar": "Sahibinin önce istediği ünlü adları ve internetten fotoğrafları (Ata Demirer, Cem Yılmaz, Manifest, DJ Dikkat) sahibi sonra bıraktı ('uğraşmayalım'); depoya girmedi. Kuşatma makineleri ailesi yüz olmadığı için dışarıda."
+      "notlar": "Sahibinin önce istediği ünlü adları ve internetten fotoğrafları (Ata Demirer, Cem Yılmaz, Manifest, DJ Dikkat) sahibi sonra bıraktı ('uğraşmayalım'); depoya girmedi. Kuşatma makineleri ailesi yüz olmadığı için dışarıda. Sahibinin uyarısıyla düzeltildi: ad sabit, portre kademeyle değiştiği için kademeye özgü adlar uyuşmuyordu ('Kalkan Kızı' 57. seviyede Thor resmiyle görünüyordu). 'Kalkan Kızı' -> 'Thor' (oyunun birim adı; bot en üst kademede başlar), 'Yengeç Şövalye' -> 'Dalga Beyi' (36. seviyede portre denizatına geçiyordu). Adlar artık ailenin bütün kademelerine uyar."
     }
   ]
 }

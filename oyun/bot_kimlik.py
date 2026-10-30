@@ -38,7 +38,7 @@ BOTLAR = [
     ("Göksel Muhafız", "goksel"), ("Cehennem Şövalyesi", "cehennem"),
     ("Ak Şövalye", "sovalye"), ("Kalkan Beyi", "piyade"), ("Yay Ustası", "okcu"), ("Rüzgâr Atlı", "atli_okcu"),
     ("Ak Sakallı", "buyucu"), ("Mağara Beyi", "trol"), ("Ateş Dili", "ejderha"), ("Yüce Elf", "elf"),
-    ("Kızıl Balta", "kuzey"), ("Kum Fırtınası", "col"), ("Yengeç Şövalye", "deniz"),
+    ("Kızıl Balta", "kuzey"), ("Kum Fırtınası", "col"), ("Dalga Beyi", "deniz"),
     ("Bulut Beyi", "goksel"), ("Kara Alev", "cehennem"),
     ("Demir Şövalye", "sovalye"), ("Mızrakçı Başı", "piyade"), ("Kartal Göz", "okcu"), ("Akıncı Beyi", "atli_okcu"),
     ("Kızıl Kâhin", "buyucu"), ("Balta Trolü", "trol"), ("Kızıl Pul", "ejderha"), ("Yaprak Okçu", "elf"),
@@ -46,7 +46,7 @@ BOTLAR = [
     ("Işık Kanadı", "goksel"), ("Kor Yürek", "cehennem"),
     ("Gümüş Mızrak", "sovalye"), ("Tunç Kılıç", "piyade"), ("Sadak Beyi", "okcu"), ("Doru Atlı", "atli_okcu"),
     ("Yıldız Bilgini", "buyucu"), ("Yağmacı Reis", "trol"), ("Fırtına Kanadı", "ejderha"),
-    ("Ay Ormanı Beyi", "elf"), ("Kalkan Kızı", "kuzey"), ("Şafak Bekçisi", "goksel"), ("Kül Beyi", "cehennem"),
+    ("Ay Ormanı Beyi", "elf"), ("Thor", "kuzey"), ("Şafak Bekçisi", "goksel"), ("Kül Beyi", "cehennem"),
 ]
 ISIMLER = [ad for ad, _ in BOTLAR]
 _AILE = dict(BOTLAR)

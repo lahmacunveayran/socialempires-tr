@@ -237,7 +237,7 @@
       "isaret": "✔",
       "kanit": "Kaynak düğmeleri oyunun images_new/collect_*.jpg resimleriyle; Playwright'ta Odun 9.604 → 19.604.",
       "test": "tests/test_diyar.py HilePaneliTestleri",
-      "pr": null,
+      "pr": "#12",
       "onay": null,
       "notlar": ""
     },

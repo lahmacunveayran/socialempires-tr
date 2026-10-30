@@ -3,8 +3,8 @@
   "guncelleme": "2026-10-30",
   "devam_noktasi": {
     "faz": "Tablet özellikleri; sonra bot dünyası, imparatorluk günlüğü, çeviri taraması",
-    "madde": "OYN-04",
-    "sonraki_adim": "Oyuncunun kendi profil fotoğrafını yüklemesi (sahibinin isteği)"
+    "madde": "OYN-05",
+    "sonraki_adim": "Sahibi APK ile tablette dener (profil resmi galeriden seçimi dahil); v0.1.0 sürümü sahibinin onayını bekliyor"
   },
   "maddeler": [
     {
@@ -578,6 +578,19 @@
       "pr": null,
       "onay": "Sahibi, 30 Ekim 2026",
       "notlar": "Sahibinin önce istediği ünlü adları ve internetten fotoğrafları sahibi sonra bıraktı ('uğraşmayalım'); depoya girmedi. Ders: sahibinin onayladığı öneriyi harfiyen uygula; 'birimin adı' denmişken ad uydurma."
+    },
+    {
+      "id": "OYN-05",
+      "baslik": "Profil resmi: oyuncu kendi fotoğrafını koyar",
+      "sinif": "ozellik",
+      "onem": "Düşük",
+      "durum": "ci_bekliyor",
+      "isaret": "◐",
+      "kanit": "Sahibinin isteği (30 Ekim 2026). /profil sayfası: fotoğraf tarayıcıda ortasından kare kırpılıp 256×256 JPEG'e küçültülür (Python'da resim kütüphanesi gerekmez), sunucu JPEG başı/sonu ve 300 KB sınırını denetler. Resim kaydın içinde, oyuna giden get_player_info'da olmayan profil_resmi alanında saklanır; yedek zarfı ve Wi-Fi taşıma onu da götürür. playerInfo.pic /profil/resim/<uid>.jpg?v=... olur: oyun içi komşu şeridi, Şeref Kürsüsü ve günlük bunu kullanır; resim değişince kürsü önbelleği boşaltılır. Tarayıcıda denendi (Chromium, 1280×800): 1288×900'lük PNG seçildi, 26 KB JPEG kaydedildi, sunuldu, kürsüde göründü. Aynı denemede iki hata bulunup düzeltildi: düğmelerin CSS'i hidden özniteliğini eziyordu (Kaydet/Kaldır baştan görünüyordu), kürsü 60 sn önbellekten eski resmi gösteriyordu. Android: dosya seçici sayfa yalnızca resim isteyince galeriyi açar (accept image/*); emülatörde ve tablette denenmedi.",
+      "test": "tests/test_profil.py",
+      "pr": null,
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Android'de galeri seçimi gerçek tablette doğrulanacak (?)."
     }
   ]
 }

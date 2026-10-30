@@ -135,7 +135,10 @@ public class MainActivity extends Activity {
                 dosyaGeriCagrisi = geriCagri;
                 Intent sec = new Intent(Intent.ACTION_GET_CONTENT);
                 sec.addCategory(Intent.CATEGORY_OPENABLE);
-                sec.setType("*/*");
+                // Sayfa yalnızca resim istiyorsa (profil resmi) galeri açılır; yedek yükleme her dosyayı gösterir
+                String[] turler = secenek.getAcceptTypes();
+                boolean resim = turler != null && turler.length > 0 && turler[0] != null && turler[0].startsWith("image/");
+                sec.setType(resim ? "image/*" : "*/*");
                 try {
                     startActivityForResult(sec, DOSYA_SEC);
                 } catch (ActivityNotFoundException hata) {

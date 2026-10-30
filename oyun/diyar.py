@@ -21,7 +21,7 @@ BIRIM_RESIMLERI = "/default01.static.socialpointgames.com/static/socialempires/b
 def portre(kayit):
     """Oyuncunun portresi (botların gerçek portreleri var)."""
     resim = str(kayit.get("playerInfo", {}).get("pic") or "")
-    return resim if resim.startswith(("/img/", BIRIM_RESIMLERI)) else VARSAYILAN_PORTRE
+    return resim if resim.startswith(("/img/", "/profil/resim/", BIRIM_RESIMLERI)) else VARSAYILAN_PORTRE
 
 
 KURSU_SURESI = 60  # saniye: 100 kayıt dosyası her istekte taranmasın
@@ -61,6 +61,12 @@ def kursu(simdi=None):
             _kursu["liste"] = _siralama()
             _kursu["zaman"] = simdi
         return _kursu["liste"]
+
+
+def kursuyu_tazele():
+    """Bir sonraki istekte sıralama yeniden kurulsun (ör. profil resmi değişti)."""
+    with _kursu_kilidi:
+        _kursu["zaman"] = 0
 
 
 @app.route("/dunya/kursu")

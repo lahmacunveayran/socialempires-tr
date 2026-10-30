@@ -661,8 +661,11 @@ img { -webkit-user-drag: none; }
 .hile-miktar { display: block; margin-top: 10px; font: 700 13px var(--metin-yazi); color: var(--murekkep-soluk); }
 .hile-miktar select { margin-left: 6px; padding: 4px 6px; border-radius: 8px; border: 1.5px solid #b49464; background: #fffaf0; font: 700 13px var(--metin-yazi); }
 .hile-dugmeler { display: flex; flex-wrap: wrap; gap: 8px; }
-.cevrimdisi [hidden], .tasima [hidden] { display: none; }
+.cevrimdisi [hidden], .tasima [hidden], .profil [hidden] { display: none; }
 .gunluk { max-width: 760px; }
+.profil-onizleme { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 6px 0 12px; }
+.profil-onizleme img { width: 128px; height: 128px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 0 0 3px #c2a46c, 0 6px 14px rgba(0, 0, 0, .3); background: #e9d9b0; }
+.profil-onizleme b { font-size: 22px; }
 .gunluk-kimlik { display: flex; align-items: center; gap: 12px; margin: 4px 0 14px; }
 .gunluk-kimlik img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 0 0 2px #c2a46c; }
 .gunluk-kimlik b { display: block; font-size: 22px; }

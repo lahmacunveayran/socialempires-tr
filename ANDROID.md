@@ -5,7 +5,7 @@ Oyun tam ekran açılır.
 
 ## Gerekenler
 
-- Android 7.0 ya da üstü (Samsung Galaxy Tab A, Tab S serisi ve benzerleri).
+- Android 7.0 ya da üstü; 32 ve 64 bit cihazlar (eski Galaxy Tab A'lardan yeni Tab S'lere kadar).
 - Yaklaşık 250 MB boş yer.
 - **İlk açılışta internet.** Oyunun resimleri, sesleri ve haritaları (~60 MB) bir kez indirilir; sonra
   internet gerekmez.
@@ -70,7 +70,7 @@ depoya konmaz, GitHub sırlarında durur.
 
 ## Kaynaktan derleme
 
-JDK 17, Android SDK ve Python 3.12 gerekir.
+JDK 17, Android SDK ve Python 3.11 gerekir (Chaquopy derleme makinesinde uygulamanınkiyle aynı sürümü ister).
 
 ```bash
 python araclar/android_paketi.py

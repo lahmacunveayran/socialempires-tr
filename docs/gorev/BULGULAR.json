@@ -404,11 +404,11 @@
       "onem": "Orta",
       "durum": "ci_bekliyor",
       "isaret": "◐",
-      "kanit": "Python tarafı yerelde Android düzeniyle çalıştırıldı (✔): oyun dosyaları salt okunur klasörde (chmod a-w), yazılabilir klasör ayrı (SE_TABAN_DIZINI); sunucu 5 sn'de hazır, 51 bot köyü ve Ruffle 0.7.1 (uygulamayla gelen .tgz, SHA-512 denetimli) yazılabilir klasöre kuruldu. Galaxy Tab S9 yatay benzetiminde yeni imparatorluk kuruldu, 'Krallığa Gir' ile oyun Türkçe açıldı, sayfa hatası 0; ilk oyunda ~60 MB varlık indi. APK derlemesi ve emülatör sınaması CI'da (bu oturumda dl.google.com kapalı, Android SDK inmiyor).",
+      "kanit": "Python tarafı yerelde Android düzeniyle çalıştırıldı (✔): oyun dosyaları salt okunur klasörde (chmod a-w), yazılabilir klasör ayrı (SE_TABAN_DIZINI); sunucu 5 sn'de hazır, 51 bot köyü ve Ruffle 0.7.1 (uygulamayla gelen .tgz, SHA-512 denetimli) yazılabilir klasöre kuruldu. Galaxy Tab S9 yatay benzetiminde yeni imparatorluk kuruldu, 'Krallığa Gir' ile oyun Türkçe açıldı, sayfa hatası 0; ilk oyunda ~60 MB varlık indi. APK derlemesi ve emülatör sınaması CI'da (bu oturumda dl.google.com kapalı, Android SDK inmiyor). İlk CI: 'Python 3.12 is not available for the ABI armeabi-v7a' (Chaquopy 3.12+ yalnızca 64 bit); 32 bit eski tabletler dışarıda kalmasın diye Python 3.11'e geçildi, 137 test 3.11'de geçti (✔).",
       "test": "tests/test_android.py; .github/workflows/android.yml (APK + emülatör)",
       "pr": null,
       "onay": "Sahibi, 30 Ekim 2026: 'Bunu android uygulaması olarak yap', 'Öyle deneyeceğim'",
-      "notlar": "Chaquopy 17.1 (Python 3.12, AGP 8.13), minSdk 24. Kayıtlar uygulama içinde; kaldırma siler. İmza: sahibin anahtarı GitHub sırrındaysa (ANDROID_IMZA) güncelleme kayıtları korur; yoksa geçici anahtar, güncellemede yedek al-kaldır-kur-yükle (KAR-07). Yedek indir/yükle Android dosya seçicisiyle çalışır."
+      "notlar": "Chaquopy 17.1 (Python 3.11, AGP 8.13), minSdk 24. Kayıtlar uygulama içinde; kaldırma siler. İmza: sahibin anahtarı GitHub sırrındaysa (ANDROID_IMZA) güncelleme kayıtları korur; yoksa geçici anahtar, güncellemede yedek al-kaldır-kur-yükle (KAR-07). Yedek indir/yükle Android dosya seçicisiyle çalışır."
     },
     {
       "id": "KAR-07",

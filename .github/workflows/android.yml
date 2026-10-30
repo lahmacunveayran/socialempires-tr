@@ -31,10 +31,15 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      # Chaquopy, uygulamanın Python sürümüyle aynı sürümü derleme makinesinde ister
+      # Chaquopy, uygulamanın Python sürümüyle aynı sürümü derleme makinesinde ister. 3.11: Chaquopy'de
+      # 32 bit Android'i (armeabi-v7a, eski Galaxy Tab A gibi) destekleyen son sürüm
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.11"
+      - name: Testler (uygulamanın Python sürümünde)
+        run: |
+          pip install -r requirements.txt
+          python -m unittest discover -s tests
       - uses: gradle/actions/setup-gradle@v5
         with:
           gradle-version: "8.14.3"

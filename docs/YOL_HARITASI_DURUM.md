@@ -15,11 +15,9 @@ her kapının nasıl sınandığı ve sonucu yazılı.
 ## Faz 1: Açılış sahnesi
 
 - Yeni oyun sayfası `/play.html` (eski Flash eklentili sayfa `/flash.html`).
-- Gökyüzü Güneş yüksekliğine göre boyanır (`templates/js/gokyuzu.js`, NOAA
-  denklemleri). İstanbul denetimi: 21 Haziran 2026 doğuş 05.33, batış
-  20.40; 21 Aralık doğuş 08.26, batış 17.39 (belgedeki değerlerle en fazla
-  1 dakika fark). SunCalc kitaplığı yerine aynı denklemler sayfaya gömüldü:
-  dışarıdan dosya gerekmesin.
+- Gökyüzü Güneş yüksekliğine göre boyanıyordu (`gokyuzu.js`, NOAA denklemleri).
+  30 Ekim 2026'da kaldırıldı (OYN-09): sayfanın bütün görselleri oyunun kendi
+  resimleri; oyunun gökyüzü ve manzarası olduğu gibi, karartılmadan görünür.
 - Ölçüm (`node araclar/sayfa_goruntuleri.js <USERID> klasor --oyna`):
 
 | Ekran | Oyun çerçevesi | Oran | Yatay kaydırma |
@@ -120,9 +118,8 @@ Yol haritasının açık soruları yanıtlandı:
 
 - `fx/p.miniFireball2.swf` arşivde yok (404); karşılığı bulunup
   `oyun/varliklar.py` → `ESDEGERLER`'e eklenmeli.
-- ~~Yükleyicideki İspanyolca "Cargando" yazısı~~: artık görünmüyor. Yükleme
-  ekranı kare kare çekildi (her 200 ms); yalnızca küre logo ve Türkçe "Oyun
-  beta sürümünde. Lütfen sabırlı olun." yazısı çıkıyor.
+- ~~Yükleyicideki İspanyolca "Cargando" yazısı~~: masaüstünde görülmemişti ama
+  tablette görünüyordu (VAR-03). Oyun kodundaki dize "Yükleniyor" olarak yamalanıyor.
 - Gerçek Windows 11 sanal makinesi, Android telefon ve iPad ile kabul sınaması.
 
 ## Görsel tasarım

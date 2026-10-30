@@ -118,10 +118,14 @@ def set_resmi(set_adi):
     return ""
 
 
+TURK_BAYRAGI = "/img/oyun/bayrak-tr.png"
+
+
 @app.route("/dunya/takvim")
 def takvim_ucu():
     from oyun import takvim
     etkinlikler = takvim.etkinlikler()
     for e in etkinlikler:
-        e["resim"] = next((r for r in map(set_resmi, e["setler"]) if r), "")
+        # Milli bayramda oyunun Türk bayrağı süsü (Turkey Flag, öğe 174), ötekilerde setin resmi
+        e["resim"] = TURK_BAYRAGI if e["bayrak"] else next((r for r in map(set_resmi, e["setler"]) if r), "")
     return {"etkinlikler": etkinlikler, "acik_setler": takvim.acik_setler()}

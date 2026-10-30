@@ -106,6 +106,31 @@ class KokenDenetimi(unittest.TestCase):
 
 
 
+class UygulamaJetonu(unittest.TestCase):
+    """DNT-04: Android'de aynı cihazdaki başka uygulamalar jetonsuz kayıtlara ulaşamaz."""
+
+    def setUp(self):
+        os.environ["SE_UYGULAMA_JETONU"] = "gizli123"
+        self.addCleanup(os.environ.pop, "SE_UYGULAMA_JETONU", None)
+        self.istemci = server.app.test_client()
+
+    def test_jetonsuz_istek_reddedilir(self):
+        for yol in ("/", "/kayit/indir", "/play.html", "/new.html"):
+            self.assertEqual(self.istemci.get(yol).status_code, 403, yol)
+        self.istemci.set_cookie(server.UYGULAMA_CEREZI, "yanlis", domain="localhost")
+        self.assertEqual(self.istemci.get("/").status_code, 403)
+
+    def test_uygulamanin_cerezi_gecer_saglik_ve_dosyalar_acik(self):
+        self.assertEqual(self.istemci.get("/saglik/hazir").status_code, 200)
+        self.assertNotEqual(self.istemci.get("/css/oyun.css").status_code, 403)
+        self.istemci.set_cookie(server.UYGULAMA_CEREZI, "gizli123", domain="localhost")
+        self.assertEqual(self.istemci.get("/").status_code, 200)
+
+    def test_jeton_yoksa_masaustu_eskisi_gibi(self):
+        os.environ.pop("SE_UYGULAMA_JETONU")
+        self.assertEqual(self.istemci.get("/").status_code, 200)
+
+
 class VarlikIndirme(unittest.TestCase):
     def test_basarisiz_indirme_on_dakika_yeniden_denenmez(self):
         from unittest import mock

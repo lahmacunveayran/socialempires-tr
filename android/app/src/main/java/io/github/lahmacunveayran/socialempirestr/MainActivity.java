@@ -38,6 +38,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.SecureRandom;
 
 /**
  * Oyunun Python sunucusunu (oyun/sunucu.py) uygulamanın içinde açar ve oyun sayfasını tam ekran gösterir.
@@ -56,6 +57,18 @@ public class MainActivity extends Activity {
     // Sunucu süreç boyunca bir kez açılır; ekran yeniden kurulsa da çalışmaya devam eder
     private static boolean sunucuAcildi = false;
     private static volatile String sunucuHatasi = null;
+    // Bu süreç için gizli jeton: yalnızca bu uygulamanın WebView'u çerez olarak gönderir (oyun/sunucu.py _uygulama_jetonu)
+    private static final String JETON = yeniJeton();
+
+    private static String yeniJeton() {
+        byte[] b = new byte[24];
+        new SecureRandom().nextBytes(b);
+        StringBuilder s = new StringBuilder();
+        for (byte x : b) {
+            s.append(String.format("%02x", x));
+        }
+        return s.toString();
+    }
 
     private final Handler ana = new Handler(Looper.getMainLooper());
     private FrameLayout kok;
@@ -110,6 +123,8 @@ public class MainActivity extends Activity {
             });
         }
 
+        CookieManager.getInstance().setCookie(ADRES, "se_uygulama=" + JETON + "; Path=/; HttpOnly; SameSite=Strict");
+        CookieManager.getInstance().flush();
         webAyarla();
         sunucuyuAc();
         hazirOluncaAc();
@@ -246,7 +261,7 @@ public class MainActivity extends Activity {
                 if (!Python.isStarted()) {
                     Python.start(new AndroidPlatform(getApplicationContext()));
                 }
-                Python.getInstance().getModule("android_giris").callAttr("baslat");
+                Python.getInstance().getModule("android_giris").callAttr("baslat", null, JETON);
                 sunucuHatasi = "Sunucu kapandı.";
             } catch (Throwable hata) {
                 Log.e(TAG, "Sunucu acilamadi", hata);

@@ -98,9 +98,14 @@ def etkinlikler(gun=None, ileri=60):
             sonuc.append({"ad": etkinlik["ad"], "setler": list(etkinlik.get("setler", [])),
                           "baslangic": baslangic.isoformat(), "bitis": bitis.isoformat(),
                           "son_gun": (bitis - timedelta(days=1)).isoformat(),
-                          "aktif": baslangic <= gun < bitis})
+                          "aktif": baslangic <= gun < bitis, "bayrak": bool(etkinlik.get("bayrak"))})
     sonuc.sort(key=lambda e: e["baslangic"])
     return sonuc
+
+
+def milli_bayram(gun=None):
+    """Bugün süren milli bayram var mı (oyunun Türk bayrağı süsü gösterilir)."""
+    return any(e["aktif"] and e["bayrak"] for e in etkinlikler(gun, ileri=0))
 
 
 def acik_setler(gun=None):

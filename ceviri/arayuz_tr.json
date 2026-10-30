@@ -1,5 +1,8 @@
 {
-  "_aciklama": "Oyun SWF'sindeki sabit yazilarin cevirisi (swf_yama.py). metin_alanlari: DefineEditText baslangic metinleri (HTML etiketsiz anahtar). statik_yazilar: DefineText; satirlar '|' ile ayrilir, satir sayisi korunmalidir.",
+  "_aciklama": "Oyun SWF'sindeki sabit yazilarin cevirisi (swf_yama.py). metin_alanlari: DefineEditText baslangic metinleri (HTML etiketsiz anahtar). statik_yazilar: DefineText; satirlar '|' ile ayrilir, satir sayisi korunmalidir. as3_dizeleri: oyun kodunun (DoABC) sabit dizeleri; yalnizca ekranda gorunen ve baska yerde karsilastirilmayan dizeler.",
+  "as3_dizeleri": {
+    "Cargando": "Yükleniyor"
+  },
   "metin_alanlari": {
     "( showing only last 10 attacks)": "(yalnızca son 10 saldırı gösteriliyor)",
     "(Completed 0/0)": "(Tamamlanan 0/0)",

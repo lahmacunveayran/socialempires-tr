@@ -7,6 +7,7 @@
 - oyun.hile:      yerel hile paneli
 """
 
+import hmac
 import json
 import os
 import secrets
@@ -18,7 +19,7 @@ import traceback
 print(" [+] Oyun ayarlari yukleniyor...")
 from flask import Flask, redirect, render_template, request, send_from_directory, session
 
-from oyun import aktarim, ayarlar, ruffle as Ruffle
+from oyun import aktarim, ayarlar, ruffle as Ruffle, takvim
 from oyun.dunya import rutbe
 from oyun.ekonomi import timestamp_now
 from oyun.kayit import (all_saves_info, all_saves_userid, fb_friends_str, load_saved_villages,
@@ -71,6 +72,23 @@ def _ad(host):
     if host.startswith("["):
         return host.split("]")[0] + "]"
     return host.rsplit(":", 1)[0] if host.count(":") == 1 else host
+
+
+# Android: aynı cihazdaki başka uygulamalar da 127.0.0.1:5050'ye ulaşabilir. Uygulama her açılışta bir jeton üretir,
+# yalnızca kendi WebView'una çerez olarak verir ve sunucuya ortam değişkeniyle bildirir (android_giris.baslat).
+# Jetonu olmayan istek kayıtlara ve oyuna ulaşamaz; sağlık yoklaması ve durağan dosyalar açık kalır.
+UYGULAMA_CEREZI = "se_uygulama"
+JETONSUZ_YOLLAR = ("/saglik", "/ruffle/", "/img/", "/css/", "/js/", "/fonts/", "/default01.static.socialpointgames.com/")
+
+
+@app.before_request
+def _uygulama_jetonu():
+    jeton = os.environ.get("SE_UYGULAMA_JETONU")
+    if not jeton or request.path.startswith(JETONSUZ_YOLLAR):
+        return None
+    if not hmac.compare_digest(request.cookies.get(UYGULAMA_CEREZI, ""), jeton):
+        return ("Bu sunucu yalnizca Social Empires uygulamasindan kullanilir", 403)
+    return None
 
 
 @app.before_request
@@ -233,7 +251,7 @@ def _oyun_sayfasi(sablon, ruffle_js=None):
                            GAMEVERSION=surum, SERVERIP=HOST, ruffle_js=ruffle_js,
                            statik=kok + STATIK_YOL, dinamik=kok + DINAMIK_YOL,
                            rutbe=rutbe(bilgi.get("level", 0)), varlik=STATIK_YOL,
-                           xp=_xp_araligi(bilgi))
+                           xp=_xp_araligi(bilgi), milli_bayram=takvim.milli_bayram())
 
 
 @app.route("/play.html")

@@ -453,5 +453,26 @@ class SwfYamaTestleri(unittest.TestCase):
             self.assertEqual(anahtar.count("|"), ceviri.count("|"), anahtar)
 
 
+    def test_oyun_kodundaki_dize_degisir(self):
+        """VAR-03: yükleme perdesinin 'Cargando' dizesi oyun kodunun (DoABC) sabit havuzunda çevrilir."""
+        from oyun import swf_yama
+        u = swf_yama._u30_yaz
+
+        def dize(d):
+            b = d.encode("utf-8")
+            return u(len(b)) + b
+
+        # bayraklar + ad, sürüm, int (2: biri boş), uint (0), double (2), dize havuzu, ardından kalan kod
+        havuz = u(2) + u(300) + u(0) + u(2) + bytes(8) + u(4) + dize("Loading") + dize("Cargando") + dize("x" * 130)
+        etiket = b"\x01\0\0\0frame1\0" + b"\x10\0\x2e\0" + havuz + b"KOD"
+        yeni, sayi = swf_yama.abc_dizelerini_degistir(etiket, {"Cargando": "Yükleniyor"})
+        self.assertEqual(sayi, 1)
+        self.assertEqual(yeni, etiket.replace(dize("Cargando"), dize("Yükleniyor")))
+        self.assertTrue(yeni.endswith(dize("x" * 130) + b"KOD"))  # iki baytlık uzunluk ve kalan kod korunur
+        self.assertEqual(swf_yama.abc_dizelerini_degistir(etiket, {"Yok": "x"}), (etiket, 0))
+        with open(os.path.join(KOK, "ceviri", "arayuz_tr.json"), encoding="utf-8") as f:
+            self.assertEqual(json.load(f)["as3_dizeleri"]["Cargando"], "Yükleniyor")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

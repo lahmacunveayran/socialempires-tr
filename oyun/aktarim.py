@@ -39,7 +39,7 @@ def onbellek_politikasi(yol):
         return DEGISMEZ
     if yol.startswith(STATIK):
         return SORARAK if yol.startswith(SORULAN_STATIK) else DEGISMEZ
-    if yol.startswith(("/img/", "/css/", "/js/")):
+    if yol.startswith(("/img/", "/css/", "/js/", "/fonts/")):
         return GUNLUK
     return SORARAK
 

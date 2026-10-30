@@ -148,7 +148,7 @@ def _oyun_sayfasi(sablon, ruffle_js=None):
                            friendsInfo=fb_friends_str(uid), version=version_name,
                            GAMEVERSION=surum, SERVERIP=HOST, ruffle_js=ruffle_js,
                            statik=kok + STATIK_YOL, dinamik=kok + DINAMIK_YOL,
-                           rutbe=rutbe(bilgi.get("level", 0)))
+                           rutbe=rutbe(bilgi.get("level", 0)), varlik=STATIK_YOL)
 
 
 @app.route("/play.html")
@@ -207,6 +207,11 @@ def images(path):
 @app.route("/css/<path:path>")
 def css(path):
     return send_from_directory(os.path.join(TEMPLATES_DIR, "css"), path)
+
+
+@app.route("/fonts/<path:path>")
+def fonts(path):
+    return send_from_directory(os.path.join(TEMPLATES_DIR, "fonts"), path)
 
 
 @app.route("/js/<path:path>")

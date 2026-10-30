@@ -10,6 +10,7 @@ from datetime import date
 
 from flask import session
 
+from oyun.config import get_item_from_id
 from oyun.dunya import turkce_ad
 from oyun.kayit import save_lock, save_session, session as kayit_oturumu
 from oyun.komutlar import depo_ekle
@@ -51,8 +52,18 @@ def al(kayit, gun):
     return adim, esya, adet
 
 
+RESIMLER = "/default01.static.socialpointgames.com/static/socialempires/buildingthumbs/"
+
+
+def resim(esya_id):
+    """Eşyanın oyundaki küçük resmi (90x90)."""
+    ad = (get_item_from_id(esya_id) or {}).get("img_name")
+    return f"{RESIMLER}{ad}.jpg" if ad else ""
+
+
 def _oduller():
-    return [{"gun": i + 1, "esya": e, "ad": turkce_ad(e), "adet": a} for i, (e, a) in enumerate(ODULLER)]
+    return [{"gun": i + 1, "esya": e, "ad": turkce_ad(e), "adet": a, "resim": resim(e)}
+            for i, (e, a) in enumerate(ODULLER)]
 
 
 @app.route("/hediye")
@@ -76,5 +87,5 @@ def hediye_al():
             return ({"hata": "Bugünün hediyesini zaten aldın. Yarın yine gel!"}, 409)
         save_session(uid)
     adim, esya, adet = sonuc
-    return {"durum": "ok", "gun": adim + 1, "ad": turkce_ad(esya), "adet": adet,
+    return {"durum": "ok", "gun": adim + 1, "ad": turkce_ad(esya), "adet": adet, "resim": resim(esya),
             "ileti": f"{adet} {turkce_ad(esya)} deponda. Oyunu yeniden açınca yerleştirebilirsin."}

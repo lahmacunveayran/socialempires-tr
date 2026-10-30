@@ -32,6 +32,11 @@
 
   // cos(phi) = sin(enlem) sin(delta) + cos(enlem) cos(delta) cos(saat açısı); h = 90 - phi
   function gunesYuksekligi(tarih, konum) {
+    return gunesKonumu(tarih, konum).h;
+  }
+
+  // Yükseklik (h, derece) ve saat açısı (derece; 0 = öğle, -90 sabah, +90 akşam).
+  function gunesKonumu(tarih, konum) {
     konum = konum || ISTANBUL;
     var g = gunesVerisi(tarih);
     var utcDakika = tarih.getUTCHours() * 60 + tarih.getUTCMinutes() + tarih.getUTCSeconds() / 60;
@@ -39,7 +44,8 @@
     var saatAcisi = (gercekGunesZamani / 4 - 180) * RAD;
     var enlem = konum.enlem * RAD;
     var cosPhi = Math.sin(enlem) * Math.sin(g.delta) + Math.cos(enlem) * Math.cos(g.delta) * Math.cos(saatAcisi);
-    return 90 - Math.acos(Math.max(-1, Math.min(1, cosPhi))) / RAD;
+    var aci = ((saatAcisi / RAD) % 360 + 540) % 360 - 180;
+    return { h: 90 - Math.acos(Math.max(-1, Math.min(1, cosPhi))) / RAD, saatAcisi: aci };
   }
 
   // Evreler: −0,833° resmi doğuş/batış; −4, −8 ve −18 alacakaranlık eşikleri.
@@ -83,10 +89,29 @@
     return { ust: son.ust, ufuk: son.ufuk };
   }
 
+  // Gökteki yer (yüzde): saat açısı yatayda, yükseklik dikeyde. Ay kabaca
+  // Güneş'in karşısında durur; gösterim içindir, gök mekaniği değildir.
+  function gokYeri(saatAcisi, h) {
+    return { x: Math.max(-10, Math.min(110, 50 + saatAcisi / 110 * 50)),
+             // Oyun çerçevesi ortayı kapladığı için gök cisimleri üst şeritte gezer.
+             y: Math.max(3, Math.min(18, 17 - h / 90 * 14)) };
+  }
+
   function uygula(tarih) {
-    var h = gunesYuksekligi(tarih);
+    var konum = gunesKonumu(tarih);
+    var h = konum.h;
     var r = renkler(h);
     var stil = document.documentElement.style;
+    var gunes = gokYeri(konum.saatAcisi, h);
+    var ay = gokYeri(((konum.saatAcisi + 360) % 360) - 180, -h);
+    stil.setProperty("--gunes-x", gunes.x + "%");
+    stil.setProperty("--gunes-y", gunes.y + "%");
+    stil.setProperty("--ay-x", ay.x + "%");
+    stil.setProperty("--ay-y", ay.y + "%");
+    stil.setProperty("--gunes-gorunur", String(Math.max(0, Math.min(1, (h + 3) / 4))));
+    stil.setProperty("--ay-gorunur", String(Math.max(0, Math.min(1, (-h - 2) / 6))));
+    // Bulutlar ve ışık: gündüz parlak, batımda turuncuya, gece koyu maviye çalar.
+    stil.setProperty("--gun-isigi", String(Math.max(0.12, Math.min(1, (h + 10) / 18))));
     stil.setProperty("--gok-ust", r.ust);
     stil.setProperty("--gok-ufuk", r.ufuk);
     // Yıldızlar mavi saatte belirmeye başlar, gecede tam görünür.
@@ -102,7 +127,7 @@
     return t && !isNaN(t) ? t : new Date();
   }
 
-  kok.Gokyuzu = { gunesYuksekligi: gunesYuksekligi, evre: evre, renkler: renkler, uygula: uygula };
+  kok.Gokyuzu = { gunesYuksekligi: gunesYuksekligi, gunesKonumu: gunesKonumu, evre: evre, renkler: renkler, uygula: uygula };
 
   if (typeof document !== "undefined") {
     uygula(simdi());

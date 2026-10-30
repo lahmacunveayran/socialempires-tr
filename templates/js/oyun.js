@@ -12,9 +12,10 @@
     var stil = getComputedStyle(document.documentElement);
     var baslik = parseFloat(stil.getPropertyValue("--baslik-yuksekligi")) || 0;
     var bosluk = parseFloat(stil.getPropertyValue("--bosluk")) || 0;
-    var cerceve = 20;
+    var arma = parseFloat(stil.getPropertyValue("--arma-payi")) || 0;
+    var cerceve = 38; // ahşap çerçeve ve altın kenar
     var genislik = alan.clientWidth - cerceve;
-    var yukseklik = window.innerHeight - baslik - 2 * bosluk - cerceve;
+    var yukseklik = window.innerHeight - baslik - arma - 2 * bosluk - cerceve;
     var s = Math.min(genislik / GEN, yukseklik / YUK, EN_BUYUK_OLCEK);
     // Çok dar yükseklikte (telefon yatay) genişliğe göre ölçeklenir, sayfa kayar.
     if (s < 0.45) s = Math.min(genislik / GEN, EN_BUYUK_OLCEK);
@@ -102,17 +103,23 @@
     var t = new Date(zaman * 1000);
     return t.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Istanbul" });
   }
+  var HABER_SIMGELERI = { savas: "⚔️", seviye: "⭐", ekonomi: "🛡️", lonca: "🔨", dunya: "🌍" };
   function satirEkle(olay, yeni) {
     var bos = liste.querySelector(".bos");
     if (bos) bos.remove();
     var li = document.createElement("li");
     li.dataset.tur = olay.tur;
     if (yeni) li.className = "yeni";
-    li.textContent = olay.metin;
+    var ikon = document.createElement("span");
+    ikon.className = "rozet-ikon";
+    ikon.textContent = HABER_SIMGELERI[olay.tur] || "📜";
+    var metin = document.createElement("span");
+    metin.textContent = olay.metin;
     var zaman = document.createElement("time");
     zaman.dateTime = new Date(olay.zaman * 1000).toISOString();
     zaman.textContent = saat(olay.zaman);
-    li.appendChild(zaman);
+    metin.appendChild(zaman);
+    li.append(ikon, metin);
     liste.insertBefore(li, liste.firstChild);
     while (liste.children.length > EN_COK_SATIR) liste.removeChild(liste.lastChild);
     ozet.textContent = "Son haber: " + olay.metin;
@@ -188,13 +195,26 @@
         });
         var bitis = new Date(v.hafta + "T00:00:00+03:00");
         bitis.setDate(bitis.getDate() + 7);
+        haftaSonu = bitis;
         haftaBilgi.textContent = "Reytingin: " + v.reyting + (v.ben ? " · Bu hafta " + v.ben.sira + ". sıradasın" : "") +
           " · Hafta " + bitis.toLocaleDateString("tr-TR", { day: "numeric", month: "long", timeZone: "Europe/Istanbul" }) + " 00.00'da kapanır; ilk 10 ödül alır.";
       })
       .catch(function () {});
   }
+  var haftaSonu = null;
+  var geriSayim = document.getElementById("geri-sayim");
+  function sayac() {
+    if (!haftaSonu) return;
+    var kalan = Math.max(0, Math.floor((haftaSonu - Date.now()) / 1000));
+    var parcalar = [[Math.floor(kalan / 86400), "gün"], [Math.floor(kalan % 86400 / 3600), "saat"],
+                    [Math.floor(kalan % 3600 / 60), "dk"], [kalan % 60, "sn"]];
+    geriSayim.innerHTML = parcalar.map(function (p) {
+      return "<span>" + String(p[0]).padStart(2, "0") + "<small>" + p[1] + "</small></span>";
+    }).join("");
+  }
   haftaYukle();
   setInterval(haftaYukle, 60000);
+  setInterval(sayac, 1000);
 
   // --- Etkinlik takvimi
   var etkinlik = document.getElementById("etkinlik");
@@ -204,47 +224,92 @@
       var tarih = function (s) { return new Date(s + "T12:00:00+03:00").toLocaleDateString("tr-TR", { day: "numeric", month: "long", timeZone: "Europe/Istanbul" }); };
       var aktif = v.etkinlikler.filter(function (e) { return e.aktif; });
       var yakin = v.etkinlikler.filter(function (e) { return !e.aktif; })[0];
+      var olay = function (simge, icerik) { return "<div class='olay'><span class='simge'>" + simge + "</span>" + icerik + "</div>"; };
       var parcalar = aktif.map(function (e) {
-        return "<b>" + e.ad + "</b> sürüyor: " + e.setler.join(", ") + " setleri mağazada (" + tarih(e.son_gun) + " sonuna dek).";
+        return olay(e.simge, "<b>" + e.ad + "</b> sürüyor! " + e.setler.join(", ") +
+          " setleri mağazada.<small>" + tarih(e.son_gun) + " gün sonuna dek</small>");
       });
-      if (yakin) parcalar.push("Sıradaki: <b>" + yakin.ad + "</b>, " + tarih(yakin.baslangic) + ".");
-      if (parcalar.length) { etkinlik.innerHTML = parcalar.join("<br>"); etkinlik.hidden = false; }
+      if (yakin) parcalar.push(olay(yakin.simge, "Sıradaki şenlik: <b>" + yakin.ad + "</b><small>" + tarih(yakin.baslangic) + "</small>"));
+      if (parcalar.length) { etkinlik.innerHTML = parcalar.join(""); etkinlik.hidden = false; }
     })
     .catch(function () {});
 
-  // --- Ücretsiz Hediyeler: 7 günlük sandık
+  // --- Ücretsiz Hediyeler: 7 günlük sandık (oyunun sandığı ve birim resimleri)
   var pencere = document.getElementById("hediye-penceresi");
   var gunler = document.getElementById("hediye-gunleri");
   var ileti = document.getElementById("hediye-ileti");
   var alDugmesi = document.getElementById("hediye-al");
-  function hediyeGoster() {
-    return fetch("/hediye", { cache: "no-store" })
-      .then(function (r) { return r.json(); })
-      .then(function (v) {
-        gunler.textContent = "";
-        v.oduller.forEach(function (o, i) {
-          var li = document.createElement("li");
-          if (i < v.sira || (!v.alinabilir && i === v.sira)) li.className = "alindi";
-          if (v.alinabilir && i === v.sira) li.className = "bugun";
-          var b = document.createElement("b"); b.textContent = o.gun + ". gün";
-          li.append(b, document.createTextNode(o.adet + " × " + o.ad));
-          gunler.appendChild(li);
-        });
-        alDugmesi.disabled = !v.alinabilir;
-        if (!v.alinabilir) ileti.textContent = "Bugünün hediyesini aldın. Yarın yine gel!";
-      });
+  var hediyeDugmesi = document.getElementById("hediye-ac");
+  var hediyeRozet = document.getElementById("hediye-rozet");
+  var cofre = document.getElementById("cofre");
+  var kazanc = document.getElementById("kazanc");
+  var altinlar = document.getElementById("altinlar");
+  function hediyeDurumu() {
+    return fetch("/hediye", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (v) {
+      hediyeDugmesi.classList.toggle("hazir", !!v.alinabilir);
+      hediyeRozet.hidden = !v.alinabilir;
+      return v;
+    });
   }
-  document.getElementById("hediye-ac").addEventListener("click", function () {
+  function hediyeGoster() {
+    return hediyeDurumu().then(function (v) {
+      gunler.textContent = "";
+      var alinan = v.alinabilir ? v.sira : v.sira + 1;
+      gunler.style.setProperty("--ilerleme", String(alinan / (v.oduller.length - 1 || 1)));
+      v.oduller.forEach(function (o, i) {
+        var li = document.createElement("li");
+        if (i === v.oduller.length - 1) li.classList.add("efsane");
+        if (i < alinan) li.classList.add("alindi");
+        if (v.alinabilir && i === v.sira) li.classList.add("bugun");
+        var gun = document.createElement("span"); gun.className = "gun"; gun.textContent = o.gun + ". gün";
+        var resim = document.createElement("img"); resim.src = o.resim; resim.alt = ""; resim.loading = "lazy";
+        var ad = document.createElement("span"); ad.className = "adi"; ad.textContent = o.adet + " × " + o.ad;
+        li.append(gun, resim, ad);
+        gunler.appendChild(li);
+      });
+      alDugmesi.disabled = !v.alinabilir;
+      alDugmesi.textContent = v.alinabilir ? "Sandığı Aç" : "Yarın yine gel";
+      if (!v.alinabilir) ileti.textContent = "Bugünün hediyesini aldın. Sandık yarın yeniden dolacak!";
+    });
+  }
+  function altinSac() {
+    altinlar.textContent = "";
+    for (var i = 0; i < 36; i++) {
+      var a = document.createElement("i");
+      a.className = "altin";
+      var aci = Math.random() * Math.PI * 2, uzak = 140 + Math.random() * 260;
+      a.style.setProperty("--dx", Math.round(Math.cos(aci) * uzak) + "px");
+      a.style.setProperty("--dy", Math.round(Math.sin(aci) * uzak * 0.8 + 120) + "px");
+      a.style.animationDelay = (Math.random() * 0.25) + "s";
+      altinlar.appendChild(a);
+    }
+  }
+  hediyeDugmesi.addEventListener("click", function () {
     ileti.textContent = "";
+    kazanc.hidden = true;
+    cofre.className = "cofre";
     hediyeGoster().then(function () { pencere.showModal(); }).catch(function () {});
   });
   document.getElementById("hediye-kapat").addEventListener("click", function () { pencere.close(); });
+  kazanc.addEventListener("click", function () { kazanc.hidden = true; });
   alDugmesi.addEventListener("click", function () {
-    fetch("/hediye/al", { method: "POST" })
-      .then(function (r) { return r.json(); })
-      .then(function (v) { hediyeGoster(); ileti.textContent = v.ileti || v.hata; })
-      .catch(function () {});
+    alDugmesi.disabled = true;
+    cofre.className = "cofre aciliyor";
+    var istek = fetch("/hediye/al", { method: "POST" }).then(function (r) { return r.json(); });
+    setTimeout(function () {
+      istek.then(function (v) {
+        if (v.durum !== "ok") { ileti.textContent = v.hata; cofre.className = "cofre"; return; }
+        cofre.className = "cofre acildi";
+        altinSac();
+        document.getElementById("kazanc-resim").src = v.resim;
+        document.getElementById("kazanc-ad").textContent = v.adet + " × " + v.ad;
+        kazanc.hidden = false;
+        ileti.textContent = v.ileti;
+        hediyeGoster();
+      }).catch(function () { cofre.className = "cofre"; });
+    }, 700);
   });
+  hediyeDurumu().catch(function () {});
 
   // --- Kayıt yedeği: başka bilgisayardan alınan yedeği yükle
   document.getElementById("yedek-dosyasi").addEventListener("change", function (e) {

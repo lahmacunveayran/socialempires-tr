@@ -2,15 +2,15 @@
   "_aciklama": "Etkinlik takvimi. Her etkinlik belirtilen günlerde tema setlerini mağazaya açar (ayarlar.json: magaza_tema_setleri = \"takvim\"). gun: AA-GG sabit gün ya da 'ramazan'/'kurban' (bayramın ilk günü). once: başlangıçtan önceki gün sayısı, sure: toplam gün. Harikalar her zaman açıktır.",
   "her_zaman": ["Harikalar"],
   "etkinlikler": [
-    {"ad": "Yılbaşı Şenliği", "gun": "01-01", "once": 3, "sure": 7, "setler": ["Çin", "Göksel"]},
-    {"ad": "Ramazan Bayramı", "gun": "ramazan", "once": 0, "sure": 3, "setler": ["Firavunlar", "Mısır"]},
-    {"ad": "Nevruz", "gun": "03-21", "once": 0, "sure": 7, "setler": ["Elf", "İmparatorluk Elfleri"]},
-    {"ad": "23 Nisan Şenliği", "gun": "04-23", "once": 0, "sure": 3, "setler": ["Atlantis"]},
-    {"ad": "Hıdırellez", "gun": "05-06", "once": 1, "sure": 3, "setler": ["Aztek"]},
-    {"ad": "Kurban Bayramı", "gun": "kurban", "once": 0, "sure": 4, "setler": ["Mitoloji"]},
-    {"ad": "19 Mayıs Şenliği", "gun": "05-19", "once": 0, "sure": 3, "setler": ["Viking"]},
-    {"ad": "Zafer Bayramı", "gun": "08-30", "once": 0, "sure": 3, "setler": ["Gladyatörler"]},
-    {"ad": "Cumhuriyet Bayramı", "gun": "10-29", "once": 0, "sure": 2, "setler": ["Kara Orklar"]},
-    {"ad": "Cadılar Bayramı", "gun": "10-31", "once": 4, "sure": 7, "setler": ["Cadılar Bayramı", "Ölüler Diyarı", "Cehennem"]}
+    {"ad": "Yılbaşı Şenliği", "simge": "❄️", "gun": "01-01", "once": 3, "sure": 7, "setler": ["Çin", "Göksel"]},
+    {"ad": "Ramazan Bayramı", "simge": "🌙", "gun": "ramazan", "once": 0, "sure": 3, "setler": ["Firavunlar", "Mısır"]},
+    {"ad": "Nevruz", "simge": "🌷", "gun": "03-21", "once": 0, "sure": 7, "setler": ["Elf", "İmparatorluk Elfleri"]},
+    {"ad": "23 Nisan Şenliği", "simge": "🎈", "gun": "04-23", "once": 0, "sure": 3, "setler": ["Atlantis"]},
+    {"ad": "Hıdırellez", "simge": "🌹", "gun": "05-06", "once": 1, "sure": 3, "setler": ["Aztek"]},
+    {"ad": "Kurban Bayramı", "simge": "🐑", "gun": "kurban", "once": 0, "sure": 4, "setler": ["Mitoloji"]},
+    {"ad": "19 Mayıs Şenliği", "simge": "🏇", "gun": "05-19", "once": 0, "sure": 3, "setler": ["Viking"]},
+    {"ad": "Zafer Bayramı", "simge": "⚔️", "gun": "08-30", "once": 0, "sure": 3, "setler": ["Gladyatörler"]},
+    {"ad": "Cumhuriyet Bayramı", "simge": "🇹🇷", "gun": "10-29", "once": 0, "sure": 2, "setler": ["Kara Orklar"]},
+    {"ad": "Cadılar Bayramı", "simge": "🎃", "gun": "10-31", "once": 4, "sure": 7, "setler": ["Cadılar Bayramı", "Ölüler Diyarı", "Cehennem"]}
   ]
 }

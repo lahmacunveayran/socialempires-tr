@@ -85,3 +85,15 @@ Yapılmayanlar: Arthur'un etkinliğe özel hedefleri; 2030 sonrası için
   aşamayı Türkçe nasihatlerle örtüyor.
 - Lighthouse (LCP, CLS) ölçümü yapılmadı.
 - Gerçek Windows 11 sanal makinesi, Android telefon ve iPad ile kabul sınaması.
+
+## Görsel tasarım
+
+Sayfadaki çizimler oyunun kendi görselleridir; oyun varlıklarıyla aynı yoldan
+(`/default01.static.socialpointgames.com/...`) iner, depoya konmaz:
+çam ağaçları ve giriş manzarası (`externalized/PopupLevelUp/`), iki nöbetçi,
+kılıçlı arma ve bayraklar, parşömen ve başlık şeridi, günlük ödül
+parşömeni, hazine sandığı, hediyeli köylü kız, Kral Arthur, haftalık turnuva
+afişi ve hediye günlerindeki birim resimleri (`buildingthumbs/`). Yalnızca
+gökyüzü (Güneş, Ay, bulutlar, yıldızlar) CSS ile çizilir, çünkü Güneş'in
+gerçek konumuna göre değişir. Yazı tipleri Cinzel ve Alegreya (OFL,
+`templates/fonts/`).

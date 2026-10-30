@@ -109,7 +109,7 @@
       "test": null,
       "pr": "#10",
       "onay": null,
-      "notlar": ""
+      "notlar": "Yanlış çürütme: tablette görünüyor; bkz. VAR-03."
     },
     {
       "id": "GUV-01",
@@ -721,6 +721,19 @@
       "pr": "#18",
       "onay": "Sahibi, 30 Ekim 2026",
       "notlar": ""
+    },
+    {
+      "id": "VAR-03",
+      "baslik": "Yükleme perdesinde İspanyolca 'Cargando' (VAR-02'nin çürütülmesi yanlıştı)",
+      "sinif": "hata",
+      "onem": "Düşük",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "Sahibi tablette 'halen Cargando yükleme yeri duruyor' dedi. VAR-02 masaüstünde 200 ms arayla çekilen karelerde görülmediği için çürütülmüştü; masaüstünde açılış hızlı, tablette yavaş. Kaynak: oyun kodunda (DoABC) StageBlockerMC kurucusu defaultText = (Main.localization == Language.LANGUAGE_ENGLISH) ? 'Loading' : 'Cargando'; dil İngilizce olmadığından İspanyolca çıkıyor. 'Cargando' dizesi kodda tek yerde (pushstring, sabit havuz no 18616) kullanılıyor, karşılaştırılmıyor. swf_yama artık DoABC sabit havuzundaki dizeleri de çeviriyor (ceviri/arayuz_tr.json as3_dizeleri: Cargando → Yükleniyor; YAMA_SURUMU 7). Yamalı SWF'de 'Cargando' kalmadı; oyun Ruffle'da sv 59 hesabıyla hatasız açıldı. Gömülü yazı tiplerine ü zaten ekleniyor (swf_font.TURKCE_HARFLER).",
+      "test": "tests/test_sistemler.py test_oyun_kodundaki_dize_degisir; tarayıcı (scratchpad/yukleme.js)",
+      "pr": "#18",
+      "onay": null,
+      "notlar": "Perde masaüstünde kareye girmedi; tablette görünüşü sahibi doğrular. Koddaki öteki İspanyolca dizeler hata günlüğü ('*** Error cargando asset') ya da ekranda görüldüğü kanıtlanmamış adlar ('Ataque Súbito'); dokunulmadı."
     }
   ]
 }

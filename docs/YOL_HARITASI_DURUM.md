@@ -118,9 +118,8 @@ Yol haritasının açık soruları yanıtlandı:
 
 - `fx/p.miniFireball2.swf` arşivde yok (404); karşılığı bulunup
   `oyun/varliklar.py` → `ESDEGERLER`'e eklenmeli.
-- ~~Yükleyicideki İspanyolca "Cargando" yazısı~~: artık görünmüyor. Yükleme
-  ekranı kare kare çekildi (her 200 ms); yalnızca küre logo ve Türkçe "Oyun
-  beta sürümünde. Lütfen sabırlı olun." yazısı çıkıyor.
+- ~~Yükleyicideki İspanyolca "Cargando" yazısı~~: masaüstünde görülmemişti ama
+  tablette görünüyordu (VAR-03). Oyun kodundaki dize "Yükleniyor" olarak yamalanıyor.
 - Gerçek Windows 11 sanal makinesi, Android telefon ve iPad ile kabul sınaması.
 
 ## Görsel tasarım

@@ -6,7 +6,11 @@ yerelleştirme metinlerinden değil, SWF içindeki metin alanlarının
 (DefineEditText) başlangıç değerlerinden gelir. Bu modül o alanları
 `ceviri/arayuz_tr.json` sözlüğüne göre değiştirip yeni bir SWF üretir.
 
-Yalnızca eşleşen metin alanları değişir; geri kalan etiketler bayt bayt
+Oyun kodundaki (DoABC) bazı sabit dizeler de ekrana çıkar: yükleme perdesindeki
+"Cargando" böyledir (dil İngilizce değilse gösterilir). Bunlar `as3_dizeleri`
+sözlüğüyle sabit havuzunda değiştirilir.
+
+Yalnızca eşleşen metin alanları ve dizeler değişir; geri kalan etiketler bayt bayt
 korunur. Gömülü yazı tiplerine eksik Türkçe harfler eklenir (swf_font).
 Yazı tipine gömülü sabit yazılar (DefineText) çevrilemez.
 """
@@ -25,7 +29,7 @@ from oyun import swf_font
 from oyun.yollar import ASSETS_DIR, CEVIRI_DIR
 TR_FONTLARI = ("tr_ArialRoundedBold.swf", "tr_ErasBold.swf")
 _URETIM_KILIDI = threading.Lock()
-YAMA_SURUMU = b"6"  # yama mantığı değişince artırın (önbellek yenilensin)
+YAMA_SURUMU = b"7"  # yama mantığı değişince artırın (önbellek yenilensin)
 SOZLUK = os.path.join(CEVIRI_DIR, "arayuz_tr.json")
 
 _ETIKET = re.compile(r"<[^>]+>")
@@ -71,6 +75,62 @@ def _etiketler(govde: bytes):
 
 def _baslik(kod: int, uzunluk: int) -> bytes:
     return struct.pack("<HI", (kod << 6) | 0x3F, uzunluk)
+
+
+DO_ABC = 82
+
+
+def _u30_oku(b: bytes, p: int):
+    deger = kayma = 0
+    while True:
+        x = b[p]
+        p += 1
+        deger |= (x & 0x7F) << kayma
+        kayma += 7
+        if not x & 0x80:
+            return deger, p
+
+
+def _u30_yaz(n: int) -> bytes:
+    cikti = bytearray()
+    while True:
+        x, n = n & 0x7F, n >> 7
+        cikti.append(x | 0x80 if n else x)
+        if not n:
+            return bytes(cikti)
+
+
+def abc_dizelerini_degistir(t: bytes, harita: dict):
+    """DoABC etiketinin sabit havuzundaki dizeleri değiştirir: (yeni_etiket, değişen_sayısı).
+
+    Havuz sırayla okunur (int, uint, double, dize); dizelerden sonrası olduğu gibi kalır.
+    Kod dizelere sıra numarasıyla eriştiği için uzunluk değişmesi bir şeyi kaydırmaz.
+    """
+    ad_sonu = t.index(b"\0", 4) + 1  # bayraklar (4 bayt) + ad
+    abc = t[ad_sonu:]
+    p = 4  # küçük ve büyük sürüm
+    for boy in (None, None, 8):  # int, uint (değişken uzunluk), double (8 bayt)
+        sayi, p = _u30_oku(abc, p)
+        for _ in range(max(sayi - 1, 0)):
+            if boy:
+                p += boy
+            else:
+                _, p = _u30_oku(abc, p)
+    sayi, p = _u30_oku(abc, p)
+    havuz_basi, parcalar, degisen = p, [], 0
+    for _ in range(max(sayi - 1, 0)):
+        uzunluk, bas = _u30_oku(abc, p)
+        p = bas + uzunluk
+        dize = abc[bas:p].decode("utf-8", "replace")
+        if dize in harita:
+            yeni = harita[dize].encode("utf-8")
+            parcalar.append(_u30_yaz(len(yeni)) + yeni)
+            degisen += 1
+        else:
+            parcalar.append(abc[bas - len(_u30_yaz(uzunluk)):p])
+    if not degisen:
+        return t, 0
+    return t[:ad_sonu] + abc[:havuz_basi] + b"".join(parcalar) + abc[p:], degisen
 
 
 def _font_konumu(t: bytes):
@@ -197,6 +257,7 @@ def turkcelestir(veri: bytes, sozluk=None):
     etiketler = list(_etiketler(govde))
     degisim, eslemeler, eski_fontlar, yeni_fontlar = _fontlari_tamamla(govde, etiketler)
     statik = sozluk.get("statik_yazilar", {})
+    as3 = sozluk.get("as3_dizeleri", {})
     sozluk = sozluk.get("metin_alanlari", sozluk)
     cikti = []
     degisen = 0
@@ -211,6 +272,12 @@ def turkcelestir(veri: bytes, sozluk=None):
             t = degisim[("bolge", bas)]
             cikti.append(_baslik(kod, len(t)) + t)
             continue
+        if kod == DO_ABC and as3:
+            t, sayi = abc_dizelerini_degistir(govde[bas:son], as3)
+            if sayi:
+                cikti.append(_baslik(kod, len(t)) + t)
+                degisen += sayi
+                continue
         if kod in (swf_font.DEFINE_TEXT, swf_font.DEFINE_TEXT2):
             t = govde[bas:son]
             onek, kayitlar = swf_font.metin_kayitlari(t, kod)

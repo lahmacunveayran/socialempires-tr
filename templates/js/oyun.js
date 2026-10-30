@@ -214,8 +214,9 @@
   }
   // Simgeler oyunun kendi armalarıdır (images_new/b_*.png).
   var ARMA = AYAR.varlik + "images_new/";
-  var HABER_SIMGELERI = { savas: "b_4.png", seviye: "b_14.png", ekonomi: "b_5.png", lonca: "b_1.png", dunya: "b_9.png" };
-  var HABER_TURLERI = { savas: "Savaş", seviye: "Seviye", ekonomi: "Ordu", lonca: "Lonca", dunya: "Dünya" };
+  var HABER_SIMGELERI = { savas: "b_4.png", seviye: "b_14.png", ekonomi: "b_5.png", lonca: "b_1.png", dunya: "b_9.png",
+                          ittifak: "b_8.png" };
+  var HABER_TURLERI = { savas: "Savaş", seviye: "Seviye", ekonomi: "Ordu", lonca: "Lonca", dunya: "Dünya", ittifak: "İttifak" };
   function satirEkle(olay, yeni) {
     var bos = liste.querySelector(".bos-haber");
     if (bos) bos.remove();

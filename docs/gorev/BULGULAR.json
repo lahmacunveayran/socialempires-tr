@@ -513,6 +513,19 @@
       "pr": null,
       "onay": "Sahibi, 30 Ekim 2026",
       "notlar": "Bilinen: ilk parmağın altındaki bina seçilebilir. Kaynak taraması: Android'de Ruffle/WebView/Chaquopy/Samsung (Auto Blocker, uyutma) bulguları ANDROID.md'ye işlendi."
+    },
+    {
+      "id": "OYN-01",
+      "baslik": "Bot dünyası: değişen ittifaklar ve intikam seferleri (Diyar Haberleri)",
+      "sinif": "ozellik",
+      "onem": "Orta",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "İttifaklar artık kayıtta (bot_hafiza.ittifak), 15 turda bir bot kalabalık ittifaktan en küçüğüne geçebiliyor (haber). Başka ittifaktan bir bota yenilen botun ittifakı intikam seferi ilan ediyor; sefer 12 turda en çok 3 akın, her turda ittifakın en güçlü uygun üyesi (saldırı hakkı, aynı hedef 6 saat kuralı ve aralıklar korunur); sonucu haber olur. Oyuncu bir bota saldırınca o botun ittifakı oyuncuya sefer ilan edebilir; oyuncuya akınlar kalkana ve aralığa saygılı. Yerelde 5 sn'lik turla: 'Yeşil Birlik, Modu Han için Tardu köyüne intikam seferi ilan etti' ardından 'Timur → Tardu: kazandı' (✔). Ayrıca: saldıran botun kaydı her akında yazılıyor (önce yalnızca ekonomisi değişince yazılıyordu).",
+      "test": "tests/test_sistemler.py (IttifakSeferTestleri)",
+      "pr": null,
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Ayarlar: dunya.intikam_olasiligi (0,35), dunya.oyuncuya_intikam (0,5). Haber türü 'ittifak', simge oyunun kendi arması b_8.png."
     }
   ]
 }

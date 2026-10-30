@@ -9,6 +9,7 @@ import shutil
 import tempfile
 import time
 import unittest
+import unittest.mock
 
 from ortak import KOK, bos_kayit
 
@@ -70,6 +71,83 @@ class DunyaTestleri(unittest.TestCase):
         d.aktif_olay = {"tur": "savas", "metin": "test", "bitis": int(time.time()) - 1}
         d._olay_guncelle(int(time.time()))
         self.assertIsNone(d.aktif_olay)
+
+
+class IttifakSeferTestleri(unittest.TestCase):
+    """Bot ittifakları ve intikam seferleri (OYN-01)."""
+
+    def kur(self, adet=4):
+        from oyun import dunya
+        kayitlar = botlar(adet)
+        for i in range(adet):
+            k = kayitlar[f"b{i}"]
+            k["maps"][0]["items"] += [[512, 5 + j, 5, 0, 0, 0] for j in range(6)]
+            # b0, b1 Kızıl; b2 Mavi; b3 Yeşil
+            k.setdefault("privateState", {})["bot_hafiza"] = {"ittifak": [0, 0, 1, 2][i]}
+        kayitlar["u1"]["maps"][0]["level"] = 12
+        kayitlar["u1"]["maps"][0]["items"] += [[512, 9, 9, 0, 0, 0]]
+        d = dunya.Dunya()
+        d.ayar.update(saldiri_olasiligi=0, intikam_olasiligi=1.0, oyuncuya_intikam=1.0)
+        return dunya, kayitlar, d
+
+    def test_ittifak_kayittan_okunur_ve_adi_turkce(self):
+        dunya, kayitlar, d = self.kur()
+        with SahteKayitlar(dunya, kayitlar):
+            self.assertEqual(d.ittifak_adi("b2"), "Mavi Birlik")
+            self.assertEqual(d._ittifak("b0"), d._ittifak("b1"))
+
+    def test_kalabalik_ittifaktan_kucuge_gecis_haber_olur(self):
+        dunya, kayitlar, d = self.kur()
+        with SahteKayitlar(dunya, kayitlar):
+            d.tick = dunya.ITTIFAK_DEGISIMI
+            with unittest.mock.patch.object(dunya.random, "random", return_value=0.0):
+                degisen = d._ittifak_degisimi()
+            (uid,) = degisen
+            self.assertIn(uid, ("b0", "b1"))
+            self.assertNotEqual(d._ittifak(uid), 0)
+            self.assertIn("katıldı", d.olaylar[-1]["metin"])
+            self.assertEqual(d.olaylar[-1]["tur"], "ittifak")
+
+    def test_intikam_seferi_ilan_edilir_ve_yurutulur(self):
+        dunya, kayitlar, d = self.kur()
+        with SahteKayitlar(dunya, kayitlar):
+            sefer = d._sefer_ilan(0, "b2", "Bot 2", "Bot 1")
+            self.assertIn("intikam seferi ilan etti", d.olaylar[-1]["metin"])
+            self.assertIsNone(d._sefer_ilan(0, "b2", "Bot 2", "Bot 1"))  # aynı sefer iki kez açılmaz
+            simdi = int(time.time())
+            degisen = d._seferleri_yurut(d._botlar(), simdi)
+            self.assertEqual(sefer["kalan"], dunya.SEFER_SALDIRI - 1)
+            self.assertIn("b2", degisen)
+            self.assertTrue(degisen & {"b0", "b1"})  # saldıran Kızıl Birlik üyesi
+            self.assertTrue(any(o["tur"] == "savas" and "Bot 2" in o["metin"] for o in d.olaylar))
+
+    def test_sefer_suresi_dolunca_dagilir(self):
+        dunya, kayitlar, d = self.kur()
+        with SahteKayitlar(dunya, kayitlar):
+            d._sefer_ilan(0, "b2", "Bot 2", "Bot 1")
+            d.tick += dunya.SEFER_SURESI + 1
+            d._seferleri_yurut(d._botlar(), int(time.time()))
+            self.assertEqual(d.seferler, [])
+            self.assertIn("dağıldı", d.olaylar[-1]["metin"])
+
+    def test_yenilen_botun_ittifaki_intikam_ilan_eder(self):
+        dunya, kayitlar, d = self.kur()
+        with SahteKayitlar(dunya, kayitlar):
+            kayitlar["b2"]["maps"][0]["items"] = [it for it in kayitlar["b2"]["maps"][0]["items"] if it[0] != 512]
+            d._akin("b0", kayitlar["b0"], d._botlar(), int(time.time()), zorla=("b2", kayitlar["b2"]))
+            self.assertTrue(d._son_sonuc["kazandi"])
+            self.assertEqual([(s["ittifak"], s["hedef"]) for s in d.seferler], [(1, "b0")])
+
+    def test_oyuncu_saldirinca_sefer_ve_kalkana_saygi(self):
+        dunya, kayitlar, d = self.kur()
+        with SahteKayitlar(dunya, kayitlar):
+            sefer = d.oyuncu_saldirdi("u1", "Oyuncu", "b2", kayitlar["b2"])
+            self.assertTrue(sefer["oyuncu"])
+            self.assertIn("senin köyüne", d.olaylar[-1]["metin"])
+            kayitlar["u1"]["privateState"]["shield_until"] = int(time.time()) + 3600
+            d._seferleri_yurut(d._botlar(), int(time.time()))
+            self.assertEqual(sefer["kalan"], dunya.SEFER_SALDIRI)  # kalkanlıya akın yok
+            self.assertIsNone(d.oyuncu_saldirdi("u1", "Oyuncu", "u1", kayitlar["u1"]))  # bot değilse yok
 
 
 class TurnuvaAdaTestleri(unittest.TestCase):

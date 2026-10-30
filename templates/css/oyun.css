@@ -468,6 +468,7 @@ img { -webkit-user-drag: none; }
 .haber[data-tur="ekonomi"] .tur { color: #3f6e18; }
 .haber[data-tur="lonca"] .tur { color: #5f4596; }
 .haber[data-tur="seviye"] .tur { color: #9a6a00; }
+.haber[data-tur="ittifak"] .tur { color: #1f4a7a; }
 .haber time { font: 700 11px var(--metin-yazi); color: #a08560; white-space: nowrap; }
 .haber p { margin: 0; font: 700 13.5px/1.32 var(--metin-yazi); color: var(--murekkep); }
 .bos-haber { display: grid; grid-template-columns: 46px 1fr; gap: 10px; align-items: center; padding: 6px 4px; color: var(--murekkep-soluk); font-size: 13.5px; }

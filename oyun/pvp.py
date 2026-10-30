@@ -185,6 +185,13 @@ def saldiri_bitir(saldiran, args):
         except Exception as hata:
             print(" ! Fetih kaydi hatasi:", hata)
     save_session(kurban_id)
+    # Bota saldırı: kurbanın ittifakı oyuncuya intikam seferi ilan edebilir (Diyar Haberleri)
+    from oyun import dunya
+    if dunya.etkin is not None:
+        try:
+            dunya.etkin.oyuncu_saldirdi(kendi_id, saldiran["playerInfo"].get("name", ""), kurban_id, kurban)
+        except Exception as hata:  # haber, savaş sonucunu bozmasın
+            print(" ! Intikam seferi ilan edilemedi:", hata)
     print(f"Saldiri bitti: {_ozet(kurban)['name']} - {'kazandi' if kazandi else 'kaybetti'}"
           f" ({altin} altin, {xp} XP{'' if kurala_uygun else ', kural disi: ganimet yok'})")
     return True

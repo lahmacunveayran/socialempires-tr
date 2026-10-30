@@ -37,7 +37,7 @@ görünüyorsa bildirin.
 
 ### 7.3 Windows paketi
 
-İlk sürümü yayınlamak için etiket gönderin (ya da bunu Claude'dan isteyin):
+İlk sürümü yayınlamak için etiket gönderin (ya da bunu yapay zekâ oturumundan isteyin):
 
 ```bash
 git tag v0.1.0

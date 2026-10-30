@@ -1,6 +1,6 @@
 # SOCIAL EMPIRES TR GÖREV KİTABI: ÇEKİRDEK (her oturumda okunur)
 
-Sürüm: 30 Ekim 2026 · Depo: `lahmacunveayran/socialempires-tr` · Okuyucu: Claude Code içindeki bir Claude oturumu
+Sürüm: 30 Ekim 2026 · Depo: `lahmacunveayran/socialempires-tr` · Okuyucu: bu depoda çalışan yapay zekâ oturumu
 
 Kitap üç dosyadır; bölüm numaraları dosyalar boyunca süreklidir ve başvurular (§) dosya sınırını aşar. Yöntem
 `lahmacunveayran/Lyraska` deposundaki görev kitabından alındı: amaç, her oturumun yaptığını sonradan **denetlenebilir**

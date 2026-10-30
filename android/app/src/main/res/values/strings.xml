@@ -5,4 +5,5 @@
     <string name="acilamadi">Oyun sunucusu açılamadı.</string>
     <string name="yedek_kaydedildi">Yedek kaydedildi.</string>
     <string name="yedek_kaydedilemedi">Yedek kaydedilemedi.</string>
+    <string name="yeniden_yukleniyor">Oyun ekranı kapandı; yeniden yükleniyor.</string>
 </resources>

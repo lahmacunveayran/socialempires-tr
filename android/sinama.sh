@@ -49,5 +49,11 @@ pid=$(timeout 20 adb shell pidof "$PAKET" | tr -d '\r') || true
 
 adim "WebView'a DevTools ile bağlanılıyor (pid $pid)"
 timeout 600 node "$(dirname "$0")/sinama_oyun.js" "$PAKET" "$OYUN_EKRANI"
-[ $? = 0 ] || { echo "Oyun WebView'da yüklenmedi"; gunluk; exit 1; }
+[ $? = 0 ] || {
+  echo "Oyun WebView'da yüklenmedi"
+  echo "--- WebView, çökme ve sistem günlüğü ---"
+  timeout 30 adb logcat -d -s SocialEmpires:V chromium:V cr_AwContents:V DEBUG:V libc:F ActivityManager:I lowmemorykiller:V \
+    | grep -v "Loading save" | tail -120
+  exit 1
+}
 adim "Tamam: sunucu hazır, oyun Android WebView'da yüklendi ve açılışını bitirdi."

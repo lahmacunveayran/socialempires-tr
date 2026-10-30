@@ -1,9 +1,11 @@
 package io.github.lahmacunveayran.socialempirestr;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -15,6 +17,7 @@ import android.webkit.CookieManager;
 import android.webkit.URLUtil;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -49,6 +52,7 @@ public class MainActivity extends Activity {
     private static volatile String sunucuHatasi = null;
 
     private final Handler ana = new Handler(Looper.getMainLooper());
+    private FrameLayout kok;
     private WebView web;
     private TextView durum;
     private ValueCallback<Uri[]> dosyaGeriCagrisi;
@@ -70,7 +74,7 @@ public class MainActivity extends Activity {
         durum.setTextSize(20);
         durum.setGravity(Gravity.CENTER);
         durum.setPadding(48, 48, 48, 48);
-        FrameLayout kok = new FrameLayout(this);
+        kok = new FrameLayout(this);
         kok.addView(web);
         kok.addView(durum);
         setContentView(kok);
@@ -100,6 +104,23 @@ public class MainActivity extends Activity {
                     startActivity(new Intent(Intent.ACTION_VIEW, adres));
                 } catch (ActivityNotFoundException ignored) {
                 }
+                return true;
+            }
+
+            // WebView'ın çizim süreci çökerse (bellek yetmezse ya da grafik sürücüsü düşerse) Android, bu işlenmezse
+            // uygulamayı da kapatır. WebView yeniden kurulur ve oyun yeniden yüklenir; sunucu çalışmaya devam eder.
+            @Override
+            @TargetApi(Build.VERSION_CODES.O) // Android 8 öncesinde çağrılmaz
+            public boolean onRenderProcessGone(WebView v, RenderProcessGoneDetail ayrinti) {
+                Log.e(TAG, "WebView cizim sureci kapandi (cokme: " + ayrinti.didCrash() + ")");
+                kok.removeView(v);
+                v.destroy();
+                web = new WebView(MainActivity.this);
+                kok.addView(web, 0);
+                webAyarla();
+                web.setVisibility(View.VISIBLE);
+                web.loadUrl(ADRES);
+                Toast.makeText(MainActivity.this, R.string.yeniden_yukleniyor, Toast.LENGTH_LONG).show();
                 return true;
             }
         });

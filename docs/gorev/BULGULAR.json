@@ -4,7 +4,7 @@
   "devam_noktasi": {
     "faz": "Görsel birlik: her şey oyunun kendi resimlerinden",
     "madde": "OYN-09",
-    "sonraki_adim": "Sahibi PR #17 APK'sıyla tablette yeni görünüşe ve izlere (OYN-07) bakar"
+    "sonraki_adim": "Sahibi PR #18 APK'sıyla tablette yeni görünüşe ve izlere (OYN-07) bakar"
   },
   "maddeler": [
     {
@@ -679,7 +679,7 @@
       "isaret": "?",
       "kanit": "Sahibi tablette ekran görüntüsü gönderdi: çimende dokunduğu yerlerde koyu yeşil piksel izleri kalıyor ve geçmiyor. Ruffle günlüğü telefon/tablette 'Running on a mobile device; defaulting to low quality' diyor; masaüstü (yüksek kalite) görüntülerde iz görülmedi. Başsız tarayıcıda dokunma taklidiyle yeniden üretilemedi (hedef penceresi açıldı). Önlem: Ruffle kalitesi varsayılan 'yüksek' (masaüstüyle aynı); sahibinin isteğiyle başlıkta Kalite seçimi (Düşük/Orta/Yüksek/En iyi), seçim hatırlanır, oyun açıksa yeniden açılır.",
       "test": "tarayıcı (seçim kaydı ve Ruffle config.quality)",
-      "pr": null,
+      "pr": 18,
       "onay": "Sahibi, 30 Ekim 2026",
       "notlar": "Doğrulanmadı (?): izlerin yüksek kalitede kaybolduğu tablette görülmeli; kaybolmazsa sebep başka (Ruffle'ın dokunma/çizim kırıntısı) ve ayrı incelenir."
     },
@@ -692,7 +692,7 @@
       "isaret": "✔",
       "kanit": "Sahibi: 'halen tam ekran istiyorum'; 'Samsung Tab S9+ ona da tam otursun'. Oyun 760:600 oranını korumak için kenarlarda boşluk bırakıyordu; germek oyunu yatayda ~%26 basık gösterirdi (oyun EXACT_FIT). Ruffle scale=noScale + forceScale ile sahne kutunun gerçek boyutunu alır; oyun haritayı genişletip menülerini yerleştirir (orijinal oyunun tam ekranı gibi). Başlıkta Görüntü: Doldur/Sığdır; uygulamada Doldur, tarayıcıda Sığdır varsayılan. Ekran 760×600'den küçükse (telefon, CI emülatörü 640×320) Doldur kendiliğinden Sığdır olur. Çık Doldur'da sağ üstte (sol üstte oyunun kaynak sayaçları). En yüksek seviyeli bot hesabıyla (Fırtına Ejderhası, sv 59; sahibinin önerisi) denendi: 1280×800'de kutu 1280×800, Çık (1216,8); Tab S9+ boyutunda (1400×876, DPR 2) kutu 1400×876, oyun pencereleri ortada.",
       "test": "tarayıcı (scratchpad/bottest.js, s9test.js); android/sinama_oyun.js (oyun modu ve pencereyi doldurma)",
-      "pr": null,
+      "pr": 18,
       "onay": "Sahibi, 30 Ekim 2026",
       "notlar": "Oyun açıkken pencere boyutu değişirse oyunun bazı pencereleri yeniden ortalanmıyor; uygulama yatay kilitli olduğundan tablette etkisiz."
     },
@@ -705,7 +705,7 @@
       "isaret": "✔",
       "kanit": "Sahibi: 'dış çerçeveleri sen kendin yaptın, varsa oyunun kendi görsellerini kullan'; 'komple ne varsa oyunun kendi görsel kaynaklarından yapacağız'. Oyunun düğme ve pencere parçaları dış klasörlerde değil, ana SWF'nin içinde gömülü. araclar/swf_resimleri.py (kendi yazdığımız küçük okuyucu; indirilen JPEXS'i çalıştırmak engellendi) SWF'deki 365 resmi çıkarır, seçilen 10'unu olduğu gibi templates/img/oyun/'a yazar (yalnızca SWF'nin önceden çarpılmış alfası düz alfaya çevrilir). Paneller, üst kutu, yükleme kartı: oyunun açılır penceresi (ahşap kenar, parşömen iç; border-image). Oyun çerçevesi: aynı pencerenin kenarı. Üst düğmeler: altın kutu; ana düğmeler: kahverengi eylem düğmesi (ATTACKING/SPYING zemini). XP, yükleme ve çevrimdışı çubukları: oyunun ilerleme çubuğu. Satırlar ve kartlar: altın kenarlı beyaz hap, 'sen' satırı altın kutu; CANLI ve SEN: kırmızı hap. Podyum: altın kutu, beyaz hap, kahverengi; portreler oyunun bronz ve altın resim çerçevesinde. Gökyüzü: oyunun gökyüzü resmi. Kaldırılanlar: CSS gökyüzü, sis, gece/gündüz karartması (templates/js/gokyuzu.js ve testi), panel kenarında dönen ışık, fareyi izleyen ışık, parıltı süpürmeleri, gölge halkaları. İlk deneme (hediye penceresi bg.png) kenarlarına sandık taştığı için bırakıldı. 1920×1080, 1280×800, 900×480, 700×420 ve bütün sayfalarda (giriş, oyun, hile, günlük, taşıma, çevrimdışı, profil, hazine) ekran görüntüsüyle bakıldı; 700×420'de başlık taşıyordu, bağlantılar tek satıra alındı.",
       "test": "tests/js/gorsel_kurali.test.js (CSS yalnızca /img/ ve oyunun statik adreslerine başvurur, degradeyle çizim yok); tarayıcı (scratchpad/cerceve.js, sayfalar.js)",
-      "pr": null,
+      "pr": 18,
       "onay": "Sahibi, 30 Ekim 2026",
       "notlar": "Kalan CSS: yazı boyaları (altın başlık yazısı, yazı çizgisi), kaydırma maskesi, gölgeli düz renkler. Hazine sayfası da manzara ve şerit başlık aldı (DNT-03 notundaki 'stilsiz' kalıntı)."
     },
@@ -718,7 +718,7 @@
       "isaret": "✔",
       "kanit": "Sahibi: 'oyunun içinde Türk bayrağı varsa onu da kullan, 29 Ekim için mesela'. Oyunda 'Turkey Flag' süsü var (öğe 174, img flagtr; ayrıca Türk Kılıççı/Baltacı/Okçu/Atlı birimleri). buildingsprites/flagtr.swf içindeki saydam resim çıkarıldı (templates/img/oyun/bayrak-tr.png). config/takvim.json'da milli bayramlar 'bayrak: true'; /dunya/takvim bu etkinliklerde haber simgesi olarak bayrağı verir, oyun çerçevesinin armasındaki iki sancak bayram süresince Türk bayrağı olur (sol sancak aynalanmaz; ay yıldız ters dönmesin). 30 Ekim'de Diyar Haberleri'nde ve armada görüldü.",
       "test": "tests/test_icerik.py test_milli_bayramda_turk_bayragi",
-      "pr": null,
+      "pr": 18,
       "onay": "Sahibi, 30 Ekim 2026",
       "notlar": ""
     }

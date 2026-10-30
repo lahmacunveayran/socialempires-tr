@@ -27,8 +27,16 @@ function konsoluYaz() {
   const [cihaz] = await android.devices({ omitDriverInstall: true });
   if (!cihaz) throw new Error("adb cihazı bulunamadı");
   console.log(`Cihaz: ${cihaz.model()} (${cihaz.serial()})`);
-  const webview = await cihaz.webView({ pkg: PAKET }, { timeout: 60000 });
-  const sayfa = await webview.page();
+  // Uygulama sunucu hazır olunca kendi giriş sayfasını yükler; WebView bu sırada sayfa hedefini değiştirebilir
+  // (eski hedef kapanır). Uygulamanın sayfası yüklenene dek beklenir, kapanan sayfada yeniden bağlanılır.
+  let sayfa = null;
+  for (let i = 0; i < 60; i++) {
+    const webview = await cihaz.webView({ pkg: PAKET }, { timeout: 60000 });
+    sayfa = await webview.page();
+    if (!sayfa.isClosed() && sayfa.url().startsWith(ADRES)) break;
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  await sayfa.waitForLoadState("load", { timeout: 60000 });
   sayfa.on("pageerror", (h) => hatalar.push(h.message));
   sayfa.on("console", (m) => konsol.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
 

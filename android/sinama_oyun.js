@@ -77,6 +77,12 @@ function konsoluYaz() {
   // Oyunun kendisi sunucuya aşamalarını bildirir (oyun/istemci.py track_game_status)
   let asamalar = [];
   for (let i = 0; i < 60; i++) {
+    // Emülatör açılışını yeni bitirirken bir sistem ekranı uygulamayı arka plana itebilir; arka planda oyun durur
+    // (pauseTimers). Bu cihazın değil emülatörün gürültüsü: uygulama yeniden öne getirilir ve günlüğe yazılır.
+    if ((await boyut()).includes("hidden")) {
+      console.log(`[${sure()}] Uygulama arka planda (${await boyut()}); öne getiriliyor`);
+      await cihaz.shell(`am start -n ${PAKET}/.MainActivity`);
+    }
     const kayit = (await cihaz.shell("logcat -d -s python.stdout:V")).toString();
     asamalar = [...new Set(kayit.match(/track_game_status: \S+/g) || [])];
     if (asamalar.some((a) => a.endsWith("129b-init"))) break;

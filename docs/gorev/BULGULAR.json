@@ -3,8 +3,8 @@
   "guncelleme": "2026-10-30",
   "devam_noktasi": {
     "faz": "Tablet özellikleri; sonra bot dünyası, imparatorluk günlüğü, çeviri taraması",
-    "madde": "DAG-12",
-    "sonraki_adim": "CI APK ve emülatör sınaması yeşil olunca sahibi tablette tam ekranı dener"
+    "madde": "OYN-06",
+    "sonraki_adim": "PR #16 yeşil olunca sahibi APK ile tablette dener: tam ekran, Çık/Tam Ekran, geri tuşu, arka plan, profil resmi"
   },
   "maddeler": [
     {
@@ -598,12 +598,25 @@
       "sinif": "hata",
       "onem": "Yüksek",
       "durum": "ci_bekliyor",
-      "isaret": "◐",
-      "kanit": "Sahibi: 'Androidde tam ekran olmuyordu' (30 Ekim 2026). Kodda bulunanlar: (1) oyun sayfasında tam ekran yoktu; oyun başlık ve panellerle bir çerçevede duruyordu (tablet 1280×800'de 793×626); (2) MainActivity çubukları Android 11'den beri eskimiş SYSTEM_UI_FLAG_* ile gizliyordu, uygulama Android 15'i hedefliyor; (3) WebChromeClient onShowCustomView yoktu, oyunun/Ruffle'ın tam ekran isteği WebView'da hiçbir şey yapmıyordu. Düzeltme: sayfada oyun modu (başlık/paneller gizli, oyun 760:600 oranla ekranı doldurur, sol üstte Çık, başlıkta Tam Ekran; seçim hatırlanır, uygulamada varsayılan açık, kullanıcı ajanındaki SocialEmpiresTR-Android işaretiyle); Android 11+ WindowInsetsController ile çubuklar, kamera çentiği kaplanır; onShowCustomView/onHideCustomView. Tarayıcıda Android ajanıyla 1280×800'de ölçüldü: oyun 1013×800 (önce 793×626, %63 büyük), Çık sonrası eski düzen, yeniden yüklemede kapalı kalır, dikey 800×1280'de 800×632 taşmadan; normal tarayıcıda varsayılan kapalı, düğme gerçek tam ekranı da ister. Aynı denetimde: Android yazı boyutu WebView'ı büyütüyordu (setTextZoom 100); geri tuşu oyundan giriş sayfasına dönüyordu (oyunda iki basış, uygulama arka plana); arka planda zamanlayıcılar ve müzik sürüyordu (pauseTimers/resumeTimers); uygulama yatay kilitlendi (sensorLandscape); sunucu açılışta kayıt dosyalarını kapatmıyordu (Android günlüğünde her kayıtta ResourceWarning; yollar.json_oku). Emülatör sınaması artık oyun modunun açık olduğunu ve oyunun pencereyi doldurduğunu da denetler. Java burada derlenemedi (Android SDK yok): CI derler. Sahibinin tablet ekran görüntüsünden (uygulama açıldı, durum çubuğu gizli): giriş sayfası oyuncuya '1.1.5 (deneysel)' ve '1.4.07 (bozuk)' sürümlerini sunuyordu. Bu iki SWF çevrimdışı pakette ve Türkçe yamada yok; sunucu formdaki GAMEVERSION'ı denetlemeden oyun sayfasına koyuyordu. Seçici kaldırıldı, sunucu 0.9.26b'ye sabit (sunucu.OYUN_SWF; test_http.test_oyun_surumu_sabit).",
+      "isaret": "✔",
+      "kanit": "Sahibi: 'Androidde tam ekran olmuyordu' (30 Ekim 2026). Kodda bulunanlar: (1) oyun sayfasında tam ekran yoktu; oyun başlık ve panellerle bir çerçevede duruyordu (tablet 1280×800'de 793×626); (2) MainActivity çubukları Android 11'den beri eskimiş SYSTEM_UI_FLAG_* ile gizliyordu, uygulama Android 15'i hedefliyor; (3) WebChromeClient onShowCustomView yoktu, oyunun/Ruffle'ın tam ekran isteği WebView'da hiçbir şey yapmıyordu. Düzeltme: sayfada oyun modu (başlık/paneller gizli, oyun 760:600 oranla ekranı doldurur, sol üstte Çık, başlıkta Tam Ekran; seçim hatırlanır, uygulamada varsayılan açık, kullanıcı ajanındaki SocialEmpiresTR-Android işaretiyle); Android 11+ WindowInsetsController ile çubuklar, kamera çentiği kaplanır; onShowCustomView/onHideCustomView. Tarayıcıda Android ajanıyla 1280×800'de ölçüldü: oyun 1013×800 (önce 793×626, %63 büyük), Çık sonrası eski düzen, yeniden yüklemede kapalı kalır, dikey 800×1280'de 800×632 taşmadan; normal tarayıcıda varsayılan kapalı, düğme gerçek tam ekranı da ister. Aynı denetimde: Android yazı boyutu WebView'ı büyütüyordu (setTextZoom 100); geri tuşu oyundan giriş sayfasına dönüyordu (oyunda iki basış, uygulama arka plana); arka planda zamanlayıcılar ve müzik sürüyordu (pauseTimers/resumeTimers); uygulama yatay kilitlendi (sensorLandscape); sunucu açılışta kayıt dosyalarını kapatmıyordu (Android günlüğünde her kayıtta ResourceWarning; yollar.json_oku). Emülatör sınaması artık oyun modunun açık olduğunu ve oyunun pencereyi doldurduğunu da denetler. Java burada derlenemedi (Android SDK yok): CI derler. Sahibinin tablet ekran görüntüsünden (uygulama açıldı, durum çubuğu gizli): giriş sayfası oyuncuya '1.1.5 (deneysel)' ve '1.4.07 (bozuk)' sürümlerini sunuyordu. Bu iki SWF çevrimdışı pakette ve Türkçe yamada yok; sunucu formdaki GAMEVERSION'ı denetlemeden oyun sayfasına koyuyordu. Seçici kaldırıldı, sunucu 0.9.26b'ye sabit (sunucu.OYUN_SWF; test_http.test_oyun_surumu_sabit). CI (PR #16): APK derlendi; emülatörde uygulama yatay açıldı (pencere 640×320), oyun modu açık, oyun 405×320 ile yüksekliği doldurdu, açılış 129b-init'e ulaştı (53 sn). Bir önceki çalıştırmada sayfa 0×0'a düştü ve oyun aşama bildirmedi: zaman çizelgesine göre emülatör tam o aralıkta BOOT_COMPLETED işlemesini bitirdi ve bir sistem ekranı uygulamayı arka plana itti; arka planda oyun artık duruyor (pauseTimers). Sınama bunu ayırt eder: uygulama arka plandaysa yeniden öne getirir ve yazar. Uygulama yaşam döngüsünü (onPause/onResume/onStop, yön, odak, tam ekran isteği) SocialEmpires etiketiyle günlüğe yazar.",
       "test": "tests/test_android.py (Proje.test_tam_ekran), android/sinama_oyun.js",
       "pr": null,
       "onay": null,
-      "notlar": "Gerçek tablette doğrulanacak (?): çubukların gizlenmesi, Çık/Tam Ekran, geri tuşu, arka planda müziğin durması. Ruffle'ın İngilizce 'hardware acceleration is disabled' uyarısı yalnızca GPU'suz ortamda (başsız tarayıcı) görüldü."
+      "notlar": "Gerçek tablette doğrulanacak (?): çubukların gizlenmesi, Çık/Tam Ekran, geri tuşu, arka planda müziğin durması."
+    },
+    {
+      "id": "OYN-06",
+      "baslik": "Arka plan: boş gökyüzü yerine oyunun kendi manzarası; tam ekranda oyunun yanlarında da",
+      "sinif": "ozellik",
+      "onem": "Düşük",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "Sahibi: 'arkaplan bomboş' (giriş sayfası ve tam ekran kenarları). Oyunun seviye atlama penceresinin manzarası (externalized/PopupLevelUp/background.png: gökyüzü, bulutlar, deniz, çayır) ağaçların ardına kondu; Güneş'e göre ağaçlar gibi kararır (--gun-isigi). Resmin kendi pencere çerçevesi (ince kenar, üst köşe süsleri) ekran dışına taşındı. Oyun modunda manzara gizlenmez, oyunun yanlarında görünür. Tarayıcıda 1280×800'de gündüz, gece ve oyun modunda bakıldı. Aynı denemede bir hata bulundu: oyuncunun devraldığı eski bot köyleri (bot işareti kalkmış) silinen gerçek kişi fotoğraflarına bağlı kalıyor, giriş sayfasında bozuk resim görünüyordu; bot_kimlik.adlari_yenile bunları varsayılan portreye çevirir (yerel kopyada 2 kayıt).",
+      "test": "tests/test_sistemler.py (BotKimlikTestleri.test_devralinan_eski_bot_koyu_silinen_fotografi_gostermez)",
+      "pr": "#16",
+      "onay": "Sahibi, 30 Ekim 2026",
+      "notlar": "Yalnızca oyunun kendi resmi kullanıldı (CLAUDE.md görsel kuralı)."
     }
   ]
 }

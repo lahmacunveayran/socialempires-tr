@@ -9,6 +9,8 @@ sırası botun başlangıç seviyesidir. Gerçek kişi adı ve fotoğrafı kulla
 
 PORTRE_YOLU = "/default01.static.socialpointgames.com/static/socialempires/buildingthumbs/{}.jpg"
 VARSAYILAN_PORTRE = "/img/profile/1025.png"
+# İlk sürümlerin bot fotoğrafları (gerçek kişiler; depodan kaldırıldı)
+SILINEN_PORTRELER = ("/img/profile/bot_", "/img/profile/pp_")
 
 # 50 bot: (oyundaki birim adı, birim resmi, birim kimliği), zayıftan güçlüye
 BOTLAR = [
@@ -80,6 +82,10 @@ def adlari_yenile(kayitlar):
                 if any(pi.get(k) != v for k, v in yeni.items()):
                     pi.update(yeni)
                     degisen.add(uid)
+        elif str(pi.get("pic") or "").startswith(SILINEN_PORTRELER):
+            # Oyuncunun devraldığı eski bot köyü: silinen gerçek kişi fotoğrafı yerine varsayılan portre
+            pi["pic"] = ""
+            degisen.add(uid)
         ps = kayit.get("privateState") or {}
         for giris in (ps.get("attacksSent") or []) + (ps.get("attacksReceived") or []):
             rakip = (giris.get("description") or {}).get("oponent") if isinstance(giris, dict) else None

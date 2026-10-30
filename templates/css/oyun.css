@@ -74,6 +74,15 @@ img { -webkit-user-drag: none; }
 /* ================= Manzara ================= */
 .manzara { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
 
+/* Oyunun kendi manzarası (seviye atlama penceresinin arka planı): gökyüzü, deniz ve çayır; ağaçların ardında
+   kalır, geceleri ağaçlar gibi kararır. Resmin alt köşelerindeki süsler ağaçların altında kalır. */
+.manzara::before {
+  /* Resmin kendi pencere çerçevesi (ince kenar ve üst köşe süsleri) ekranın dışında kalsın */
+  content: ""; position: absolute; inset: -7vh -6vw 60px;
+  background: url("/default01.static.socialpointgames.com/static/socialempires/externalized/PopupLevelUp/background.png") center 30% / cover no-repeat;
+  filter: brightness(calc(.15 + var(--gun-isigi) * .85)) saturate(calc(.5 + var(--gun-isigi) * .5));
+}
+
 /* Oyunun çam ağaçları: üç derinlikte sıra; ışığa göre kararır. */
 .orman {
   position: absolute; left: -60px; right: -60px; bottom: 0;
@@ -737,8 +746,8 @@ img { -webkit-user-drag: none; }
    kalan kenarlar koyu ahşap. Android uygulamasında varsayılan açıktır. */
 .tam-ekran-dugme { cursor: pointer; font: inherit; }
 .tam-cik[hidden] { display: none; }
-body.oyun-modu { background: #1a0f07; overflow: hidden; }
-body.oyun-modu > :not(.yerlesim):not(.tam-cik):not(script) { display: none; }
+body.oyun-modu { overflow: hidden; }
+body.oyun-modu > :not(.yerlesim):not(.tam-cik):not(.manzara):not(script) { display: none; }
 body.oyun-modu .yerlesim { display: block; max-width: none; padding: 0; }
 body.oyun-modu .yerlesim > :not(.oyun-alani) { display: none; }
 body.oyun-modu .oyun-alani { padding: 0; height: 100vh; height: 100dvh; align-items: center; }

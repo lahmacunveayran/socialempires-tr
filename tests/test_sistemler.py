@@ -373,7 +373,15 @@ class BotKimlikTestleri(unittest.TestCase):
         yeni = self.b.ISIMLER[self.b.ESKI_ISIMLER.index("Cengiz Han")]
         self.assertEqual((rakip["name"], rakip["pic"]), (yeni, self.b.portre(yeni)))
         self.assertEqual(oyuncu["playerInfo"]["name"], "Attila")  # bot olmayan kayıt adı değişmez
+        self.assertNotIn("pic", oyuncu["playerInfo"])  # silinen fotoğrafa bağlı değildi, dokunulmaz
         self.assertEqual(self.b.adlari_yenile(kayitlar), set())  # ikinci açılışta yazacak bir şey yok
+
+    def test_devralinan_eski_bot_koyu_silinen_fotografi_gostermez(self):
+        oyuncu = {"playerInfo": {"name": "Kapgan Kalesi", "pic": "/img/profile/bot_kapgan.jpg"}, "privateState": {}}
+        kendi = {"playerInfo": {"name": "Ben", "pic": "/profil/resim/ben.jpg?v=1"}, "privateState": {}}
+        self.assertEqual(self.b.adlari_yenile({"o": oyuncu, "k": kendi}), {"o"})
+        self.assertEqual(oyuncu["playerInfo"]["pic"], "")
+        self.assertEqual(kendi["playerInfo"]["pic"], "/profil/resim/ben.jpg?v=1")
 
     def test_diyar_portresi_birim_resmini_kabul_eder(self):
         from oyun.diyar import portre

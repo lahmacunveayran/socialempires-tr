@@ -15,6 +15,7 @@ import traceback
 print(" [+] Oyun ayarlari yukleniyor...")
 from flask import Flask, redirect, render_template, request, send_from_directory, session
 
+from oyun import aktarim, ruffle as Ruffle
 from oyun.ekonomi import timestamp_now
 from oyun.kayit import (all_saves_info, all_saves_userid, fb_friends_str, load_saved_villages,
                         new_village, save_info, save_lock, save_session, gecerli_uid,
@@ -27,6 +28,8 @@ load_saved_villages()
 
 HOST = "127.0.0.1"
 PORT = 5050
+# Ruffle aynı anda çok sayıda küçük dosya istediği için iş parçacığı sayısı önemli.
+IS_PARCACIGI = 8
 OYUN_DILI = "tr"
 HATA_LOG = os.path.join(SAVES_DIR, "sunucu_hatalari.log")
 BASLANGIC = time.time()
@@ -37,6 +40,7 @@ app.secret_key = os.environ.get("SE_SECRET_KEY", "SECRET_KEY")
 # dosya yeniden indirilmesin). Değiştirdiğiniz dosyalar için Ctrl+F5.
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 86400
 app.json.sort_keys = False
+aktarim.kaydet(app)
 
 
 def bot_mu(uid):
@@ -123,13 +127,15 @@ def login():
     return render_template("login.html", saves_info=kayitlar, version=version_name)
 
 
-def _oyun_sayfasi(sablon):
+def _oyun_sayfasi(sablon, ruffle_js=None):
     uid, surum = session.get("USERID"), session.get("GAMEVERSION")
     if not uid or not surum or uid not in all_saves_userid():
         return redirect("/")
+    if ruffle_js is None:
+        ruffle_js = f"/ruffle/{Ruffle.SURUM}/ruffle.js"
     return render_template(sablon, save_info=save_info(uid), serverTime=timestamp_now(),
                            friendsInfo=fb_friends_str(uid), version=version_name,
-                           GAMEVERSION=surum, SERVERIP=HOST)
+                           GAMEVERSION=surum, SERVERIP=HOST, ruffle_js=ruffle_js)
 
 
 @app.route("/play.html")
@@ -140,6 +146,12 @@ def play():
 @app.route("/ruffle.html")
 def ruffle():
     return _oyun_sayfasi("ruffle.html")
+
+
+@app.route("/ruffle-deneme.html")
+def ruffle_deneme():
+    """Ruffle'ın gece sürümünü sabitlenmiş sürüme dokunmadan dener."""
+    return _oyun_sayfasi("ruffle.html", ruffle_js=Ruffle.DENEME_URL)
 
 
 @app.route("/new.html")
@@ -174,9 +186,16 @@ def calistir():
     try:
         yedekleri_baslat()
         Dunya().baslat()
+        Ruffle.brotli_baslat()
         print(f" [+] Sunucu hazir: http://{HOST}:{PORT}/")
-        # threaded: Flash aynı anda onlarca varlık istiyor.
-        app.run(host=HOST, port=PORT, debug=False, threaded=True, use_reloader=False)
+        try:
+            from waitress import serve
+        except ImportError:
+            print(" ! waitress kurulu degil; Flask gelistirme sunucusu kullaniliyor"
+                  " (pip install -r requirements.txt)")
+            app.run(host=HOST, port=PORT, debug=False, threaded=True, use_reloader=False)
+            return
+        serve(app, host=HOST, port=PORT, threads=IS_PARCACIGI, ident="SocialEmpiresTR")
     except Exception:
         try:
             os.makedirs(SAVES_DIR, exist_ok=True)

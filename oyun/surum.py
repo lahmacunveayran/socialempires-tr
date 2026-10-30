@@ -8,7 +8,7 @@ version_code = "0.05a"
 def migrate_loaded_save(save: dict) -> bool:
 
     # discard current version saves
-    if save["version"] == version_code:
+    if save.get("version") == version_code:
         return False
     
     # fix 0.01a saves

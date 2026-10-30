@@ -37,7 +37,7 @@
                 <h3 class="yazi-oyun">2. Başka cihazdan al</h3>
                 <p class="paket-aciklama">İmparatorluğun <b>gideceği</b> cihazda, öteki cihazın ekranındaki adres ve kodu yazın.</p>
                 <form id="al-form" class="tasima-form" autocomplete="off">
-                    <label>Adres <input name="adres" inputmode="decimal" placeholder="192.168.1.20" required></label>
+                    <label>Adres <input name="adres" inputmode="url" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="192.168.1.20" required></label>
                     <label>Kod <input name="kod" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="000000" required></label>
                     <button class="ust-dugme" type="submit">Bağlan</button>
                 </form>
@@ -68,7 +68,7 @@
                 document.getElementById("kod").textContent = d.kod;
                 document.getElementById("kalan").textContent = Math.ceil(d.kalan / 60) + " dakika açık kalacak" +
                     (d.gonderilen ? " · " + d.gonderilen + " imparatorluk gönderildi" : "");
-                zamanlayici = setTimeout(function () { fetch("/tasima/gonder").then(json).then(function (s) { gonderimiGoster(s[1]); }); }, 5000);
+                zamanlayici = setTimeout(durumuYokla, 5000);
             }
             document.getElementById("gonder").addEventListener("click", function () {
                 fetch("/tasima/gonder", { method: "POST" }).then(json).then(function (s) {
@@ -79,7 +79,12 @@
             document.getElementById("gonder-dur").addEventListener("click", function () {
                 fetch("/tasima/gonder/durdur", { method: "POST" }).then(json).then(function (s) { gonderimiGoster(s[1]); }).catch(hata);
             });
-            fetch("/tasima/gonder").then(json).then(function (s) { gonderimiGoster(s[1]); });
+            // Bağlantı bir an koparsa durum yoklaması sessizce durmasın; yeniden denenir
+            function durumuYokla() {
+                fetch("/tasima/gonder").then(json).then(function (s) { gonderimiGoster(s[1]); })
+                    .catch(function () { hata(); clearTimeout(zamanlayici); zamanlayici = setTimeout(durumuYokla, 5000); });
+            }
+            durumuYokla();
 
             var form = document.getElementById("al-form");
             var liste = document.getElementById("uzak-liste");

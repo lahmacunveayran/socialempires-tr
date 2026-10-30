@@ -24,12 +24,17 @@ def _icerigi_kopyala(kaynak, hedef):
 def hazirla(taban, kok=KOK):
     """Yazılabilir klasörü kurar; ilk açılışta ayarları ve modları oraya kopyalar (var olanlara dokunmaz)."""
     os.makedirs(taban, exist_ok=True)
+    # İlk kopya yarıda kesilirse (uygulama kapatıldı) yarım dosya/klasör kalmasın: önce geçici ada, sonra tek adımda yerine
     ayar = os.path.join(taban, "ayarlar.json")
     if not os.path.exists(ayar):
-        shutil.copyfile(os.path.join(kok, "ayarlar.json"), ayar)
+        shutil.copyfile(os.path.join(kok, "ayarlar.json"), ayar + ".tmp")
+        os.replace(ayar + ".tmp", ayar)
     modlar = os.path.join(taban, "mods")
     if not os.path.isdir(modlar):
-        _icerigi_kopyala(os.path.join(kok, "mods"), modlar)
+        gecici = modlar + ".tmp"
+        shutil.rmtree(gecici, ignore_errors=True)
+        _icerigi_kopyala(os.path.join(kok, "mods"), gecici)
+        os.replace(gecici, modlar)
     # oyun.yollar bunu içe aktarılırken okur; bu yüzden oyun modüllerinden önce ayarlanır
     os.environ["SE_TABAN_DIZINI"] = taban
 

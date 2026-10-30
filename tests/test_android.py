@@ -162,6 +162,26 @@ class Proje(unittest.TestCase):
             self.assertIn(parca, java)
         self.assertIn('android:screenOrientation="sensorLandscape"', self.oku("app", "src", "main", "AndroidManifest.xml"))
 
+    def test_denetim_duzeltmeleri(self):
+        """DNT-02: bağımsız denetimin Android bulguları geri dönmesin."""
+        java = self.oku("app", "src", "main", "java", "io", "github", "lahmacunveayran", "socialempirestr",
+                        "MainActivity.java")
+        for parca in ("WindowInsets.Type.ime()",          # klavye alanları örtmesin
+                      "protected void onDestroy()",       # eski WebView sızmasın
+                      "DocumentsContract.deleteDocument",  # başarısız yedek boş dosya bırakmasın
+                      'sema.equals("https")',             # file:/intent: bağlantısı uygulamayı düşürmesin
+                      "EN_COK_COKME",                     # çizim süreci çökme döngüsü
+                      "sunucuAcildi = false"):            # sunucu açılamazsa yeniden denenebilsin
+            self.assertIn(parca, java)
+        self.assertNotIn("web.pauseTimers();\n        CookieManager", java)  # onPause'da değil onStop'ta
+        for xml in ("yedek.xml", "yedek_eski.xml"):
+            self.assertIn("socialempires/saves/gunluk_yedek/", self.oku("app", "src", "main", "res", "xml", xml))
+        with open(os.path.join(KOK, ".github", "workflows", "android.yml"), encoding="utf-8") as f:
+            akis = f.read()
+        for yol in ("config/**", "villages/**", "ceviri/**", "mods/**", "araclar/**", "ayarlar.json"):
+            self.assertIn(f"- {yol}", akis)
+        self.assertNotIn("ruffle/0.7.1", self.oku("sinama.sh"))
+
 
 if __name__ == "__main__":
     unittest.main()

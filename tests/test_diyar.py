@@ -19,8 +19,10 @@ class OyunSayfasiTestleri(unittest.TestCase):
     def test_oyun_sayfasi_ruffle_ve_giris_dugmesi(self):
         adres = "http://192.168.1.20:5050"
         istemci = server.app.test_client()
-        istemci.post("/", base_url=adres, data={"USERID": self.uid, "GAMEVERSION": "SocialEmpires0926bsec.swf"})
-        sayfa = istemci.get("/play.html", base_url=adres).get_data(as_text=True)
+        lan = {"REMOTE_ADDR": "192.168.1.30"}  # ev ağındaki tablet
+        istemci.post("/", base_url=adres, environ_base=lan,
+                     data={"USERID": self.uid, "GAMEVERSION": "SocialEmpires0926bsec.swf"})
+        sayfa = istemci.get("/play.html", base_url=adres, environ_base=lan).get_data(as_text=True)
         self.assertIn('id="kralliga-gir"', sayfa)
         self.assertIn("/js/gokyuzu.js", sayfa)
         # Telefon ev ağından açınca varlıklar da aynı adresten insin.

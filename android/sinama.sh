@@ -42,13 +42,15 @@ gunluk
 adim "Sağlık"
 curl -fsS --max-time 10 http://127.0.0.1:5050/saglik || exit 1
 echo
-kod=$(curl -s --max-time 60 -o /dev/null -w "%{http_code}" http://127.0.0.1:5050/ruffle/0.7.1/ruffle.js)
+RUFFLE=$(sed -n 's/^SURUM = "\(.*\)"/\1/p' "$(dirname "$0")/../oyun/ruffle.py")
+kod=$(curl -s --max-time 60 -o /dev/null -w "%{http_code}" "http://127.0.0.1:5050/ruffle/$RUFFLE/ruffle.js")
 [ "$kod" = 200 ] || { echo "Ruffle uygulamayla gelmemiş ($kod)"; exit 1; }
 pid=$(timeout 20 adb shell pidof "$PAKET" | tr -d '\r') || true
 [ -n "$pid" ] || { echo "Uygulama kapanmış"; exit 1; }
 
 adim "WebView'a DevTools ile bağlanılıyor (pid $pid)"
-timeout 600 node "$(dirname "$0")/sinama_oyun.js" "$PAKET" "$OYUN_EKRANI"
+# Node'un kendi beklemeleri 600 sn'yi aşabiliyor; öldürülürse tanı çıktısı kaybolur
+timeout 900 node "$(dirname "$0")/sinama_oyun.js" "$PAKET" "$OYUN_EKRANI"
 [ $? = 0 ] || {
   echo "Oyun WebView'da yüklenmedi"
   if [ "$(timeout 10 adb get-state 2>/dev/null)" != device ]; then

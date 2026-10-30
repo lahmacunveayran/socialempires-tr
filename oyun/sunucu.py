@@ -9,7 +9,9 @@
 
 import json
 import os
+import secrets
 import socket
+import sys
 import time
 import traceback
 
@@ -23,7 +25,7 @@ from oyun.kayit import (all_saves_info, all_saves_userid, fb_friends_str, load_s
                         new_village, save_info, save_lock, save_session, gecerli_uid,
                         session as kayit_oturumu)
 from oyun.surum import version_code, version_name
-from oyun.yollar import SAVES_DIR, STUB_DIR, TEMPLATES_DIR
+from oyun.yollar import BASE_DIR, SAVES_DIR, STUB_DIR, TEMPLATES_DIR
 
 print(" [+] Kayitlar yukleniyor...")
 load_saved_villages()
@@ -36,8 +38,59 @@ OYUN_DILI = "tr"
 HATA_LOG = os.path.join(SAVES_DIR, "sunucu_hatalari.log")
 BASLANGIC = time.time()
 
+def _oturum_anahtari():
+    """İlk açılışta rastgele üretilir ve taban klasörde saklanır (sabit bir anahtarla oturum çerezi taklit edilebilirdi)."""
+    yol = os.path.join(BASE_DIR, ".oturum_anahtari")
+    try:
+        with open(yol, encoding="ascii") as f:
+            anahtar = f.read().strip()
+        if len(anahtar) >= 32:
+            return anahtar
+    except OSError:
+        pass
+    anahtar = secrets.token_hex(32)
+    try:
+        with open(yol, "w", encoding="ascii") as f:
+            f.write(anahtar)
+    except OSError:
+        pass  # yazılamazsa bu açılış için geçerli
+    return anahtar
+
+
 app = Flask(__name__, template_folder=TEMPLATES_DIR)
-app.secret_key = os.environ.get("SE_SECRET_KEY", "SECRET_KEY")
+app.secret_key = os.environ.get("SE_SECRET_KEY") or _oturum_anahtari()
+# Yedek yükleme en çok 32 MB; daha büyük gövde diske/belleğe alınmadan reddedilir
+app.config["MAX_CONTENT_LENGTH"] = 40 * 1024 * 1024
+
+YEREL_ADLAR = ("127.0.0.1", "localhost", "[::1]", "::1")
+
+
+def _ad(host):
+    """'adres:port' içinden adres ([::1]:5050 -> [::1])."""
+    host = (host or "").strip().lower()
+    if host.startswith("["):
+        return host.split("]")[0] + "]"
+    return host.rsplit(":", 1)[0] if host.count(":") == 1 else host
+
+
+@app.before_request
+def _koken_denetimi():
+    """Başka sitelerin bu sunucuya iş yaptırmasını engeller.
+
+    - DNS yeniden bağlama: bu makineden gelen istek yerel bir ad taşımalı (Host: kotu.site -> 127.0.0.1 olmaz).
+    - Siteler arası istek (CSRF): durum değiştiren istekler başka bir kökenden gelemez; tarayıcı bunu
+      Origin ve Sec-Fetch-Site ile bildirir (oyunun kendi sayfası ve Ruffle aynı kökenden ister).
+    """
+    if request.remote_addr in ("127.0.0.1", "::1") and _ad(request.host) not in YEREL_ADLAR:
+        return ("Gecersiz adres", 403)
+    if request.method in ("GET", "HEAD", "OPTIONS") and request.path != "/new.html":
+        return None
+    if request.headers.get("Sec-Fetch-Site") == "cross-site":
+        return ("Baska siteden istek reddedildi", 403)
+    koken = request.headers.get("Origin")
+    if koken and _ad(koken.split("://", 1)[-1].split("/", 1)[0]) != _ad(request.host):
+        return ("Baska siteden istek reddedildi", 403)
+    return None
 # Statik varlıklar tarayıcıda/Flash'ta önbelleklensin (her açılışta yüzlerce
 # dosya yeniden indirilmesin). Değiştirdiğiniz dosyalar için Ctrl+F5.
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 86400
@@ -121,6 +174,9 @@ def saglik_hazir():
 def login():
     session.pop("USERID", None)
     session.pop("GAMEVERSION", None)
+    from oyun import dunya
+    if dunya.etkin is not None:
+        dunya.etkin.bekleyenleri_yaz()  # diskten yeniden okumadan önce bot dünyasının biriken değişiklikleri
     load_saved_villages()  # kayıtlar sunucu kapanmadan düzenlenebilsin
     if request.method == "POST":
         uid = request.form.get("USERID", "")
@@ -291,4 +347,7 @@ def calistir():
         except OSError:
             pass
         traceback.print_exc()
-        input("Sunucu baslatilamadi. Kapatmak icin Enter'a basin...")
+        if sys.stdin is not None and sys.stdin.isatty():
+            input("Sunucu baslatilamadi. Kapatmak icin Enter'a basin...")
+        else:
+            raise  # Android: gerçek hata uygulamanın ekranına çıksın (input() EOFError verirdi)

@@ -5,10 +5,14 @@
         <include domain="file" path="socialempires/saves/" />
         <include domain="file" path="socialempires/ayarlar.json" />
         <exclude domain="file" path="socialempires/saves/backups/" />
+        <!-- 14 günlük kopyalar Android'in 25 MB bulut yedeği sınırını bir haftada aşıp bütün yedeği düşürüyordu -->
+        <exclude domain="file" path="socialempires/saves/gunluk_yedek/" />
     </cloud-backup>
     <device-transfer>
         <include domain="file" path="socialempires/saves/" />
         <include domain="file" path="socialempires/ayarlar.json" />
         <exclude domain="file" path="socialempires/saves/backups/" />
+        <!-- 14 günlük kopyalar Android'in 25 MB bulut yedeği sınırını bir haftada aşıp bütün yedeği düşürüyordu -->
+        <exclude domain="file" path="socialempires/saves/gunluk_yedek/" />
     </device-transfer>
 </data-extraction-rules>

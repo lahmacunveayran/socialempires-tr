@@ -50,6 +50,10 @@
 
   // --- Çerçeve ölçeği: oyun EXACT_FIT ile kutuya esner, oran tam 760:600 kalmalı.
   var kutu = document.getElementById("oyun-kutusu");
+  // Paneller görünmüyorken (oyun modu ya da sekme arka planda) yoklama ve sayaçlar çalışmaz: tablette Ruffle ve
+  // cihazdaki sunucuyla yarışmasın. Görünür olunca hemen tazelenir (oyunModu, visibilitychange).
+  function panellerGizli() { return document.hidden || document.body.classList.contains("oyun-modu"); }
+  function gorunurken(f) { return function () { if (!panellerGizli()) f(); }; }
 
   // Paralaks yalnızca transform ile; prefers-reduced-motion açıkken CSS kapatır.
   window.addEventListener("scroll", function () {
@@ -237,10 +241,13 @@
     while (liste.children.length > EN_COK_SATIR) liste.removeChild(liste.lastChild);
     ozet.textContent = "Son haber: " + olay.metin;
   }
-  setInterval(function () {
+  setInterval(gorunurken(function () {
     liste.querySelectorAll("time[data-zaman]").forEach(function (t) { t.textContent = once(Number(t.dataset.zaman)); });
-  }, 30000);
+  }), 30000);
+  var yoklaniyor = false;
   function yokla() {
+    if (yoklaniyor) return; // yavaş yanıt bir sonrakiyle çakışıp aynı haberi iki kez kuyruğa koymasın
+    yoklaniyor = true;
     fetch("/dunya/olaylar?sonra=" + sonId, { cache: "no-store" })
       .then(function (r) { return r.json(); })
       .then(function (v) {
@@ -252,18 +259,19 @@
           kuyruk = kuyruk.concat(v.olaylar);
         }
       })
-      .catch(function () {});
+      .catch(function () {})
+      .then(function () { yoklaniyor = false; });
   }
-  setInterval(function () {
+  setInterval(gorunurken(function () {
     if (!durdu && kuyruk.length) satirEkle(kuyruk.shift(), true);
-  }, 5000);
+  }), 5000);
   durdurDugmesi.addEventListener("click", function () {
     durdu = !durdu;
     durdurDugmesi.textContent = durdu ? "Sürdür" : "Durdur";
     durdurDugmesi.setAttribute("aria-pressed", String(durdu));
   });
   yokla();
-  setInterval(yokla, 15000);
+  setInterval(gorunurken(yokla), 15000);
 
   // --- Şeref Kürsüsü: ilk üç podyumda, kalanlar kabartma satırlarda.
   var kursu = document.getElementById("kursu");
@@ -318,7 +326,7 @@
       .catch(function () {});
   }
   kursuYukle();
-  setInterval(kursuYukle, 60000);
+  setInterval(gorunurken(kursuYukle), 60000);
 
   // --- Haftalık turnuva: ilk 10 hafta bitince ödül alır.
   var hafta = document.getElementById("hafta");
@@ -385,8 +393,10 @@
     });
   }
   haftaYukle();
-  setInterval(haftaYukle, 60000);
-  setInterval(sayac, 1000);
+  setInterval(gorunurken(haftaYukle), 60000);
+  setInterval(gorunurken(sayac), 1000);
+  function panelleriTazele() { yokla(); kursuYukle(); haftaYukle(); sayac(); }
+  document.addEventListener("visibilitychange", function () { if (!panellerGizli()) panelleriTazele(); });
 
   // --- Etkinlik takvimi
   var etkinlik = document.getElementById("etkinlik");
@@ -436,6 +446,9 @@
   function oyunModu(acik, kaydet) {
     document.body.classList.toggle("oyun-modu", acik);
     tamCik.hidden = !acik;
+    if (!acik) panelleriTazele();
+    var oyuncu = document.querySelector("ruffle-player");
+    if (oyuncu) oyuncu.focus(); // basılan düğme gizlendi; odak oyuna dönsün
     if (kaydet) {
       try { localStorage.setItem(MOD_ANAHTARI, acik ? "1" : "0"); } catch (e) {}
     }
@@ -445,10 +458,15 @@
   }
   document.getElementById("tam-ekran").addEventListener("click", function () { oyunModu(true, true); });
   tamCik.addEventListener("click", function () { oyunModu(false, true); });
+  // Oyunun kendi tam ekranı (Ruffle, oyun kutusundaki öğe) sayfanın tam ekranından çıkış sayılmaz;
+  // yalnızca tam ekran bütünüyle bitince (Esc) oyun modu kapanır.
   document.addEventListener("fullscreenchange", function () {
-    var simdi = document.fullscreenElement === document.documentElement;
-    if (sayfaTamEkranda && !simdi && document.body.classList.contains("oyun-modu")) oyunModu(false, true);
-    sayfaTamEkranda = simdi;
+    if (!document.fullscreenElement) {
+      if (sayfaTamEkranda && document.body.classList.contains("oyun-modu")) oyunModu(false, true);
+      sayfaTamEkranda = false;
+    } else if (document.fullscreenElement === document.documentElement) {
+      sayfaTamEkranda = true;
+    }
   });
   if (UYGULAMA) {
     var kayitli = null;

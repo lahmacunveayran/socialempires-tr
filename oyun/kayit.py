@@ -5,6 +5,7 @@ import json
 import os
 import random
 import re
+import shutil
 import threading
 import uuid
 
@@ -89,14 +90,16 @@ def _load_saved_villages():
         if not file.endswith(".save.json"):
             continue
         print(f" * Loading save at {file}... ", end='')
+        yol = os.path.join(SAVES_DIR, file)
+        # Tek bir bozuk kayıt (eski/elle düzenlenmiş yedek, yarım yazım) sunucunun açılmasını engellemesin:
+        # okunamayan kayıt kenara alınır, varsa .bak'ı yerine konur (Android'de dosyayı silmenin yolu yok).
         try:
-            save = json_oku(os.path.join(SAVES_DIR, file))
-        except json.decoder.JSONDecodeError as e:
-            print("Corrupted JSON.")
-            continue
-        if not is_valid_village(save):
-            print("Invalid Save.")
-            continue
+            save = _kaydi_ac(yol)
+        except Exception as hata:
+            print(f"Okunamadi ({type(hata).__name__}: {hata}).")
+            save = _bozugu_kenara_al(yol)
+            if save is None:
+                continue
         USERID = save["playerInfo"]["pid"]
         try:
             map_name = save["playerInfo"]["map_names"][ save["playerInfo"]["default_map"] ]
@@ -104,11 +107,51 @@ def _load_saved_villages():
             map_name = '?'
         print(f"({map_name}) Ok.")
         __saves[str(USERID)] = save
-        modified = migrate_loaded_save(save) # check save version for migration
-        if _seviyeyi_duzelt(save):
-            modified = True
-        if modified:
+        if save.pop("_bak_kullanildi", False) or _yukleme_duzeltmeleri(save):
             save_session(USERID)
+
+
+def _kaydi_ac(yol):
+    return kaydi_dogrula(json_oku(yol))
+
+
+def kaydi_dogrula(save):
+    """Kaydın yüklenip oynanabileceğini dener (şema, sürüm göçü, ad, seviye); olmazsa ValueError.
+
+    Göç bir kopyada denenir: yarıda patlarsa asıl kayıt yarım değişmiş olmaz. Yedekten yüklemede de kullanılır."""
+    if not isinstance(save, dict) or not is_valid_village(save):
+        raise ValueError("gecersiz kayit")
+    try:
+        deneme = copy.deepcopy(save)
+        migrate_loaded_save(deneme)
+        deneme["playerInfo"]["map_names"][deneme["playerInfo"].get("default_map", 0)]
+        int(deneme["maps"][0]["level"])
+    except Exception as hata:
+        raise ValueError(f"kayit acilamiyor: {type(hata).__name__}: {hata}") from hata
+    return save
+
+
+def _bozugu_kenara_al(yol):
+    """Okunamayan kaydı .bozuk olarak saklar; .bak okunabiliyorsa onu döndürür (kaydedilmek üzere)."""
+    try:
+        os.replace(yol, yol + ".bozuk")
+    except OSError:
+        pass
+    try:
+        save = _kaydi_ac(yol + ".bak")
+    except Exception:
+        print("   ! .bak da yok ya da okunamadi; kayit .bozuk olarak saklandi.")
+        return None
+    print("   > .bak'tan geri alindi.")
+    save["_bak_kullanildi"] = True
+    return save
+
+
+def _yukleme_duzeltmeleri(save: dict) -> bool:
+    modified = migrate_loaded_save(save)  # check save version for migration
+    if _seviyeyi_duzelt(save):
+        modified = True
+    return modified
 
 
 def _seviyeyi_duzelt(save: dict) -> bool:
@@ -344,13 +387,15 @@ def save_session(USERID: str):
         village = session(USERID)
         try:
             with open(gecici, "w", encoding="utf-8") as f:
-                json.dump(village, f, indent=4, ensure_ascii=False)
+                # Girintisiz: dosya ~5 kat küçük; bot dünyası her dakika yazdığından tablette pil/depolama için önemli
+                json.dump(village, f, ensure_ascii=False, separators=(",", ":"))
                 f.flush()
                 os.fsync(f.fileno())
 
             if os.path.exists(yol):
                 try:
-                    os.replace(yol, yol + ".bak")
+                    # Kopya (taşıma değil): iki adım arasında süreç ölürse canlı kayıt yine yerinde kalır
+                    shutil.copyfile(yol, yol + ".bak")
                 except OSError:
                     pass  # yedek alınamasa da asıl kayıt yazılsın
 

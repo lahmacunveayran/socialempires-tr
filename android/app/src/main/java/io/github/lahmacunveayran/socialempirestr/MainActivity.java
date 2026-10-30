@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -66,6 +67,11 @@ public class MainActivity extends Activity {
     private View tamEkranGorunumu;
     private WebChromeClient.CustomViewCallback tamEkranGeriCagrisi;
     private long sonGeri;
+    private static final long COKME_PENCERESI_MS = 120_000;
+    private static final int EN_COK_COKME = 3;
+    private int cokmeler;
+    private long ilkCokme;
+    private boolean onde;
 
     @Override
     protected void onCreate(Bundle kayitliDurum) {
@@ -95,6 +101,14 @@ public class MainActivity extends Activity {
         kok.addView(web);
         kok.addView(durum);
         setContentView(kok);
+        // Tam ekranda (çubuklar gizli, pencere kenardan kenara) Android sayfayı klavyeye göre küçültmez; klavye
+        // Wi-Fi taşıma kodu gibi alanları örterdi. Klavye yüksekliği kadar alttan boşluk bırakılır.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            kok.setOnApplyWindowInsetsListener((v, ekler) -> {
+                v.setPadding(0, 0, 0, ekler.getInsets(WindowInsets.Type.ime()).bottom);
+                return ekler;
+            });
+        }
 
         webAyarla();
         sunucuyuAc();
@@ -121,10 +135,14 @@ public class MainActivity extends Activity {
                 if ("127.0.0.1".equals(adres.getHost())) {
                     return false;
                 }
-                // Discord, GitHub gibi dış bağlantılar tarayıcıda açılır
-                try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, adres));
-                } catch (ActivityNotFoundException ignored) {
+                // Discord, GitHub gibi dış bağlantılar tarayıcıda açılır; file:, intent: gibi şemalar açılmaz
+                // (file: Android 7+ FileUriExposedException ile uygulamayı düşürür)
+                String sema = adres.getScheme() == null ? "" : adres.getScheme().toLowerCase();
+                if (sema.equals("http") || sema.equals("https") || sema.equals("mailto")) {
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, adres));
+                    } catch (RuntimeException ignored) {
+                    }
                 }
                 return true;
             }
@@ -135,13 +153,35 @@ public class MainActivity extends Activity {
             @TargetApi(Build.VERSION_CODES.O) // Android 8 öncesinde çağrılmaz
             public boolean onRenderProcessGone(WebView v, RenderProcessGoneDetail ayrinti) {
                 Log.e(TAG, "WebView cizim sureci kapandi (cokme: " + ayrinti.didCrash() + ")");
+                tamEkrandanCik(); // ölü WebView'ın tam ekran görünümü yenisinin üstünde kalmasın
                 kok.removeView(v);
                 v.destroy();
+                long simdi = System.currentTimeMillis();
+                cokmeler = simdi - ilkCokme > COKME_PENCERESI_MS ? 1 : cokmeler + 1;
+                if (cokmeler == 1) {
+                    ilkCokme = simdi;
+                }
                 web = new WebView(MainActivity.this);
                 kok.addView(web, 0);
                 webAyarla();
+                if (cokmeler > EN_COK_COKME) {
+                    // Çökme döngüsü: yeniden yükleyip durmak yerine nedeni gösterilir; dokununca yeniden denenir
+                    durum.setText(R.string.ekran_cokuyor);
+                    durum.setVisibility(View.VISIBLE);
+                    durum.setOnClickListener(d -> {
+                        durum.setOnClickListener(null);
+                        durum.setVisibility(View.GONE);
+                        cokmeler = 0;
+                        web.setVisibility(View.VISIBLE);
+                        web.loadUrl(ADRES);
+                    });
+                    return true;
+                }
                 web.setVisibility(View.VISIBLE);
                 web.loadUrl(ADRES);
+                if (!onde) {
+                    web.onPause(); // arka planda bellek geri alındıysa oyun öne gelince çalışsın
+                }
                 Toast.makeText(MainActivity.this, R.string.yeniden_yukleniyor, Toast.LENGTH_LONG).show();
                 return true;
             }
@@ -212,6 +252,9 @@ public class MainActivity extends Activity {
                 Log.e(TAG, "Sunucu acilamadi", hata);
                 sunucuHatasi = hata.toString();
             }
+            synchronized (MainActivity.class) {
+                sunucuAcildi = false; // yeniden denenebilsin (ekrana dokununca)
+            }
         }, "oyun-sunucusu");
         is.setDaemon(true);
         is.start();
@@ -238,7 +281,16 @@ public class MainActivity extends Activity {
                 }
             }
             String ayrinti = sunucuHatasi != null ? "\n\n" + sunucuHatasi : "";
-            ana.post(() -> durum.setText(getString(R.string.acilamadi) + ayrinti));
+            ana.post(() -> {
+                durum.setText(getString(R.string.acilamadi) + ayrinti + "\n\n" + getString(R.string.yeniden_dene));
+                durum.setOnClickListener(d -> {
+                    durum.setOnClickListener(null);
+                    durum.setText(R.string.aciliyor);
+                    sunucuHatasi = null;
+                    sunucuyuAc();
+                    hazirOluncaAc();
+                });
+            });
         }, "oyun-bekleme").start();
     }
 
@@ -291,6 +343,14 @@ public class MainActivity extends Activity {
         }, "yedek-indir").start();
     }
 
+    private void yedekDosyasiniSil(Uri adres) {
+        try {
+            DocumentsContract.deleteDocument(getContentResolver(), adres);
+        } catch (Exception ignored) {
+            // silinemezse boş dosya kalır; kullanıcıya zaten "kaydedilemedi" denir
+        }
+    }
+
     @Override
     protected void onActivityResult(int istek, int sonuc, Intent veri) {
         super.onActivityResult(istek, sonuc, veri);
@@ -300,19 +360,34 @@ public class MainActivity extends Activity {
         } else if (istek == DOSYA_KAYDET) {
             byte[] icerik = kaydedilecek;
             kaydedilecek = null;
-            if (sonuc != RESULT_OK || veri == null || veri.getData() == null || icerik == null) {
+            if (sonuc != RESULT_OK || veri == null || veri.getData() == null) {
                 return;
             }
-            try (OutputStream cikti = getContentResolver().openOutputStream(veri.getData())) {
-                if (cikti == null) {
-                    throw new IOException("Dosya açılamadı");
-                }
-                cikti.write(icerik);
-                Toast.makeText(this, R.string.yedek_kaydedildi, Toast.LENGTH_SHORT).show();
-            } catch (IOException hata) {
-                Log.e(TAG, "Yedek kaydedilemedi", hata);
+            Uri hedef = veri.getData();
+            if (icerik == null) {
+                // Seçici açıkken uygulama kapatıldı: oluşturulan boş dosya "yedek var" sanılmasın
+                yedekDosyasiniSil(hedef);
                 Toast.makeText(this, R.string.yedek_kaydedilemedi, Toast.LENGTH_LONG).show();
+                return;
             }
+            // Bulut belge sağlayıcılarında yazma uzun sürebilir: ana iş parçacığını kilitlemesin
+            new Thread(() -> {
+                boolean tamam;
+                try (OutputStream cikti = getContentResolver().openOutputStream(hedef)) {
+                    if (cikti == null) {
+                        throw new IOException("Dosya açılamadı");
+                    }
+                    cikti.write(icerik);
+                    tamam = true;
+                } catch (IOException | RuntimeException hata) {
+                    Log.e(TAG, "Yedek kaydedilemedi", hata);
+                    yedekDosyasiniSil(hedef);
+                    tamam = false;
+                }
+                boolean sonucu = tamam;
+                ana.post(() -> Toast.makeText(this, sonucu ? R.string.yedek_kaydedildi : R.string.yedek_kaydedilemedi,
+                        sonucu ? Toast.LENGTH_SHORT : Toast.LENGTH_LONG).show());
+            }, "yedek-yaz").start();
         }
     }
 
@@ -323,9 +398,29 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        onde = true;
+        web.resumeTimers();
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
         Log.i(TAG, "onStop");
+        onde = false;
+        // Arka plandayken oyun döngüsü ve müzik dursun (pil); sunucu ve bot dünyası çalışmayı sürdürür.
+        // onPause'da değil: Android 7-9'da bölünmüş ekranda oyun görünürken de onPause gelir.
+        web.pauseTimers();
+    }
+
+    @Override
+    protected void onDestroy() {
+        // Etkinlik yeniden kurulursa eski WebView ve çizim süreci bellekte kalmasın
+        tamEkrandanCik();
+        kok.removeAllViews();
+        web.destroy();
+        super.onDestroy();
     }
 
     @Override
@@ -399,8 +494,6 @@ public class MainActivity extends Activity {
         super.onPause();
         Log.i(TAG, "onPause");
         web.onPause();
-        // Arka plandayken oyun döngüsü ve müzik dursun (pil); sunucu ve bot dünyası çalışmayı sürdürür
-        web.pauseTimers();
         CookieManager.getInstance().flush();
     }
 
@@ -409,7 +502,6 @@ public class MainActivity extends Activity {
         super.onResume();
         Log.i(TAG, "onResume");
         web.onResume();
-        web.resumeTimers();
         sistemCubuklariniGizle();
     }
 }

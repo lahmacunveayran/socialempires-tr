@@ -2,9 +2,9 @@
   "surum": "0.05a",
   "guncelleme": "2026-10-30",
   "devam_noktasi": {
-    "faz": "Görsel birlik: her şey oyunun kendi resimlerinden",
-    "madde": "OYN-09",
-    "sonraki_adim": "Sahibi PR #18 APK'sıyla tablette yeni görünüşe ve izlere (OYN-07) bakar"
+    "faz": "Upstream karşılaştırması ve yol seçimi",
+    "madde": "KYN-01",
+    "sonraki_adim": "Sahibi 0926'da kalma / 1.4.07'ye geçme kararını verir; geçiş düşünülürse önce 1.4.07'nin Ruffle'da açılış sınaması (izin gerekiyor)"
   },
   "maddeler": [
     {
@@ -304,7 +304,7 @@
       "test": null,
       "pr": "#10",
       "onay": null,
-      "notlar": "Yapmak için istemcinin AS3 bayt kodunu değiştirmek gerekir."
+      "notlar": "Yapmak için istemcinin AS3 bayt kodunu değiştirmek gerekir. 30.10.2026: 0926'da görev tablosu Constants sınıfında (228 kayıt, ~70 MISSION_ türü), kod gizlenmiş. 1.4.07'de hedefler config'ten (goals) okunuyor; upstream nerroth-rewrite 206 hedefle bunu kullanıyor (KYN-01). 0926'da kalınırsa yol: sunucu tarafında takip ve var olan görevlerin metin/ödülünü değiştirmek."
     },
     {
       "id": "KAR-01",
@@ -734,6 +734,58 @@
       "pr": "#18",
       "onay": null,
       "notlar": "Perde masaüstünde kareye girmedi; tablette görünüşü sahibi doğrular. Koddaki öteki İspanyolca dizeler hata günlüğü ('*** Error cargando asset') ya da ekranda görüldüğü kanıtlanmamış adlar ('Ataque Súbito'); dokunulmadı."
+    },
+    {
+      "id": "KYN-01",
+      "baslik": "Upstream ile karşılaştırma: çatalımız 0.04a tabanlı; yeni iş yayımlanmamış nerroth-rewrite dalında, oyunun 1.4.07 istemcisiyle",
+      "sinif": "karar",
+      "onem": "Yüksek",
+      "durum": "onay_bekliyor",
+      "isaret": "✔",
+      "kanit": "Sahibi: 'bizim dosyalar eski mi, fark ne? iki kez, ikincisi bağımsız tara'. İki bağımsız tarama (docs/inceleme/2026-10-30-upstream-tarama1.md ve -tarama2.md) aynı sonuca vardı: temiz başlangıç ağacının 84 dosyası upstream 0.04a (f642e0b, 26.09.2025) ile bayt bayt aynı; oyun SWF'miz upstream'deki 0926bsec ile aynı. Upstream main 0.04a'dan beri değişmedi; yeni iş nerroth-rewrite dalında (0.04a'dan sonra 429 commit, son 16.08.2026, yayımlanmamış). O dal yamalı 1.4.07 istemcisini (SocialEmpires1.4.07sec_fixed.swf) çalıştırıyor. Derleme tarihleri ProductInfo etiketinden (kendim doğruladım): 0926b 05.12.2012, 1.4.07 31.01.2014; arada 56-58 derleme. 1.4.07: +570/−145 sınıf, 29 yeni komut, görev sistemi config'ten (goals, 43 tür kullanılmış, 206 hedef), Soul Mixer, yeni PvP, birim paketleri, Forge adası. Bizim upstream'de olmayan işlerimiz: Türkçe (config, SWF metin alanları, AS3 dizeleri, yazı tipi harfleri), Android, bot dünyası, turnuva/kompu/dünya haritası uçları (upstream'de 404), testler ve CI, sağlam kayıt, güvenlik. Kod ortaklığı düşük (bizim kodun 0.04a ile ortak satırı %6). Uyumluluk: kayıtlarımız upstream sunucusunda zarar görür (mezarlık, sayaçlar sıfırlanır); Türkçe SWF yamamız 1.4.07'de metin alanlarının %88,8'ini (404/455) eşliyor, ~130 yeni metin çıkar.",
+      "test": "tarama betikleri (oturum çalışma klasörü); ProductInfo okuması",
+      "pr": null,
+      "onay": null,
+      "notlar": "Karar sahibinde. İki taramanın önerisi: 0926'da kal, upstream'den 0926 ile çalışan düzeltmeleri atıfla al, Türkçe araçları upstream'e katkı olarak öner; 1.4.07'ye geçiş ancak yamalı SWF'nin Ruffle 0.7.1'de açıldığı sınandıktan sonra konuşulsun (bu sınama upstream kodunu çalıştırmayı gerektirdiği için sahibinin iznini bekliyor). Tarama 2: 1.4.07 istemcisinde hedefin uygunluğunu soran işlev hep 'evet' döndürüyor, kayıtta tarih alanı yok; etkinliğe özel hedef ancak sunucunun hedef listesini tarihe göre değiştirmesiyle olur (◐). web.archive.org bu oturumda bağlanmadı; dosyaların kaynağı (Wayback mi) doğrulanmadı."
+    },
+    {
+      "id": "KYN-02",
+      "baslik": "Mağazadaki Soul Mixer binası 0926 istemcisinde işlevsiz",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "acik",
+      "isaret": "◐",
+      "kanit": "config/patch/soulmixer_temp.json öğe 1529 'Soul Mixer'ı mağazaya ekliyor (2000 altın). 0926bsec'in AS3 dizelerinde PopupSoulMixer ve soulmixer_mix_unit yok; 1.4.07'de var (kendim doğruladım). Bina kurulabiliyor ama penceresi ve karıştırma komutu istemcide yok.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "Oyunda tıklanınca ne olduğu görülmedi (?). Seçenek: mağazadan kaldırmak."
+    },
+    {
+      "id": "KYN-03",
+      "baslik": "Varlık indirme kaynağı upstream'in değişebilir main dalı",
+      "sinif": "hata",
+      "onem": "Düşük",
+      "durum": "acik",
+      "isaret": "✔",
+      "kanit": "oyun/varliklar.py satır 30: raw.githubusercontent.com/AcidCaos/socialemperors/main/assets/{path}. Upstream main değişirse indirilen dosyalar sessizce değişir; f642e0b commit'ine sabitlenmeli.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": ""
+    },
+    {
+      "id": "KYN-04",
+      "baslik": "0926 istemcisinin okumadığı ölü config yamaları ve bayat belgeler",
+      "sinif": "hata",
+      "onem": "Düşük",
+      "durum": "acik",
+      "isaret": "✔",
+      "kanit": "Tarama 2: mission_goals, viral_offers, viral_icons, new_daily_bonus, level_up_tips yamaları yalnızca 1.x istemciler için; 0926 bunları okumuyor. Tarama 1: VAR-01 (fx_yama) kapandığı hâlde docs/YOL_HARITASI_DURUM.md:119, docs/GELISTIRME.md:140, docs/FAZ0_OLCUMLER.md:32 hâlâ açık iş diyor.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "Temizlik işi; davranış değiştirmez."
     }
   ]
 }

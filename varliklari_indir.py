@@ -8,6 +8,8 @@ böylece oyun internetsiz ve daha hızlı açılır.
 Kaynak: AcidCaos/socialemperors deposundaki assets/ klasörü.
 assets/ altında zaten bulunan dosyalara (ör. Türkçe fontlar) dokunulmaz.
 
+Oyunu tarayıcıda çalıştıran Ruffle'ın sabitlenmiş sürümü de indirilir.
+
 Kullanım:
     python varliklari_indir.py
 """
@@ -98,6 +100,11 @@ if __name__ == "__main__":
     if not git_ile():
         print("git kullanilamadi; dosyalar tek tek indirilecek.")
         http_ile()
+    sys.path.insert(0, KOK)
+    from oyun import ruffle
+    if ruffle.hazirla():
+        print(f"[+] Ruffle {ruffle.SURUM} hazir; sikistiriliyor (bir dakika kadar surebilir)...")
+        ruffle.brotli_baslat(bekle=True)
     if not os.path.exists(os.path.join(HEDEF, "flash", "SocialEmpires0926bsec.swf")):
         print("UYARI: oyun dosyasi hala eksik; internet baglantinizi kontrol edin.")
         sys.exit(1)

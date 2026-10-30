@@ -15,9 +15,10 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from flask import send_file, send_from_directory
+from flask import request, send_file, send_from_directory
 from werkzeug.utils import safe_join
 
+from oyun import ruffle as Ruffle
 from oyun import swf_yama
 from oyun.sunucu import OYUN_DILI, app
 from oyun.yollar import ASSETS_DIR, INDIRILEN_DIR
@@ -119,3 +120,19 @@ def oyun_swf(dosya):
             traceback.print_exc()
             print(" ! SWF Turkcelestirilemedi; orijinali sunuluyor")
     return send_file(kaynak, mimetype="application/x-shockwave-flash")
+
+
+@app.route("/ruffle/<surum>/<dosya>")
+def ruffle_dosyasi(surum, dosya):
+    """Sabitlenmiş Ruffle sürümü; önceden sıkıştırılmış hâli varsa o gönderilir."""
+    if surum != Ruffle.SURUM or not Ruffle.hazirla():
+        return ("", 404)
+    bulunan = Ruffle.dosya(dosya, request.headers.get("Accept-Encoding", ""))
+    if bulunan is None:
+        return ("", 404)
+    yol, tur, kodlama = bulunan
+    yanit = send_file(yol, mimetype=tur, max_age=31536000)
+    yanit.vary.add("Accept-Encoding")
+    if kodlama:
+        yanit.headers["Content-Encoding"] = kodlama
+    return yanit

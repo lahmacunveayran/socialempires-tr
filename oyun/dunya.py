@@ -9,6 +9,7 @@ normal kayıt dosyalarına yazılır; istemci tarafında ek bir şey gerekmez.
 Ayarlar: `ayarlar.json` içindeki `dunya` bölümü
 """
 
+import functools
 import hashlib
 import random
 import threading
@@ -17,6 +18,7 @@ import time
 from oyun import ayarlar, denge
 from oyun.config import get_game_config
 from oyun.kayit import all_saves_userid, save_lock, save_session, session
+from oyun.turkce import cevirileri_yukle
 from oyun.zaman import zaman_olcegi
 
 VARSAYILAN_AYAR = {
@@ -26,6 +28,21 @@ VARSAYILAN_AYAR = {
     "oyuncuya_saldiri": 0.15,
     "olay_saklama": 200,
 }
+
+
+@functools.lru_cache(maxsize=1)
+def _ceviriler():
+    return cevirileri_yukle()
+
+
+def turkce_ad(esya_id):
+    """Eşyanın Türkçe adı (haber metinleri için)."""
+    return _ceviriler().get(f"item:{esya_id}") or _item(esya_id).get("name") or str(esya_id)
+
+
+def rutbe(seviye):
+    """Seviyeye özgü rütbe adı (Nefer, Yeniçeri, Sipahi, Paşa...)."""
+    return _ceviriler().get(f"level:{seviye}", "")
 
 
 def ayarlari_yukle():
@@ -152,11 +169,17 @@ def rapor_ekle(hedef, saldiran, veri):
 # Dünya
 # ---------------------------------------------------------------------------
 
+# Sunucuda çalışan dünya (haber şeridi buradan okur); başlatılmadıysa None.
+etkin = None
+
+
 class Dunya:
     def __init__(self):
         self.ayar = ayarlari_yukle()
         self.tick = 0
         self.olaylar = []
+        self._olay_no = 0
+        self._ekonomi_haberleri = []
         self.aktif_olay = None
         self.ekonomi_carpan = 1.0
         self.savas_carpan = 1.0
@@ -183,8 +206,15 @@ class Dunya:
         return [(uid, k) for uid, k in self.oyuncular() if k.get("playerInfo", {}).get("bot")]
 
     # -- olay kaydı -------------------------------------------------------
+    def olaylar_sonra(self, sonra=0, en_cok=20):
+        """Haber şeridi için `sonra` numaralı olaydan sonrakiler (eskiden yeniye)."""
+        if sonra > self._olay_no:
+            sonra = 0  # sunucu yeniden başladı: istemcinin numarası geçersiz
+        return [o for o in self.olaylar if o["id"] > sonra][-en_cok:]
+
     def olay(self, tur, metin):
-        self.olaylar.append({"zaman": int(time.time()), "tur": tur, "metin": metin})
+        self._olay_no += 1
+        self.olaylar.append({"id": self._olay_no, "zaman": int(time.time()), "tur": tur, "metin": metin})
         fazla = len(self.olaylar) - int(self.ayar.get("olay_saklama", 200))
         if fazla > 0:
             del self.olaylar[:fazla]
@@ -224,6 +254,12 @@ class Dunya:
                         saldiri_sayisi += 1
                         self._son_saldiri[uid] = simdi
                         degisen.add(hedef)
+
+            # Bot ekonomisi her turda onlarca birim üretir; şerit boğulmasın
+            # diye turda yalnızca biri haber olur (dakikada ~1 olay).
+            if self._ekonomi_haberleri:
+                self.olay("ekonomi", random.choice(self._ekonomi_haberleri))
+                self._ekonomi_haberleri = []
 
             self._dunya_olayi(simdi)
             lonca = self._lonca(simdi)
@@ -282,7 +318,7 @@ class Dunya:
                 }
                 esya[4] = simdi
                 ad = kayit.get("playerInfo", {}).get("name", uid)
-                self.olay("lonca", f"Kardeşlik Loncası, {ad} köyünde {esya_id} numaralı binaya usta işçi gönderdi")
+                self.olay("lonca", f"Kardeşlik Loncası, {ad} köyündeki {turkce_ad(esya_id)} için usta işçi gönderdi")
                 return uid
         return None
 
@@ -348,6 +384,8 @@ class Dunya:
                     [secim, random.randint(38, 62), random.randint(38, 62), 0, timestamp_now(), 0, [], {}]
                 )
                 degisti = True
+                self._ekonomi_haberleri.append(
+                    f"{kayit['playerInfo'].get('name', uid)} ordusuna bir {turkce_ad(secim)} kattı")
 
         # Seviye atlama
         seviyeler = get_game_config()["levels"]
@@ -555,6 +593,8 @@ class Dunya:
                 print(f" ! Dunya tick hatasi: {hata}")
 
     def baslat(self):
+        global etkin
+        etkin = self
         if not self.ayar.get("aktif", True):
             print(" [+] Dunya simulasyonu kapali (ayarlar.json)")
             return

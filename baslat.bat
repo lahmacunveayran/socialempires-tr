@@ -6,7 +6,7 @@ echo ============================================
 echo  Social Emperors - Turkce gelistirme sunucusu
 echo ============================================
 
-python -c "import flask, jsonpatch" >nul 2>&1
+python -c "import flask, jsonpatch, waitress" >nul 2>&1
 if errorlevel 1 (
     echo [1/2] Gerekli Python paketleri kuruluyor...
     python -m pip install -r requirements.txt

@@ -72,14 +72,39 @@ def patch_game_config():
     tema_setlerini_ac()
 
 
-def tema_setlerini_ac():
-    """config/tema_setleri.json'daki etkinlik setlerini mağazaya açar."""
-    from oyun import ayarlar
+def tema_setleri():
+    """{set adı: [eşya kimlikleri]} (config/tema_setleri.json)."""
     yol = os.path.join(CONFIG_DIR, "tema_setleri.json")
-    if not ayarlar.oku().get("magaza_tema_setleri", True) or not os.path.exists(yol):
-        return
+    if not os.path.exists(yol):
+        return {}
     with open(yol, encoding="utf-8") as f:
-        kimlikler = {str(i) for ids in json.load(f)["setler"].values() for i in ids}
+        return json.load(f)["setler"]
+
+
+def tema_seti_kipi():
+    """ayarlar.json -> magaza_tema_setleri: True (hepsi açık), False ya da "takvim"."""
+    from oyun import ayarlar
+    return ayarlar.oku().get("magaza_tema_setleri", True)
+
+
+def takvimdeki_setler():
+    """Takvim kipinde bugün mağazada açık olacak eşya kimlikleri (kipi kapalıysa None)."""
+    if tema_seti_kipi() != "takvim":
+        return None
+    from oyun import takvim
+    setler = tema_setleri()
+    return frozenset(str(i) for ad in takvim.acik_setler() for i in setler.get(ad, []))
+
+
+def tema_setlerini_ac():
+    """config/tema_setleri.json'daki etkinlik setlerini mağazaya açar.
+
+    "takvim" kipinde setler burada değil, istemciye gönderilirken o günün
+    etkinliğine göre açılır (get_client_game_config).
+    """
+    if tema_seti_kipi() is not True:
+        return
+    kimlikler = {str(i) for ids in tema_setleri().values() for i in ids}
     acilan = 0
     for esya in __game_config["items"]:
         if esya["id"] in kimlikler and esya.get("in_store") != "1":
@@ -130,7 +155,8 @@ def get_client_game_config(dil: str = "en", ascii_mode: bool = False) -> dict:
     olcek = zaman_olcegi()
     dil = (dil or "en").lower()[:2]
     teklif = kompu_teklifi()
-    anahtar = (dil, olcek, bool(ascii_mode), teklif and teklif["id"])
+    takvim_setleri = takvimdeki_setler()
+    anahtar = (dil, olcek, bool(ascii_mode), teklif and teklif["id"], takvim_setleri)
     if anahtar in __istemci_config_onbellegi:
         return __istemci_config_onbellegi[anahtar]
 
@@ -142,6 +168,10 @@ def get_client_game_config(dil: str = "en", ascii_mode: bool = False) -> dict:
         kopya = copy.deepcopy(__game_config)
     if teklif:
         kopya["kompu_offers"] = [teklif]
+    if takvim_setleri:
+        for esya in kopya.get("items", []):
+            if esya["id"] in takvim_setleri:
+                esya["in_store"] = "1"
 
     if olcek != 1.0:
         for esya in kopya.get("items", []):

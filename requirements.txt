@@ -1,2 +1,4 @@
 flask
 jsonpatch
+waitress
+brotli

@@ -76,7 +76,7 @@ class HttpDumanTestleri(unittest.TestCase):
         veri = cevap.get_json()
         adlar = [e["name"] for e in veri["items"]]
         self.assertEqual(adlar[0], "Ev I")
-        self.assertIn("Köylüyü eğit", [m["title"] for m in veri["missions"]])
+        self.assertIn("Köylü eğit", [m["title"] for m in veri["missions"]])
 
     def test_turkce_font_yayini(self):
         cevap = self.istemci.get("/default01.static.socialpointgames.com/static/socialempires/fonts/tr_ErasBold.swf")

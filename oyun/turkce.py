@@ -27,19 +27,12 @@ ETIKET = re.compile(r"<[^>]+>")
 
 
 def cevirileri_yukle(yol=TR_DOSYASI):
-    """Otomatik çevirileri ve elle yazılan tr.json'u birleştirir.
-
-    Elle yazılan çeviri her zaman otomatiği ezer.
-    """
-    sonuc = {}
-    oto = os.path.join(os.path.dirname(yol), "oto_tr.json")
-    for dosya in (oto, yol):
-        if not os.path.exists(dosya):
-            continue
-        with open(dosya, "r", encoding="utf-8") as f:
-            veri = json.load(f)
-        sonuc.update(veri.get("ceviriler", veri))
-    return sonuc
+    """ceviri/tr.json'daki çevirileri {anahtar: metin} olarak döndürür."""
+    if not os.path.exists(yol):
+        return {}
+    with open(yol, "r", encoding="utf-8") as f:
+        veri = json.load(f)
+    return dict(veri.get("ceviriler", veri))
 
 
 def _bolum_anahtarlari(config):

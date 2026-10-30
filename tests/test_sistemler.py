@@ -208,7 +208,7 @@ class CeviriTestleri(unittest.TestCase):
         from oyun.config import get_client_game_config, get_game_config
         tr = get_client_game_config("tr")
         sozluk = {e["name"]: e["text"] for e in tr["localization_strings"]}
-        self.assertEqual(sozluk.get("AUX_ACEPTAR"), "Kabul Et")
+        self.assertEqual(sozluk.get("AUX_ACEPTAR"), "Kabul et")
         self.assertEqual(tr["levels"][0]["name"], "Köle")
         self.assertEqual(get_game_config()["levels"][0]["name"], "Slave")
         adlar = {i["id"]: i["name"] for i in tr["items"]}

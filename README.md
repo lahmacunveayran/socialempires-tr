@@ -93,8 +93,8 @@ Ayrıntılar: [FLASH.md](FLASH.md). GNU/Linux: [LINUX.md](LINUX.md).
 
 ### Türkçe
 
-- `ceviri/oto_tr.json` (makine çevirisi) ve `ceviri/tr.json` (elle
-  düzeltmeler): config'teki oyun metinleri.
+- `ceviri/tr.json`: config'teki oyun metinleri (eşyalar, hedefler, arayüz).
+  Oyunun hikâyesine göre elle yazılmıştır.
 - `ceviri/arayuz_tr.json`: oyun SWF'sinin içindeki sabit yazılar. Sunucu
   SWF'yi ilk istekte Türkçeleştirip `download_assets/tr/` altında saklar.
 - `assets/fonts/tr_*.swf`: Türkçe harfli yazı tipleri.

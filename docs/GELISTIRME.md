@@ -74,9 +74,10 @@ argümanda varsayılan değer döndürür.
 
 ## Türkçeleştirme
 
-1. **Config metinleri**: `ceviri/oto_tr.json` + `ceviri/tr.json`
-   (`oyun/turkce.py` uygular). Eksik metinleri bulmak/çevirmek için
-   `araclar/sozluk_cikar.py` ve `araclar/oto_ceviri.py`.
+1. **Config metinleri**: `ceviri/tr.json` (`oyun/turkce.py` uygular).
+   Eksik metinleri bulmak için `araclar/sozluk_cikar.py`. Üslup:
+   oyuncuya "sen" diye hitap edilir, noktalı virgül ve tire kullanılmaz,
+   terimler tutarlıdır (Konak, Okçu Ocağı, Bıçkıhane, Nakit, Sefer, Hedef).
 2. **SWF içindeki sabit yazılar**: `ceviri/arayuz_tr.json`.
    - `metin_alanlari`: DefineEditText başlangıç metinleri (HTML etiketleri
      çıkarılmış hâli anahtardır).

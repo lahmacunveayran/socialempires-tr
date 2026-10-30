@@ -2,9 +2,9 @@
   "surum": "0.05a",
   "guncelleme": "2026-10-30",
   "devam_noktasi": {
-    "faz": "Yol haritası tamam; görev kitabı kuruldu",
+    "faz": "Yol haritası tamam; kısa ekran düzeni",
     "madde": "DAG-04",
-    "sonraki_adim": "Sahibi Android ve iPad'de dener (20-BOLUM-II §7); HIZ-03 için karar"
+    "sonraki_adim": "Sahibi gerçek Android ve iPad'de dener (20-BOLUM-II §7.1)"
   },
   "maddeler": [
     {
@@ -178,16 +178,16 @@
     },
     {
       "id": "HIZ-03",
-      "baslik": "1366×768'de oyun çerçevesi 581 px (XP çubuğu başlığı uzattı)",
-      "sinif": "karar",
-      "onem": "Düşük",
-      "durum": "onay_bekliyor",
+      "baslik": "Kısa ekranlarda (dizüstü, telefon yatay) oyun çerçevesi küçük kalıyor",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "ci_bekliyor",
       "isaret": "✔",
-      "kanit": "sayfa_goruntuleri.js: 581×459; yol haritasının hesabı 602×475.",
-      "test": null,
-      "pr": "#10",
-      "onay": null,
-      "notlar": "Sahibine soruldu: başlık kartı sıkıştırılsın mı?"
+      "kanit": "StatCounter Türkiye masaüstü (Temmuz 2026): 1536×864 %10,55, 1366×768 %7,86. Tarayıcı çubukları düşünce pencere 657/744 px; çerçeve ~441 px idi. Kısa ekran düzeniyle (yükseklik ≤ 820 px başlık 76 px, ≤ 500 px başlık 44 px şerit) araclar/cihaz_denemesi.js: 1366×657'de 612×483, 1536×744'te 722×570, telefon yatayda ekran yüksekliğini dolduruyor; 9 cihazda sığıyor, oran 1,2667.",
+      "test": "araclar/cihaz_denemesi.js (elle)",
+      "pr": "#13",
+      "onay": "Sahibi kararı geliştiriciye bıraktı (30 Ekim 2026)",
+      "notlar": "Karar: kısa ekranlarda alan oyuna verilir; başlık sıkışık düzene geçer."
     },
     {
       "id": "TAS-01",
@@ -233,7 +233,7 @@
       "baslik": "Hile paneli eski görünümde, sonucu ham JSON",
       "sinif": "hata",
       "onem": "Düşük",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "Kaynak düğmeleri oyunun images_new/collect_*.jpg resimleriyle; Playwright'ta Odun 9.604 → 19.604.",
       "test": "tests/test_diyar.py HilePaneliTestleri",
@@ -286,10 +286,10 @@
       "sinif": "hata",
       "onem": "Orta",
       "durum": "onay_bekliyor",
-      "isaret": "?",
-      "kanit": "Bu ortamda gerçek cihaz yok. Playwright dokunma benzetimi çalıştı (F0-01).",
-      "test": null,
-      "pr": null,
+      "isaret": "◐",
+      "kanit": "Gerçek cihaz yok. Benzetim (araclar/cihaz_denemesi.js, Playwright cihaz tanımları, Chromium): iPhone 13, Pixel 7, iPad (gen 7) dik ve yatayda çerçeve sığıyor, oran 1,2667, başlık taşmıyor; --dokun ile 6 dokunmatik benzetimin hepsinde 'Krallığa Gir'e dokununca Ruffle açılıyor, yükleme bitiyor, sayfa hatası 0. Ruffle 0.7.1 kaynağı oyun kutusuna touch-action:none uyguluyor: harita sürüklemek sayfayı kaydırmaz. Ruffle iOS/iPadOS Safari 14.1+'ı resmî olarak destekliyor (wiki).",
+      "test": "araclar/cihaz_denemesi.js --dokun (elle)",
+      "pr": "#13",
       "onay": null,
       "notlar": "Sahibinin elle testi: 20-BOLUM-II §7."
     },
@@ -383,6 +383,19 @@
       "pr": "#9",
       "onay": null,
       "notlar": "Ders: JS'ten blok silerken çevresini oku ve sayfayı tarayıcıda aç."
+    },
+    {
+      "id": "KAR-06",
+      "baslik": "Commit mesajlarına model etiketi (Co-Authored-By satırı) eklenmesi",
+      "sinif": "karar",
+      "onem": "Orta",
+      "durum": "karar_verildi",
+      "isaret": "✔",
+      "kanit": "master geçmişinde 30 commit mesajında model adı taşıyan 'Co-Authored-By:' satırı (git log --format=%B | grep Co-Authored-By); depo dosyalarında yok.",
+      "test": null,
+      "pr": "#13",
+      "onay": "Sahibi, 30 Ekim 2026: 'Opus etiketlemelerini geri al ve bir daha yapma.'",
+      "notlar": "Yeni commit'lerde yok; CLAUDE.md kuralı. Eski commit'lerden silmek master geçmişini yeniden yazmayı (force push) gerektirir; bu ortamda izinli değil, sahibine soruldu."
     }
   ]
 }

@@ -18,6 +18,11 @@ Gerekirse en fazla **oyunun kendi görselleri** kullanılır: oyun varlıkları
 - Günlük ödül yalnızca oyunun kendi günlük ödülüdür; sayfada ayrı bir
   hediye sistemi yoktur.
 
+## Commit ve PR metinleri
+
+- Commit mesajlarına, PR açıklamalarına ve depo dosyalarına model adı ya da etiketi (ör. "Claude Opus",
+  `Co-Authored-By: Claude ...`) **yazılmaz**. Sahibi istemedi (30 Ekim 2026).
+
 ## Geliştirme
 
 - Testler: `python -m unittest discover -s tests`

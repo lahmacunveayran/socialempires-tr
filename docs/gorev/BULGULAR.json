@@ -3,8 +3,8 @@
   "guncelleme": "2026-10-31",
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
-    "madde": "GEC-04",
-    "sonraki_adim": "GEC-04 sürüyor: GOR-01 ve KYT-01 PR #24 ile birleşti (kayıt 0.08a). İlk alım teklifi (KAR-10) PR #25'te. Sıradaki: GEC-04'ün kalanı (geri dönüş testi: yedekten açılan kaydın baytları eski kayıtla aynı) ve GEC-03'ün kuyruk, Ada Ocağı ve günlük ödül komutları; bunların alanları KYT-02'de."
+    "madde": "GEC-03",
+    "sonraki_adim": "GEC-03 sürüyor: eğitim kuyruğunun dört komutu yazıldı (formüller docs/inceleme/1407-formuller.md); KYT-04 için sahibinin kararı bekleniyor. Sıradaki: GEC-03'ün kalanı (Ada Ocağı collect_game_*, mezarlık, viral teklifler, birim paketleri) ve GEC-04'ün geri dönüş testi. PR #25 (KAR-10) sahibinin birleştirmesini bekliyor."
   },
   "maddeler": [
     {
@@ -845,12 +845,12 @@
       "sinif": "ozellik",
       "onem": "Yüksek",
       "durum": "acik",
-      "isaret": "?",
+      "isaret": "◐",
       "kanit": "Plan: docs/YOL_HARITASI_1407.md §3; kabul kapısı orada yazılı. Başlangıç ölçümleri KYN-05 ve bu PR'da.",
-      "test": null,
+      "test": "tests/test_komutlar.py",
       "pr": null,
       "onay": null,
-      "notlar": "KAR-08 kararıyla açıldı (30.10.2026)."
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026). 31.10.2026: eğitim kuyruğunun dört komutu (push_queue_unit, pop_queue_unit, unqueue_unit, speed_up_queue) bayt kodundaki formüllerle yazıldı; formüller docs/inceleme/1407-formuller.md, 9 test (EgitimKuyrugu). Eksik komut 29 → 25 (docs/inceleme/1407-komutlar.md). Hızlandırma bedeli upstream'den ayrı: istemci bekleyen birimleri de ücretlendirir. İstemcide görsel denetim yapılmadı (S-35). Kalan: Ada Ocağı (collect_game_*), mezarlık, viral teklifler, birim paketleri ve diğerleri."
     },
     {
       "id": "GEC-04",
@@ -1202,6 +1202,19 @@
       "pr": "#25",
       "onay": "Sahibi, 31 Ekim 2026",
       "notlar": "Uygulama: göç firstPurchaseTimestamp 0 ve numDayLogged 1 ekler (oyun/kayit_semasi.py); numDayLogged girişte her yeni takvim gününde artar (oyuncu.giris_gunu_say); set_first_purchase_timestamp pencere ilk açılınca damgayı koyar; buy_first_purchase bedeli düşer, ödülü açık kasabaya ve depoya verir, damgayı 1 yapar (istemci süresi geçmiş sayar, düğme bir daha çıkmaz). Var olan oyuncular için de sayaç göçte 1'den başlar: düğme göçten sonraki ilk 3 günde görünür. Bedel ve ödül 1.4.07'nin kendi değerleri (KNF-02 kararıyla uyumlu). İstemcide görsel denetim yapılmadı (S-35)."
+    },
+    {
+      "id": "KYT-04",
+      "baslik": "Eğitim kuyruğundan çıkarmada istemcinin iadesi fazla: köylüde yemek, Ruh Karıştırıcı'da bedel iade ediliyor",
+      "sinif": "hata",
+      "onem": "Düşük",
+      "durum": "onay_bekliyor",
+      "isaret": "✔",
+      "kanit": "BuildingQueueManager/addUnit köylüden yemek almaz (SUBCATFUNC_UNIT_PEASANT → 0) ve Ruh Karıştırıcı'da (1529) bedel almaz; BuildingQueueData/returnCost ikisini de ayırmadan bedel ve ceil(bedel × 2) yemek iade eder. Köylü I (50 yemek) kuyruğa alınıp çıkarılınca 100 yemek kazanılır. Sunucu istemciyle aynı yapıyor (kayıt istemcinin gösterdiğiyle aynı): tests/test_komutlar.py test_koylu_iadesi_istemci_gibi_yemek_de_verir.",
+      "test": "tests/test_komutlar.py",
+      "pr": null,
+      "onay": null,
+      "notlar": "Denge kararı sahibinin: istemci gibi bırakılır ya da sunucu fazlayı vermez (o zaman yeniden yüklemede kaynak istemcinin gösterdiğinden az görünür). Ruh Karıştırıcı'da kuyruktan çıkarma arayüzü olup olmadığı denenmedi."
     }
   ]
 }

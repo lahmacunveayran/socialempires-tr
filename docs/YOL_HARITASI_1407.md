@@ -33,6 +33,7 @@ Sahibinin 30 Ekim 2026 kararları:
 | GEC-02'den sonra açılış | ✔ yeni imparatorluk ve 0.05a'dan göç eden 51 kayıt; konsol hatası 0; 54 kayıtta karşılıksız eşya 0 | GEC-02 |
 | Eski görev numarası 1.4.07'de başka hedefe denk | ✔ SV59 deneme hesabında 228'den 86; göçle (0.07a) 190'ı karşılığına çevrildi, 38'i düştü | GOR-01 |
 | İstemcinin kayıttan okuduğu privateState alanı | ✔ 82 (0926: 64), 18 yeni; yokluğu bozan 6'sı ve saldırı sayıları göçle (0.08a) eklendi | KYT-01, `docs/inceleme/1407-kayit-alanlari.json` |
+| GEC-03 eğitim kuyruğundan sonra H, eksik (G ∖ H), imza uyumsuzluğu | ✔ 134, 25, 0; kuyruğun dört komutu, formüller `docs/inceleme/1407-formuller.md` | GEC-03, `docs/inceleme/1407-komutlar.md` |
 | Türkçe SWF yamasının 1.4.07'de eşlediği alan | ✔ 521 alan (sözlük anahtarlarının 404/455'i) | KYN-01 |
 | Upstream varlık ağacı `54df29e` ile `f642e0b` | ✔ 4.825 / 4.479 dosya | bu oturum, `git ls-tree` |
 | Ortak 4.478 dosyanın içerik farkı | ✔ **0** (git blob kimlikleri birebir aynı) | bu oturum |

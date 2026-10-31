@@ -21,6 +21,7 @@ from oyun.ekonomi import apply_collect, apply_collect_xp, apply_cost, timestamp_
 from oyun.kayit import all_saves_userid, neighbor_session, save_session, session
 from oyun.oyuncu import acik_kasaba
 from oyun.yollar import SAVES_DIR, VILLAGES_DIR
+from oyun.zaman import zaman_olcegi
 
 KOMUTLAR = {}
 
@@ -540,6 +541,165 @@ def pop_sell(save, a):
         kaynak_ekle(save, h, "g", int(birim.get("cost", 0) or 0) // DIVISOR_SELL)
     if len(bina) > 6 and not bina[6]:
         bina[4] = timestamp_now()
+
+
+# Eğitim kuyruğu (1.4.07, BuildingQueueManager / BuildingQueueData). Kuyruk privateState.barracksQueues[qid]
+# = {"ts": sıradaki birimin eğitime başladığı an, "amount": kalan birim, "unit": birim id}; qid binanın
+# attrs'ındaki "bq". Bedel ve iade formülü istemciden (docs/inceleme/1407-formuller.md). Ruh Karıştırıcı'da
+# (1529) eğitim bedelsizdir, xp vermez ve sm_training_time kullanır.
+KUYRUK_SINIRI = 5  # BuildingQueueManager/addUnit: remainingUnits < 5
+RUH_KARISTIRICI = 1529
+DEMIRCI, UNIVERSITE = 131, 134  # SUBCATFUNC_BUILDING_*
+INDIRIM = 0.9  # REDUCTION_MULTIPLIER_BLACKSMITH / _UNIVERSITY
+DEMIRCI_BIRIMLERI = (78, 79, 80)  # piyade, atlı, okçu
+KUSATMA = 81
+KOYLU = 71
+EGITIM_YEMEGI = 2  # FOOD_PER_GOLD_INTRAINING
+HIZLANDIRMA_SAATI = 1  # COST_SPEED_UP_UNIT_QUEUE: kalan her (başlamış) saat için nakit
+
+
+def kuyruklar(save):
+    ps = save["privateState"]
+    if not isinstance(ps.get("barracksQueues"), dict):
+        ps["barracksQueues"] = {}
+    return ps["barracksQueues"]
+
+
+def egitim_suresi(birim, ruh_karistirici=False):
+    """İstemcinin gördüğü süre: config'te ölçeğe bölünür (config.get_client_game_config), istemci tam sayıya keser."""
+    deger = birim.get("sm_training_time" if ruh_karistirici else "training_time")
+    try:
+        sayi = float(deger)
+    except (TypeError, ValueError):
+        return 0
+    olcek = zaman_olcegi()
+    if sayi > 0 and olcek != 1.0:
+        sayi = float(f"{sayi / olcek:.6g}")
+    return int(sayi)
+
+
+def egitim_bedeli(h, birim):
+    """(bedel, yemek) - BuildingQueueManager/addUnit, BuildingQueueData/returnCost.
+
+    Haritada demirci varsa piyade/atlı/okçu, üniversite varsa kuşatma birimi %10 ucuz (yukarı yuvarlanır);
+    üstüne bedelin iki katı yemek."""
+    bedel = int(float(birim.get("cost", 0) or 0))
+    alt = int(birim.get("subcat_functional", 0) or 0)
+    if alt in DEMIRCI_BIRIMLERI:
+        bina = DEMIRCI
+    elif alt == KUSATMA:
+        bina = UNIVERSITE
+    else:
+        bina = None
+    if bina and any(int((get_item_from_id(e[0]) or {}).get("subcat_functional", 0) or 0) == bina
+                    for e in h["items"]):
+        bedel = math.ceil(bedel * INDIRIM)
+    return bedel, math.ceil(bedel * EGITIM_YEMEGI)
+
+
+@komut("push_queue_unit")
+def push_queue_unit(save, a):
+    """[bina_x, bina_y, bina_id, birim_id, kuyruk_no, ruh_karistirici_degil] - açık kasabada."""
+    h = harita(save, acik_kasaba(save["playerInfo"].get("pid")))
+    bina_id, birim_id, qid = a.tam(2), a.tam(3), str(a.tam(4))
+    bina = esya_bul(h, a.tam(0), a.tam(1), bina_id)
+    birim = get_item_from_id(birim_id)
+    if bina is None or birim is None:
+        print(" ! kuyruk: bina ya da birim yok")
+        return
+    kuyruk = kuyruklar(save).get(qid)
+    if kuyruk and int(kuyruk.get("amount", 0)) >= KUYRUK_SINIRI:
+        print(" ! kuyruk dolu")
+        return
+    ozellikler(bina)["bq"] = qid
+    if kuyruk and int(kuyruk.get("amount", 0)) > 0:
+        kuyruk["amount"] = int(kuyruk["amount"]) + 1
+        kuyruk["unit"] = birim_id
+    else:
+        kuyruklar(save)[qid] = {"ts": timestamp_now(), "amount": 1, "unit": birim_id}
+    if bina_id != RUH_KARISTIRICI:
+        bedel, yemek = egitim_bedeli(h, birim)
+        kaynak_ekle(save, h, birim.get("cost_type"), -bedel)
+        if int(birim.get("subcat_functional", 0) or 0) != KOYLU:
+            kaynak_ekle(save, h, "f", -yemek)
+
+
+def _kuyruk_ve_bina(save, h, qid):
+    kuyruk = kuyruklar(save).get(qid)
+    bina = next((e for e in h["items"] if len(e) > 7 and isinstance(e[7], dict) and e[7].get("bq") == qid), None)
+    return kuyruk, bina
+
+
+def _kuyruktan_dus(save, qid, kuyruk, bina, sure=0):
+    kuyruk["amount"] = int(kuyruk.get("amount", 0)) - 1
+    kuyruk["ts"] = int(kuyruk.get("ts", 0)) + sure
+    if kuyruk["amount"] <= 0:
+        del kuyruklar(save)[qid]
+        if bina is not None:
+            bina[7].pop("bq", None)
+
+
+@komut("pop_queue_unit")
+def pop_queue_unit(save, a):
+    """[kuyruk_no, x, y, bina_id] - sıradaki birim eğitimi bitince haritaya çıkar.
+
+    Sıradakinin başlangıcı bir öncekinin bitişidir (BuildingQueueData/setData zinciri)."""
+    h = harita(save, acik_kasaba(save["playerInfo"].get("pid")))
+    qid = a.metin(0)
+    kuyruk, bina = _kuyruk_ve_bina(save, h, qid)
+    if not kuyruk:
+        print(" ! kuyruk yok:", qid)
+        return
+    birim_id = int(kuyruk.get("unit", 0))
+    birim = get_item_from_id(birim_id) or {}
+    ruh = a.tam(3) == RUH_KARISTIRICI
+    esya_ekle(h, birim_id, a.tam(1), a.tam(2))
+    if not ruh:
+        h["xp"] = int(h.get("xp", 0)) + int(birim.get("xp", 0) or 0)
+    _kuyruktan_dus(save, qid, kuyruk, bina, egitim_suresi(birim, ruh))
+
+
+@komut("unqueue_unit")
+def unqueue_unit(save, a):
+    """[kuyruk_no, bina_id] - kuyruktan bir birim çıkar, bedeli iade edilir.
+
+    İstemcinin iadesi (BuildingQueueData/returnCost) birebir: köylüde de yemek iade eder, Ruh Karıştırıcı'da da
+    bedel iade eder (KYT-04)."""
+    h = harita(save, acik_kasaba(save["playerInfo"].get("pid")))
+    qid = a.metin(0)
+    kuyruk, bina = _kuyruk_ve_bina(save, h, qid)
+    if not kuyruk:
+        print(" ! kuyruk yok:", qid)
+        return
+    birim = get_item_from_id(int(kuyruk.get("unit", 0))) or {}
+    bedel, yemek = egitim_bedeli(h, birim)
+    kaynak_ekle(save, h, birim.get("cost_type"), bedel)
+    kaynak_ekle(save, h, "f", yemek)
+    _kuyruktan_dus(save, qid, kuyruk, bina)  # istemci sondakini çıkarır: sıradakinin başlangıcı değişmez
+
+
+@komut("speed_up_queue")
+def speed_up_queue(save, a):
+    """[kuyruk_no] - kalan bütün birimler hemen biter; kalan sürenin başlamış her saati için nakit.
+
+    Kalan süre (BuildingQueueData/get remainingSeconds): sıradakinin kalanı + bekleyenlerin tam süresi.
+    İstemci ardından her birim için pop_queue_unit gönderir."""
+    h = harita(save, acik_kasaba(save["playerInfo"].get("pid")))
+    qid = a.metin(0)
+    kuyruk, bina = _kuyruk_ve_bina(save, h, qid)
+    if not kuyruk:
+        print(" ! kuyruk yok:", qid)
+        return
+    birim = get_item_from_id(int(kuyruk.get("unit", 0))) or {}
+    sure = egitim_suresi(birim, bool(bina) and bina[0] == RUH_KARISTIRICI)
+    adet, simdi = int(kuyruk.get("amount", 0)), timestamp_now()
+    kalan = max(0, int(kuyruk.get("ts", 0)) + sure - simdi + (adet - 1) * sure)
+    bedel = math.ceil(kalan / 3600) * HIZLANDIRMA_SAATI
+    if int(save["playerInfo"].get("cash", 0)) < bedel:
+        print(" ! hizlandirma icin nakit yetmiyor")
+        return
+    cash_ekle(save, -bedel)
+    kuyruk["ts"] = simdi - adet * sure
 
 
 @komut("add_unit_warehouse")

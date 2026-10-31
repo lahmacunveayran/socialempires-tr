@@ -50,7 +50,7 @@ const bekle = (ms) => new Promise((r) => setTimeout(r, ms));
   });
 
   await baglam.request.post(`${ADRES}/`, {
-    form: { USERID: uid, GAMEVERSION: "SocialEmpires0926bsec.swf" },
+    form: { USERID: uid, GAMEVERSION: "SocialEmpires1.4.07sec_fixed.swf" },
     maxRedirects: 0,
   });
   await sayfa.goto(`${ADRES}/play.html`);

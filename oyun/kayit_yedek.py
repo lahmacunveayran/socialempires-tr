@@ -17,6 +17,7 @@ from werkzeug.utils import safe_join
 
 from oyun.kayit import (all_saves_userid, gecerli_uid, kaydi_dogrula, load_saved_villages,
                         save_lock)
+from oyun import kaynaklar
 from oyun.sunucu import app
 from oyun.yollar import SAVES_DIR
 
@@ -127,5 +128,5 @@ def kayit_yukle():
         return ({"hata": HATALAR.get(hata.kod, HATALAR["bicim"])}, 400)
     geri_yukle(kimlik, ham)
     session["USERID"] = kimlik
-    session.setdefault("GAMEVERSION", "SocialEmpires0926bsec.swf")
+    session["GAMEVERSION"] = kaynaklar.ISTEMCI
     return {"durum": "ok"}

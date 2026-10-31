@@ -18,7 +18,7 @@ import urllib.request
 
 from flask import Flask, render_template, request, session
 
-from oyun import kayit_yedek
+from oyun import kaynaklar, kayit_yedek
 from oyun.hile import _hile_izinli as yerel_mi
 from oyun.kayit import all_saves_userid, save_info, session as kayit_oturumu
 from oyun import sunucu
@@ -224,5 +224,5 @@ def tasima_al():
         return {"hata": kayit_yedek.HATALAR["kimlik"]}, 400
     kayit_yedek.geri_yukle(kimlik, ham)
     session["USERID"] = kimlik
-    session.setdefault("GAMEVERSION", "SocialEmpires0926bsec.swf")
+    session["GAMEVERSION"] = kaynaklar.ISTEMCI
     return {"durum": "ok", "imparatorluk": save_info(kimlik)}

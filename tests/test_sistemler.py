@@ -315,6 +315,25 @@ class CeviriTestleri(unittest.TestCase):
         from oyun.turkce import dogrula
         self.assertEqual(dogrula("Hi #0#, you have #1# gold", "Merhaba #0#, #1# altının var"), [])
 
+    def test_1407_hedefleri_ve_resimleri(self):
+        from oyun.config import get_game_config
+        c = get_game_config()
+        self.assertEqual(len(c["goals"]), 206)
+        eksik = {a for g in c["goals"] for a in (g["image"], g["characters"])
+                 if a != "none" and a not in c["images"]}
+        self.assertEqual(eksik, set())
+
+    def test_turnuva_acik_kalir(self):
+        # 1.4.07'nin mega_patch'i 0 yapar; istemci o zaman turnuva penceresini açmaz (GuiManager/openPopupTournament)
+        from oyun.config import get_game_config
+        self.assertEqual(get_game_config()["globals"]["TOURNAMENT_ACTIVATED"], 1)
+
+    def test_kompu_bedeli_istemcinin_okudugu_bicimde(self):
+        # İstemci bedeli nesne olarak okur (`.g`, anahtar döngüsü); upstream'in [0, 15000, 20]'si NaN gösterir
+        from oyun.config import get_game_config
+        bedel = get_game_config()["globals"]["KOMPU_WIZZARD_COSTS"]
+        self.assertEqual(bedel, [{"g": 0}, {"g": 5000}, {"c": 10}])
+
     def test_yeni_icerik_yuklendi(self):
         from oyun.config import get_game_config
         adlar = {i["id"]: i["name"] for i in get_game_config()["items"]}

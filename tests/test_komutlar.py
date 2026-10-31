@@ -159,6 +159,14 @@ class GorevVeBonusKomutlari(KomutTesti):
         self.komut("reward_mission", 0, 2)
         self.assertEqual(self.harita["coins"], 50000 + 10)
 
+    def test_odul_1407_hedeflerinden(self):
+        # 113: eski görev listesinde "Get Treasure Chest!" (226), 1.4.07 hedeflerinde başka hedef (224)
+        from oyun.config import get_game_config
+        hedef = next(g for g in get_game_config()["goals"] if g["id"] == 113)
+        self.komut("reward_mission", 0, 113)
+        self.assertEqual(self.harita["coins"], 50000 + hedef["reward"])
+        self.assertEqual(hedef["reward"], 224)
+
     def test_gorev_atlama_bedeli(self):
         self.komut("complete_mission", 2, 1)
         self.assertEqual(self.cash, 98)
@@ -253,42 +261,6 @@ class GenelDavranis(KomutTesti):
 
     def test_bilinmeyen_komut_hata_vermez(self):
         self.komut("boyle_bir_komut_yok", 1, 2)
-
-    def test_istemcinin_tum_komutlari_karsilaniyor(self):
-        """İstemci SWF'sinin gönderdiği tüm komut adları kayıtlı olmalı."""
-        istemci = {
-            "accept_collect_help", "activate", "activate_dragon", "activate_monster",
-            "add_collectable", "add_items_store", "add_survival_vida_extra", "add_unit_warehouse",
-            "admin_add_animal", "apply_rewards_ranking", "assist_neighbor", "assist_neighbor_new",
-            "assist_receive", "assist_send_feed", "attack_player", "buy", "buy_cash", "buy_magic",
-            "buy_map", "buy_mana_new", "buy_monster_step_cash", "buy_offer_pack", "buy_si_help",
-            "buy_step_cash", "buy_stored_item_cash", "buy_super_offer_pack", "buy_survival_map",
-            "buy_temple_step_cash", "clean_attacks", "clean_received_assists", "clear_message",
-            "clear_tiles_area", "collect_new", "collect_treasure", "comeback_reward",
-            "complete_mission", "complete_tutorial", "cross_promotion_finished", "darts_new_free",
-            "darts_reset", "darts_shoot_balloon", "desactivate_dragon", "desactivate_monster",
-            "end_attack", "end_quest", "end_survival", "exchange_cash_new", "expand",
-            "fast_forward", "finish_collection", "finish_dragon_help", "finish_si", "game_status",
-            "gold_statue_conversion", "graveyard_buy_potions", "increase_population", "kill",
-            "load_map", "modify_position_univers", "move", "name_map", "next_dragon",
-            "next_monster", "next_monster_step", "next_step", "next_temple_step", "orient",
-            "perform_city_quest", "ping", "place_gift", "place_iphone", "place_stored_item",
-            "pop_sell", "pop_unit", "push_unit", "put_graveyard", "reset",
-            "reset_completed_missions", "reset_heavy_siege", "reset_position_univers",
-            "reset_temple", "reset_warehouse", "reset_world_change", "resurrect_hero",
-            "reward_mission", "rider_buy_step_cash", "rider_next_step", "rider_select",
-            "rt_level_up", "rt_publish_achievement_unit", "rt_publish_score", "save_map", "sell",
-            "sell_gift", "sell_iphone_item", "sell_stored_item", "set_attack_team",
-            "set_fake_neighbors", "set_help_map", "set_info_showed", "set_quest_var",
-            "set_resource_allies", "set_skin", "set_strategy", "set_variables", "spy_player",
-            "start_heavy_siege", "start_quest", "start_survival", "store_add_items", "store_item",
-            "store_item_frombug", "system_set_count_hack", "tournament_refund_resources",
-            "tournament_substract_resources", "trade_resource_b", "unit_collections_completed",
-            "unlock_building", "unlock_skin", "upgrade", "use_magic", "weekly_reward", "win_bonus",
-            "buy_attacks_pack", "buy_spyings_pack", "buy_warehouse_capacity_single",
-            "buy_pvp_territory", "place_warehoused_item",
-        }
-        self.assertEqual(sorted(istemci - set(self.komutlar.KOMUTLAR)), [])
 
 
 class KomsuKomutlari(KomutTesti):

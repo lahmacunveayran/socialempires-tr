@@ -21,9 +21,10 @@ from PIL import Image
 KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, KOK)
 
+from oyun.kaynaklar import ISTEMCI_YOLU  # noqa: E402
 from oyun.yollar import INDIRILEN_DIR  # noqa: E402
 
-ANA_SWF = os.path.join(INDIRILEN_DIR, "assets", "flash", "SocialEmpires0926bsec.swf")
+ANA_SWF = os.path.join(INDIRILEN_DIR, "assets", *ISTEMCI_YOLU.split("/"))
 BAYRAK_SWF = os.path.join(INDIRILEN_DIR, "assets", "buildingsprites", "flagtr.swf")
 HEDEF = os.path.join(KOK, "templates", "img", "oyun")
 

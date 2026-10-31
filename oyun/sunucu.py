@@ -19,7 +19,7 @@ import traceback
 print(" [+] Oyun ayarlari yukleniyor...")
 from flask import Flask, redirect, render_template, request, send_from_directory, session
 
-from oyun import aktarim, ayarlar, ruffle as Ruffle, takvim
+from oyun import aktarim, ayarlar, kaynaklar, ruffle as Ruffle, takvim
 from oyun.dunya import rutbe
 from oyun.ekonomi import timestamp_now
 from oyun.kayit import (all_saves_info, all_saves_userid, fb_friends_str, load_saved_villages,
@@ -201,7 +201,7 @@ def login():
         if not gecerli_uid(uid):
             return ("Gecersiz oyuncu kimligi", 400)
         session["USERID"] = uid
-        # Yalnızca 0.9.26b destekli: Türkçe yama, çevrimdışı paket ve sınamalar bu sürüm için (formdaki değere bakılmaz)
+        # Tek istemci 1.4.07 (KAR-08): formdaki değere bakılmaz
         session["GAMEVERSION"] = OYUN_SWF
         # Bot kaydıyla giriş yapıldıysa oyuncuya devret; yoksa dünya
         # simülasyonu aynı kayda yazarken çakışabilir.
@@ -221,7 +221,7 @@ def login():
     return render_template("login.html", saves_info=kayitlar, version=version_name, varlik=STATIK_YOL)
 
 
-OYUN_SWF = "SocialEmpires0926bsec.swf"
+OYUN_SWF = kaynaklar.ISTEMCI
 STATIK_YOL = "/default01.static.socialpointgames.com/static/socialempires/"
 DINAMIK_YOL = "/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvempires/"
 
@@ -248,7 +248,7 @@ def _oyun_sayfasi(sablon, ruffle_js=None):
     bilgi = save_info(uid)
     return render_template(sablon, save_info=bilgi, serverTime=timestamp_now(),
                            friendsInfo=fb_friends_str(uid), version=version_name,
-                           GAMEVERSION=surum, SERVERIP=HOST, ruffle_js=ruffle_js,
+                           GAMEVERSION=OYUN_SWF, SERVERIP=HOST, ruffle_js=ruffle_js,
                            statik=kok + STATIK_YOL, dinamik=kok + DINAMIK_YOL,
                            rutbe=rutbe(bilgi.get("level", 0)), varlik=STATIK_YOL,
                            xp=_xp_araligi(bilgi), milli_bayram=takvim.milli_bayram())

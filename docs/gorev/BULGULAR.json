@@ -1,10 +1,10 @@
 {
-  "surum": "0.05a",
+  "surum": "0.06a",
   "guncelleme": "2026-10-31",
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
-    "madde": "GEC-02",
-    "sonraki_adim": "PR #21 birleşince GEC-02: OYUN_SWF = 1.4.07, kaynak 54df29e + SHA-256 denetimi; config hattı kararları (KNF-01: 11 çatışan yama), goals, reward_mission goals'tan"
+    "madde": "GEC-04",
+    "sonraki_adim": "PR #22 (GEC-02) birleşince GEC-03 ∥ GEC-04. GEC-04'ün ilk işi GOR-01: eski görev numaralarının 1.4.07 hedeflerine göçü. Sahibinden: KNF-02 (1.4.07 fiyatları) onayı."
   },
   "maddeler": [
     {
@@ -818,26 +818,26 @@
       "baslik": "Ölçüm altyapısı: AS3 bayt kodu okuyucusu, 1.4.07 komut imzaları, çeviri kapsamı, config hattı ölçümü",
       "sinif": "ozellik",
       "onem": "Yüksek",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "Plan: docs/YOL_HARITASI_1407.md §3. Bu PR'da komut kısmı bitti (✔ çalıştırıldı, 31.10.2026): araclar/abc_okur.py (ABC çözücü, akış izleyen işlem kodu okuma, simgesel yığınla çağrı argümanları) ve araclar/komut_imzalari.py. 1.4.07 (SHA-256 0e4cc178…): 288 addCommand çağrı yeri, 0 çözülemeyen; G = 158 gönderilen komut; Constants'ta 185 CMD_ sabiti, 183 farklı değer = 158 gönderilen + 25 kodda hiç okunmayan (kabul kapısı 'G = 183 ile tutarlı' ✔). H = 128; |G ∖ H| = 31; imza uyumsuzluğu 0. Tablo: docs/inceleme/1407-komutlar.md, makinece: docs/inceleme/1407-komutlar.json ve 0926-komutlar.json. İkinci parça (✔ çalıştırıldı, 31.10.2026): araclar/ceviri_kapsami.py dört T oranını ölçer; 1.4.07'de SWF metin alanları 404/638 = 0,633, SWF sabit yazılar 44/58 = 0,759, AS3 dizeleri 0/219 = 0, config loc adları 1478/1976 = 0,748, hedefler 0/410 = 0 (docs/inceleme/ceviri-kapsami.md). araclar/config_hatti.py 13 yamamızı 1.4.07 config'ine karşı sınıflar: 1 gider, 1 kalır, 11 çatışır (docs/inceleme/1407-config-hatti.md, KNF-01). Taban config upstream'in main.json'u ile birebir aynı.",
       "test": "tests/test_komut_imzalari.py, tests/test_ceviri_kapsami.py",
       "pr": "#21",
       "onay": null,
-      "notlar": "KAR-08 kararıyla açıldı (30.10.2026). Sınırlar (◐): AS3 ekran dizeleri, örnekleri okunarak seçilmiş atama ve çağrı adlarıyla bulunur (ceviri_kapsami.YAZI_ALANLARI/YAZI_CAGRILARI); değişkenden geçen dize yakalanmaz (0926'da çevrilmiş 'Cargando' bu yüzden sayılmıyor). DOLGU listesi boş: kodun üzerine yazdığı yer tutucuları otomatik ayırma denendi, görünen yazıları da dışladığı için bırakıldı (S-31); GEC-06'da tek tek kanıtla doldurulur. Kapsama kapısı EKSIK_1407 listesiyle 'yalnızca azalır' biçiminde sınanıyor. Komut kısmı PR #20'de birleşti; çeviri kapsamı ve config hattı PR #21'de."
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026). Sınırlar (◐): AS3 ekran dizeleri, örnekleri okunarak seçilmiş atama ve çağrı adlarıyla bulunur (ceviri_kapsami.YAZI_ALANLARI/YAZI_CAGRILARI); değişkenden geçen dize yakalanmaz (0926'da çevrilmiş 'Cargando' bu yüzden sayılmıyor). DOLGU listesi boş: kodun üzerine yazdığı yer tutucuları otomatik ayırma denendi, görünen yazıları da dışladığı için bırakıldı (S-31); GEC-06'da tek tek kanıtla doldurulur. Kapsama kapısı EKSIK_1407 listesiyle 'yalnızca azalır' biçiminde sınanıyor. Komut kısmı PR #20'de birleşti; çeviri kapsamı ve config hattı PR #21'de. #20 ve #21 birleşti (30.10.2026, 3dc9eea)."
     },
     {
       "id": "GEC-02",
       "baslik": "İstemcinin 1.4.07'ye geçmesi: SWF, sabit kaynak 54df29e ve SHA-256, config hattı, goals, Türkçe yama, kayıt sürümü; 0926'nın kaldırılması",
       "sinif": "ozellik",
       "onem": "Yüksek",
-      "durum": "acik",
-      "isaret": "?",
-      "kanit": "Plan: docs/YOL_HARITASI_1407.md §3; kabul kapısı orada yazılı. Başlangıç ölçümleri KYN-05 ve bu PR'da.",
-      "test": null,
-      "pr": null,
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "✔ çalıştırıldı, 31.10.2026. İstemci: oyun/kaynaklar.py ISTEMCI = SocialEmpires1.4.07sec_fixed.swf, kaynak 54df29e, SHA-256 0e4cc178…6a15; oyun/varliklar.py ozet_uyuyor: özeti uymayan istemci sunulmaz, indirilen yeniden indirilir. Formdaki GAMEVERSION'a bakılmaz. Config: upstream'in 0-language_en, 1-mega_patch, 2-unit_patch yamaları ve goals.json config/'e alındı; mega_patch'in kapsadığı 11 eski yama silindi; kompu.json yalnızca kompu_offers ve KOMPU_WIZZARD_COSTS (KNF-03); turnuva.json (KNF-04); yeni_icerik.json kaldı. config['goals'] = 206 hedef, resimleri images'a eklenir (oyun/config.py hedefleri_ekle). reward_mission ödülü goals'tan. Türkçe SWF yaması 1.4.07'de 521 alan değiştiriyor (0926: 582), çıktı yeniden okunabiliyor; 1.4.07 hâlâ p.miniFireball2 istiyor, fx_yama kalır. Kayıt: sürüm 0.06a, göçten önceki hâl backups/<kimlik>.goc-<sürüm>.save.json (bir kez, silinmez). Çeviri: CEV-02. Deneme (geçici kayıt klasörü, S-36): yeni imparatorluk ve 0.05a'ya çekilmiş 51 kayıt (50 bot + oyuncu) açıldı, 51'i göç etti, 51 yedek; tarayıcıda konsol hatası 0, bütün istekler 200, eğitim Türkçe; göç etmiş oyuncu kaydı istemcide açıldı. Yüksek seviye: botlardan SV13, SV36, SV59 oyuncu hesabı (eski görev listeleriyle) yapıldı; 54 kaydın her biri için oyuncu bilgisi ve komşu ziyareti ok, config'de karşılığı olmayan eşya 0. SV59'un istemcide görsel denetimi yapılamadı (S-35). 0926'ya özel 3 test kaldırıldı, 6 test eklendi; 228 test geçiyor.",
+      "test": "tests/test_onindirme.py, tests/test_sistemler.py, tests/test_komutlar.py, tests/test_denetim.py",
+      "pr": "#22",
       "onay": null,
-      "notlar": "KAR-08 kararıyla açıldı (30.10.2026)."
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026). İlk 1.4.07 oturumunda yeni imparatorluk eğitim sırasında 200 XP ve çok sayıda collect_new aldı; eğitimin kendisinden mi geldiği bakılmadı (?)."
     },
     {
       "id": "GEC-03",
@@ -1045,7 +1045,7 @@
       "test": "tests/test_komut_imzalari.py",
       "pr": "#20",
       "onay": null,
-      "notlar": "Bilinmeyen komut hata vermeden günlüğe düşer; oyunda Zaman Makinesi penceresine ulaşılıp ulaşılmadığı denenmedi (?). 1.4.07'de de eksik; GEC-03'te formülüyle birlikte yazılır."
+      "notlar": "Bilinmeyen komut hata vermeden günlüğe düşer; oyunda Zaman Makinesi penceresine ulaşılıp ulaşılmadığı denenmedi (?). 1.4.07'de de eksik; GEC-03'te formülüyle birlikte yazılır. GEC-02: 0926 kaldırıldı; üç komut 1.4.07 istemcisinde de var, EKSIK_1407'de duruyor (GEC-03)."
     },
     {
       "id": "KYN-06",
@@ -1084,7 +1084,72 @@
       "test": "tests/test_ceviri_kapsami.py",
       "pr": "#21",
       "onay": null,
-      "notlar": "Upstream da bu adlı yamalarımızı 1.4.07'de yok sayıyor (get_game_config.py patch_ignore; yalnızca okundu). Her çatışan yama için 'upstream'inki mi, bizimki mi' kararı GEC-02'de alanı alanına verilir; oyunun dengesini değiştirenler (graveyard fiyatı) sahibine sorulur."
+      "notlar": "Upstream da bu adlı yamalarımızı 1.4.07'de yok sayıyor (get_game_config.py patch_ignore; yalnızca okundu). Her çatışan yama için 'upstream'inki mi, bizimki mi' kararı GEC-02'de alanı alanına verilir; oyunun dengesini değiştirenler (graveyard fiyatı) sahibine sorulur. GEC-02'de uygulandı: çatışan 10 yama upstream'in 0.04a kopyasıydı (blob özetleri f642e0b ile aynı), upstream'in kendisi de 1.4.07'de patch_ignore ile atıyor; silindi. level_up_tips bizim değiştirdiğimiz kopyaydı, mega_patch'inki 1.4.07'nin istediği biçimde; silindi. kompu.json kısaldı, yeni_icerik kaldı. Denge farkları KNF-02'de."
+    },
+    {
+      "id": "KNF-02",
+      "baslik": "Denge: 1.4.07'nin kendi değerleri eskilerinden farklı (iksir fiyatı, 12 eşyanın fiyatı)",
+      "sinif": "karar",
+      "onem": "Orta",
+      "durum": "onay_bekliyor",
+      "isaret": "✔",
+      "kanit": "Eski config (0.04a yamalarıyla) ile yeni config karşılaştırıldı (31.10.2026). GRAVEYARD_POTIONS: 100 nakde 1 iksir → 5 nakde 25. Fiyatı değişen eşyalar: Black Castle 6000 altın → 15 nakit, Golden Castle 5000 altın → 20 nakit, Soul Mixer 2000 altın → 100 nakit, Necro King 10 nakit → 6800 altın, Necro King Barracks 14000 altın → 30 nakit, Golden Hall 35 nakit → 150000 (all), Dragon Breeding Nest 6000 → 0, Yellow/Red Tree 1 → 225 altın, Happy Tree 1 → 390, Soldier Statue 1 → 700. Yeni alanlar (eski oyunda yoktu): training_time 771 eşyada (kuyruk), GRAVEYARD_CAPACITY, PVP_*, HONOR_POINT_*, QUEST_GOLD_REWARD. Değerler 1.4.07'nin (upstream mega_patch) değerleri; PR'da bunlar kullanılıyor.",
+      "test": null,
+      "pr": "#22",
+      "onay": null,
+      "notlar": "Sahibine soruldu: 1.4.07'nin kendi fiyatları mı, eskiler mi (eskiler kendi yamamızla geri yazılabilir)."
+    },
+    {
+      "id": "KNF-03",
+      "baslik": "KOMPU_WIZZARD_COSTS: istemci nesne bekliyor; upstream'in [0, 15000, 20]'si fiyatı NaN gösterir",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "1.4.07 bayt kodu (31.10.2026): PopupKompuGacha/_getValueFromCost bedelin anahtarlarında döner (for-in, Number(cost[key])); onButMed bedeli Object'e çevirip .g okur. Sayıda for-in boş kalır: NaN. Bizim [{g:0},{g:5000},{c:10}] korunur; sunucu da (oyun/istemci.py kompu_try) .g/.c okur.",
+      "test": "tests/test_sistemler.py",
+      "pr": "#22",
+      "onay": null,
+      "notlar": "Değerler bugünkü oyundaki gibi kaldı; denge değişmedi."
+    },
+    {
+      "id": "KNF-04",
+      "baslik": "1.4.07'nin mega_patch'i TOURNAMENT_ACTIVATED'ı 0 yapıyor: turnuva penceresi açılmaz",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "ci_bekliyor",
+      "isaret": "◐",
+      "kanit": "Bayt kodunda TOURNAMENT_ACTIVATED yalnızca GuiManager/openPopupTournament ve showTooltipWorld'de okunuyor (✔). Bugünkü oyunda 1. config/patch/turnuva.json ile 1'de tutuldu. 1.4.07 turnuvasının end_tournament_match komutu henüz yok (EKSIK_1407, GEC-05); bilinmeyen komut hata vermez. Turnuva 1.4.07'de oynanarak denenmedi (◐).",
+      "test": "tests/test_sistemler.py",
+      "pr": "#22",
+      "onay": null,
+      "notlar": null
+    },
+    {
+      "id": "CEV-02",
+      "baslik": "1.4.07'nin language_en yaması yerelleştirme listesini baştan değiştiriyor: 501 metin çevirisiz kaldı",
+      "sinif": "hata",
+      "onem": "Yüksek",
+      "durum": "ci_bekliyor",
+      "isaret": "◐",
+      "kanit": "tests/test_sistemler.py test_bos_olmayan_tum_metinler_cevrilmis 501 eksikle kırıldı (✔). İstemci metinleri id ile tutar, son gelen kazanır (Language.loadLanguage: vLiterals[o.id] = o.text, ✔ bayt kodu). ceviri/tr.json'a 531 anahtar: 153'ü aynı İngilizcenin eski çevirisi, 8'i iki çevirisi olan (biri seçildi), 252'si yeni çeviri, 40'ı İngilizcesi değişen anahtarın düzeltmesi (ör. KOMPU_*, heykel 'attacks per day' → 'quests'), 88'i oyunun kendi yer tutucusu ([1190]-AD): anlamı addan çıkarıldı (◐); 6'sı boş bırakıldı: 3'ü eskiden de boştu, 3'ü içeriği bilinmeyen yardım sayfası (HELP_TEXT_PACK_2…4). Hepsi dogrula'dan geçti. Config loc T: 1478/1976 → 1976/1976.",
+      "test": "tests/test_sistemler.py",
+      "pr": "#22",
+      "onay": null,
+      "notlar": "Yer tutucu metinlerin oyundaki yerleri ekranda görülmedi; GEC-06'nın ekran görüntüsü denetiminde bakılır."
+    },
+    {
+      "id": "GOR-01",
+      "baslik": "Eski görev numaraları 113'ten sonra 1.4.07 hedefleriyle ayrışıyor: yüksek seviyeli eski oyuncuda bazı hedefler yapılmadan bitmiş görünür",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "acik",
+      "isaret": "✔",
+      "kanit": "Eski missions (228) ile goals.json (206): 181 ortak numara, 95'inde başlık aynı (✔ 31.10.2026). İlk ayrılık 30 ve 94'te metin, 113'ten sonra hedefin kendisi (113: 'Get Treasure Chest!' → 'Train 3 Medium Knights'). Deneme hesapları: SV59 bitmiş 228 görevden 86'sı, SV36 130'dan 9'u, SV13 60'tan 1'i 1.4.07'de başka bir hedefe denk. Ödül tekrar verilmez (rewardedMissions numarayla tutulur).",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "Göç g'nin bir parçası (GEC-04): başlık ve tür eşleşmesiyle eski numaraları 1.4.07 numaralarına çevirmek."
     }
   ]
 }

@@ -644,12 +644,13 @@ def complete_mission(save, a):
 
 @komut("reward_mission")
 def reward_mission(save, a):
-    """[kasaba, gorev_id] - ödül görevin 'reward' altını."""
+    """[kasaba, gorev_id] - ödül hedefin 'reward' altını. 1.4.07 hedefleri `goals`'tan okur (GEC-02)."""
     gorev_id = a.tam(1)
     ps = save["privateState"]
     if gorev_id in ps.get("rewardedMissions", []):
         return
-    gorev = next((g for g in get_game_config()["missions"] if int(g["id"]) == gorev_id), {})
+    config = get_game_config()
+    gorev = next((g for g in config.get("goals", config["missions"]) if int(g["id"]) == gorev_id), {})
     kaynak_ekle(save, harita(save, a.tam(0)), "g", int(gorev.get("reward", 0) or 0))
     listeye_ekle(ps, "rewardedMissions", gorev_id)
 

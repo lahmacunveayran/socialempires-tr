@@ -147,7 +147,33 @@ def _bozugu_kenara_al(yol):
     return save
 
 
+def goc_oncesi_yedek(save: dict):
+    """Sürümü eski olan kaydın göçten önceki hâlini backups/<kimlik>.goc-<sürüm>.save.json olarak bir kez saklar.
+
+    Ad, zaman damgalı yedeklerin `<kimlik>-` önekini taşımaz: en fazla MAX_BACKUPS kuralı onu silmez.
+    Var olan dosyanın üzerine yazılmaz (göçün ilk kez yapıldığı hâl korunur).
+    """
+    uid = str(save.get("playerInfo", {}).get("pid", ""))
+    surum = secure_filename(str(save.get("version") or "surumsuz"))
+    if save.get("version") == version_code or not gecerli_uid(uid) or secure_filename(uid) != uid:
+        return None
+    hedef = os.path.join(BACKUP_DIR, f"{uid}.goc-{surum}.save.json")
+    if os.path.exists(hedef):
+        return hedef
+    try:
+        os.makedirs(BACKUP_DIR, exist_ok=True)
+        with open(hedef + ".tmp", "w", encoding="utf-8") as f:
+            json.dump(save, f, ensure_ascii=False, separators=(",", ":"))
+        os.replace(hedef + ".tmp", hedef)
+    except OSError as hata:
+        print(f" ! Goc oncesi yedek alinamadi ({hedef}): {hata}")
+        return None
+    print(f"   > goc oncesi yedek: {hedef}")
+    return hedef
+
+
 def _yukleme_duzeltmeleri(save: dict) -> bool:
+    goc_oncesi_yedek(save)
     modified = migrate_loaded_save(save)  # check save version for migration
     if _seviyeyi_duzelt(save):
         modified = True

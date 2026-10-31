@@ -20,6 +20,7 @@ Oturum başında göz gezdirilir. Yeni bir sorunla karşılaşınca ya da bir so
 | S-26 | Sahibinin Windows'unda `python -c "print(...)"` `UnicodeEncodeError: 'charmap' codec ... '✔'` verir | Konsol kod sayfası cp1254; ✔ ◐ gibi işaretler onda yok | Komuttan önce `PYTHONIOENCODING=utf-8`; araç betikleri `sys.stdout.reconfigure(encoding="utf-8")` yapar | ✔ 31.10.2026 |
 | S-27 | Sahibinin Windows'unda testler `ModuleNotFoundError: waitress` ile 1 hata verir | Bağımlılıklar o Python'a kurulmamış (S-01'in Windows hâli; blinker sorunu yok) | `python -m pip install -q -r requirements.txt`; sonra 214 test geçer | ✔ 31.10.2026 |
 | S-28 | Sahibinin Windows'unda `node` yok: `node --test tests/js/*.test.js` çalışmaz | Node.js kurulu değil | JS testleri CI'da (`tests.yml`) koşar; JS'e dokunan işte yerelde Node kurulması sahibine sorulur | ✔ 31.10.2026 |
+| S-35 | Tarayıcı panelinde oyun "Yükleniyor"da kalıyor, ekran görüntüsü 5 sn'de zaman aşımına uğruyor | Oturum hiçbir pencerede açık değilken panel gizli; Ruffle kare çizmiyor, SWF ilerlemiyor (sayfa `visible` dese de) | İstemcinin açılış çağrıları (oyuncu bilgisi, komşu, config) HTTP ile her kayıt için sınandı; görsel denetim için sahibinin pencereyi açması gerekir. Düğmelere `javascript_tool` ile basılabilir | ◐ 31.10.2026 |
 
 ## Ağ, GitHub ve upstream
 
@@ -57,8 +58,8 @@ Oturum başında göz gezdirilir. Yeni bir sorunla karşılaşınca ya da bir so
 | S-23 | Görsel gerekiyorsa yalnızca oyunun kendi dosyası, olduğu gibi | Sahibi çerçevelerin elle yapıldığını fark etti (OYN-09); 30.10.2026'da kural yeniden ve kesin söylendi | ✔ 30.10.2026 |
 | S-30 | Gizlenmiş bayt kodu doğrusal okunmaz, akışı izlenerek okunur (`araclar/abc_okur.py` `Abc.coz`) | 1.4.07'de atlamayla geçilen anlamsız baytlar geçersiz işlem kodunda okumayı durdurur; akış izleyen okuma onlara hiç uğramaz (GEC-01) | ✔ 31.10.2026 |
 | S-31 | Bir ölçütü kullanmadan önce bildiğin örneklerle sına | Metin alanı "kod üzerine yazıyorsa görünmez" ölçütü (örnek adlarıyla) "Cancel", "OK", "Welcome to Social Empires" gibi görünen yazıları da dışladı; düğme içi yazıları hiç görmedi. Bırakıldı; dolgu tek tek ve kanıtla ayrılacak (GEC-01) | ✔ 31.10.2026 |
-| S-32 | Kaçış karakterli kodu (`"
+| S-32 | Kaçış karakterli kodu (`"\n"`, `b"\0"`, düzenli ifade) Python ya da kabuk betiğiyle dosyaya yazma | Betiğin dize işlemesi `\n`'yi gerçek satır sonuna, `\0`'ı boş bayta çevirdi; üç kez sözdizimi hatası çıktı. Böyle kodu doğrudan dosya düzenleme aracıyla yaz | ✔ 31.10.2026 |
 | S-33 | Test çıktısını `grep`'le süzüp `&&` ile commit'e bağlama | `unittest ... | grep -E "OK|FAIL" && git commit` zincirinde grep FAIL satırını bulunca başarılı döndü; kırık test (`test_gorev`, PR alanı `#20, #21`) commit'lenip gönderildi. Önce testi kendi çıkış koduyla çalıştır, sonra commit at | ✔ 31.10.2026 |
 | S-34 | Bir dala yeniden göndermeden önce PR'ının birleşip birleşmediğine bak | #20 sahibince birleştirildikten sonra aynı dala ikinci parça gönderildi; birleşmiş PR'ın açıklaması da yanlışlıkla güncellendi. İkinci parça güncel `master`'dan açılan dala alındı (#21), #20'nin açıklaması geri alındı | ✔ 31.10.2026 |
-"`, `b" "`, düzenli ifade) Python ya da kabuk betiğiyle dosyaya yazma | Betiğin dize işlemesi `
-`'yi gerçek satır sonuna, ` `'ı boş bayta çevirdi; üç kez sözdizimi hatası çıktı. Böyle kodu doğrudan dosya düzenleme aracıyla yaz | ✔ 31.10.2026 |
+| S-36 | Sunucuyu denemek için sahibinin `saves/` klasörünü kullanma | Kayıt sürümü 0.06a'ya çıkınca açılan her kayıt göç eder. Deneme `SE_KAYIT_DIZINI` ile geçici klasörde yapıldı (bot dünyası orada kuruldu, kayıtlar elle 0.05a'ya çekildi) | ✔ 31.10.2026 |
+| S-37 | PR squash ile birleşince üstüne kurulmuş dal yeniden kullanılmaz | GEC-02, #21'in birleşmemiş commit'lerinin üstündeydi; ağaçların eşit olduğu (`git diff HEAD origin/master` boş) görülüp değişiklikler güncel `master`'dan açılan `gec-02-istemci-gecisi`'ne taşındı | ✔ 31.10.2026 |

@@ -41,7 +41,7 @@ const CIHAZLAR = [
     const { defaultBrowserType, ...baglamAyari } = ayar; // eslint-disable-line no-unused-vars
     const baglam = await tarayici.newContext(baglamAyari);
     await baglam.request.post(`${ADRES}/`, {
-      form: { USERID: uid, GAMEVERSION: "SocialEmpires0926bsec.swf" }, maxRedirects: 0,
+      form: { USERID: uid, GAMEVERSION: "SocialEmpires1.4.07sec_fixed.swf" }, maxRedirects: 0,
     });
     const sayfa = await baglam.newPage();
     const hatalar = [];

@@ -119,7 +119,7 @@ class YedekTestleri(unittest.TestCase):
     def setUp(self):
         self.uid = server.new_village()
         self.istemci = server.app.test_client()
-        self.istemci.post("/", data={"USERID": self.uid, "GAMEVERSION": "SocialEmpires0926bsec.swf"})
+        self.istemci.post("/", data={"USERID": self.uid, "GAMEVERSION": "SocialEmpires1.4.07sec_fixed.swf"})
         self.yol = os.path.join(SAVES_DIR, f"{self.uid}.save.json")
 
     def _yukle(self, veri, istemci=None):
@@ -162,7 +162,7 @@ class YedekTestleri(unittest.TestCase):
 class SayfaUclariTestleri(unittest.TestCase):
     def test_hafta_ve_takvim_uclari(self):
         istemci = server.app.test_client()
-        istemci.post("/", data={"USERID": server.new_village(), "GAMEVERSION": "SocialEmpires0926bsec.swf"})
+        istemci.post("/", data={"USERID": server.new_village(), "GAMEVERSION": "SocialEmpires1.4.07sec_fixed.swf"})
         # Günlük ödül yalnızca oyunun kendi ödülü: sayfada ayrı bir sandık yok.
         self.assertEqual(istemci.get("/hediye").status_code, 404)
         self.assertNotIn("hediye", istemci.get("/play.html").get_data(as_text=True))

@@ -15,13 +15,13 @@ Son güncelleme: 30 Ekim 2026. Push'tan önce yerel kapılar temiz olur; CI kap�
 
 | Kapı                | Komut                                       | Son sonuç                |
 | ------------------- | ------------------------------------------- | ------------------------ |
-| Python testleri     | `python -m unittest discover -s tests`      | ✔ 223 test (31 Ekim, GEC-01) |
+| Python testleri     | `python -m unittest discover -s tests`      | ✔ 228 test (31 Ekim, GEC-02) |
 | Tarayıcı JS testleri | `node --test tests/js/*.test.js`           | ✔ 3 test (PR #19)        |
 | Sözdizimi           | `python -m compileall -q .`                 | ✔                        |
 | JS sözdizimi        | `node --check templates/js/*.js`            | ✔                        |
 | Komut kapsaması (1.4.07) | `python araclar/komut_imzalari.py <1.4.07.swf> --eski <0926.swf> --md docs/inceleme/1407-komutlar.md --json docs/inceleme/1407-komutlar.json` | ✔ G 158, H 128, G ∖ H 31, imza 0 (31 Ekim); CI'da `tests/test_komut_imzalari.py` JSON'a karşı sınar |
-| Çeviri kapsamı | `python araclar/ceviri_kapsami.py <1.4.07.swf> --yama <upstream config/patch> --hedefler <goals.json> --eski <0926.swf> --md docs/inceleme/ceviri-kapsami.md` | ✔ 1.4.07: 0,633 / 0,759 / 0 / 0,748 / 0 (31 Ekim); kapı: beşi de 1 |
-| Config hattı | `python araclar/config_hatti.py --yama <upstream config/patch> --hedefler <goals.json> --istemci <1.4.07.swf> --eski <0926.swf> --md docs/inceleme/1407-config-hatti.md` | ✔ gider 1, kalır 1, çatışır 11 (31 Ekim) |
+| Çeviri kapsamı | `python araclar/ceviri_kapsami.py <1.4.07.swf> --yama <upstream config/patch> --hedefler <goals.json> --eski <0926.swf> --md docs/inceleme/ceviri-kapsami.md` | ✔ 1.4.07: 0,633 / 0,759 / 0 / 0,748 / 0 (31 Ekim, GEC-01). GEC-02'den sonra config `config/patch`: `python araclar/ceviri_kapsami.py <1.4.07.swf> --hedefler config/goals.json` → 0,633 / 0,759 / 0 / **1** / 0; kapı: beşi de 1 |
+| Config hattı | `python araclar/config_hatti.py --yama <upstream config/patch> --hedefler <goals.json> --istemci <1.4.07.swf> --eski <0926.swf> --md docs/inceleme/1407-config-hatti.md` | ✔ gider 1, kalır 1, çatışır 11 (31 Ekim); GEC-02'de uygulandı (KNF-01), rapor GEC-01 ölçümü olarak kalır |
 
 `tests/test_gorev.py` bu kitabın `BULGULAR.json` şemasını da denetler.
 

@@ -2,7 +2,7 @@
 
 Arşivdeki (AcidCaos/socialemperors, assets/) 4.479 dosyanın ~1,3 GB'ı bu sürümde kullanılmaz: başka oyun
 sürümlerinin SWF'leri ve yapılandırmada geçmeyen bina/birim çizimleri. Liste yalnızca şunları alır:
-- flash/: yükleyici ve oyun (SocialEmpires0926bsec.swf),
+- flash/: yükleyici ve oyun (oyun.kaynaklar.ISTEMCI),
 - buildingsprites/: yapılandırmadaki (yamalarla) eşya ve büyülerin img_name'i olan çizimler,
 - geri kalan klasörlerin hepsi (küçük resimler, efektler, müzik...).
 Arşivdeki boş dosyalar ve sunucunun hiç o adla sunmadığı dosyalar (varliklar.ESDEGERLER) alınmaz.
@@ -30,9 +30,9 @@ import urllib.request
 KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, KOK)
 
-from oyun.kaynaklar import COMMIT, DEPO_URL as DEPO, HAM_KOK as HAM  # noqa: E402
+from oyun.kaynaklar import COMMIT, DEPO_URL as DEPO, HAM_KOK as HAM, ISTEMCI_YOLU  # noqa: E402
 CIKTI = os.path.join(KOK, "config", "onindirme.tsv")
-OYUN_DOSYALARI = {"flash/SELoader.swf", "flash/SocialEmpires0926bsec.swf"}
+OYUN_DOSYALARI = {"flash/SELoader.swf", ISTEMCI_YOLU}
 
 
 def arsiv_dosyalari():

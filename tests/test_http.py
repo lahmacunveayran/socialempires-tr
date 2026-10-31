@@ -21,7 +21,7 @@ class HttpDumanTestleri(unittest.TestCase):
         global UID
         UID = server.new_village()
         cls.istemci = server.app.test_client()
-        cls.istemci.post("/", data={"USERID": UID, "GAMEVERSION": "SocialEmpires0926bsec.swf"})
+        cls.istemci.post("/", data={"USERID": UID, "GAMEVERSION": "SocialEmpires1.4.07sec_fixed.swf"})
 
     def test_giris_sayfasi(self):
         istemci = server.app.test_client()
@@ -71,11 +71,11 @@ class HttpDumanTestleri(unittest.TestCase):
         self.assertEqual(cevap.status_code, 200)
 
     def test_oyun_surumu_sabit(self):
-        # Yalnızca 0.9.26b destekli; formdan gelen başka sürüm (ya da yol) oyuna geçmez
+        # Tek istemci 1.4.07; formdan gelen başka sürüm (ya da yol) oyuna geçmez
         istemci = server.app.test_client()
         istemci.post("/", data={"USERID": UID, "GAMEVERSION": "../../ayarlar.json"})
         sayfa = istemci.get("/play.html").get_data(as_text=True)
-        self.assertIn("flash/SocialEmpires0926bsec.swf", sayfa)
+        self.assertIn("flash/SocialEmpires1.4.07sec_fixed.swf", sayfa)
         self.assertNotIn("ayarlar.json", sayfa)
         self.assertNotIn('name="GAMEVERSION"', istemci.get("/").get_data(as_text=True))
 

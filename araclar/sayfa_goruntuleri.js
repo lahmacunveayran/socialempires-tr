@@ -31,7 +31,7 @@ const SAATLER = { oglen: "2026-06-21T13:00:00+03:00", gun_batimi: "2026-06-21T20
 
 async function giris(baglam) {
   await baglam.request.post(`${ADRES}/`, {
-    form: { USERID: uid, GAMEVERSION: "SocialEmpires0926bsec.swf" }, maxRedirects: 0,
+    form: { USERID: uid, GAMEVERSION: "SocialEmpires1.4.07sec_fixed.swf" }, maxRedirects: 0,
   });
 }
 

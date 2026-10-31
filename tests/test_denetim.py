@@ -48,6 +48,23 @@ class BozukKayit(unittest.TestCase):
         kayit.load_saved_villages()
         self.assertIn("surumsuz", kayit.all_saves_userid())
 
+    def test_goc_oncesi_hal_yedekte_kalir(self):
+        from oyun.surum import version_code
+        eski = bos_kayit("surumsuz")  # 0.05a: 1.4.07'den önceki kayıt
+        _yaz("surumsuz", eski)
+        yedek = os.path.join(kayit.BACKUP_DIR, "surumsuz.goc-0.05a.save.json")
+        self.addCleanup(lambda: os.path.exists(yedek) and os.remove(yedek))
+        kayit.load_saved_villages()
+        with open(yedek, encoding="utf-8") as f:
+            self.assertEqual(json.load(f), eski)
+        with open(os.path.join(SAVES_DIR, "surumsuz.save.json"), encoding="utf-8") as f:
+            self.assertEqual(json.load(f)["version"], version_code)
+        # ikinci yükleme yedeğe dokunmaz, zaman damgalı yedeklerin silinmesi de onu almaz
+        os.utime(yedek, (0, 0))
+        kayit.load_saved_villages()
+        kayit._eski_yedekleri_temizle("surumsuz")
+        self.assertEqual(os.path.getmtime(yedek), 0)
+
     def test_bozuk_kaydin_bak_dosyasi_geri_alinir(self):
         _yaz("bakli", {"playerInfo": {}}, ".save.json")
         _yaz("bakli", bos_kayit("bakli"), ".save.json.bak")

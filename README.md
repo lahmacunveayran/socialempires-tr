@@ -186,6 +186,13 @@ Copyright (C) 2022  The Social Emperors team
 See the GNU General Public License <https://www.gnu.org/licenses/>.
 ```
 
+Bu proje AcidCaos/socialemperors'tan türetilmiştir ve değiştirilmiştir (GPLv3 madde 5a). Sunucu
+0.04a'nın (`f642e0b`) tabanından değiştirildi. `config/patch/0-language_en.json`, `1-mega_patch.json`,
+`2-unit_patch.json` ve `config/goals.json`, upstream'in `54df29e` commit'inden olduğu gibi alındı. Bunları
+değiştiren kendi yamalarımız ayrı dosyalardadır (`kompu.json`, `turnuva.json`, `yeni_icerik.json`), değişiklik
+tarihleri depo geçmişindedir. Oyunun istemcisi (`SocialEmpires1.4.07sec_fixed.swf`) Social Point'indir, GPL
+kapsamında değildir ve depoda tutulmaz.
+
 ### Teşekkürler
 
 - [AcidCaos/socialemperors](https://github.com/AcidCaos/socialemperors) —

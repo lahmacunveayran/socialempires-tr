@@ -5,6 +5,7 @@ orijinal koruma projesinden indirilip download_assets/ altında saklanır.
 Tamamını önceden indirmek için: python varliklari_indir.py
 """
 
+import hashlib
 import http.client
 import os
 import re
@@ -86,6 +87,37 @@ def _indir_dene(path, hedef):
     return False
 
 
+# Özeti denetlenen dosyalar: istemci SWF'si (GEC-02). Uymayan dosya sunulmaz; indirilmişse silinir.
+OZETLER = {kaynaklar.ISTEMCI_YOLU: kaynaklar.ISTEMCI_SHA256}
+_dogrulanan = {}
+
+
+def ozet_uyuyor(path, yol):
+    """`path` özeti denetlenen bir dosyaysa diskteki `yol`'un SHA-256'sı beklenene eşit mi.
+
+    Doğrulanan dosyanın boyutu ve değişme zamanı tutulur; dosya değişmedikçe yeniden hesaplanmaz.
+    """
+    beklenen = OZETLER.get(path)
+    if beklenen is None:
+        return True
+    try:
+        st = os.stat(yol)
+        imza = (yol, st.st_size, st.st_mtime_ns)
+        if _dogrulanan.get(path) == imza:
+            return True
+        ozet = hashlib.sha256()
+        with open(yol, "rb") as f:
+            for parca in iter(lambda: f.read(1 << 20), b""):
+                ozet.update(parca)
+    except OSError:
+        return False
+    if ozet.hexdigest() != beklenen:
+        print(f" ! {path} özeti uymuyor ({ozet.hexdigest()[:12]}…, beklenen {beklenen[:12]}…); sunulmuyor")
+        return False
+    _dogrulanan[path] = imza
+    return True
+
+
 def _turet(path):
     """Arşivde olmayan efekti oyunun benzer efektinden türetip önbelleğe yazar."""
     hedef = safe_join(os.path.join(INDIRILEN_DIR, "turetilen"), path)
@@ -120,18 +152,27 @@ def varlik_yolu(path):
         return None
     yerel = safe_join(ASSETS_DIR, path)
     if yerel and os.path.isfile(yerel):
-        return yerel
+        return yerel if ozet_uyuyor(path, yerel) else None
     indirilen = safe_join(INDIRILEN_VARLIKLAR, path)
     if not indirilen:
         return None
     if os.path.isfile(indirilen):
-        if _gecerli_dosya(indirilen):
+        if _gecerli_dosya(indirilen) and ozet_uyuyor(path, indirilen):
             return indirilen
-        try:
-            os.remove(indirilen)  # yarım/bozuk indirme: yeniden dene
-        except OSError:
-            pass
-    return indirilen if _indir(path, indirilen) else None
+        _sil(indirilen)  # yarım, bozuk ya da özeti uymayan indirme: yeniden dene
+    if not _indir(path, indirilen):
+        return None
+    if ozet_uyuyor(path, indirilen):
+        return indirilen
+    _sil(indirilen)
+    return None
+
+
+def _sil(yol):
+    try:
+        os.remove(yol)
+    except OSError:
+        pass
 
 
 @app.route(STATIK + "/<path:path>")
@@ -143,11 +184,12 @@ def statik_varlik(path):
 
 
 def _oyun_swf_mi(dosya):
-    """SocialEmpires<sürüm>.swf biçiminde mi? (Düzenli ifade yok: uzun ve
-    kötü niyetli adlarda yavaşlamasın.)"""
+    """SocialEmpires<sürüm>.swf biçiminde mi? Sürümde harf ve rakamın yanında nokta ve alt çizgi olabilir
+    (1.4.07sec_fixed). Düzenli ifade yok: uzun ve kötü niyetli adlarda yavaşlamasın."""
     surum = dosya[len("SocialEmpires"):-len(".swf")]
+    yalin = surum.replace(".", "").replace("_", "")
     return (dosya.startswith("SocialEmpires") and dosya.endswith(".swf")
-            and surum.isascii() and surum.isalnum())
+            and yalin.isascii() and yalin.isalnum())
 
 
 @app.route(STATIK + "/flash/<dosya>")

@@ -29,6 +29,9 @@ Sahibinin 30 Ekim 2026 kararları:
 | Sunucunun işlediği (H), eksik (G ∖ H), imza uyumsuzluğu | ✔ 128, 31, 0 | GEC-01, `araclar/komut_imzalari.py` |
 | Çeviri T: SWF metin alanı / sabit yazı / AS3 / config loc / hedef | ✔ 0,633 / 0,759 / 0 / 0,748 / 0 | GEC-01, `docs/inceleme/ceviri-kapsami.md` |
 | Yamalarımız 1.4.07 config'inde: gider / kalır / çatışır | ✔ 1 / 1 / 11 | KNF-01, `docs/inceleme/1407-config-hatti.md` |
+| GEC-02'den sonra config loc T | ✔ 1976 / 1976 = 1 (hedefler hâlâ 0 / 410) | CEV-02 |
+| GEC-02'den sonra açılış | ✔ yeni imparatorluk ve 0.05a'dan göç eden 51 kayıt; konsol hatası 0; 54 kayıtta karşılıksız eşya 0 | GEC-02 |
+| Eski görev numarası 1.4.07'de başka hedefe denk | ✔ SV59 deneme hesabında 228'den 86 | GOR-01 |
 | Türkçe SWF yamasının 1.4.07'de eşlediği alan | ✔ 521 alan (sözlük anahtarlarının 404/455'i) | KYN-01 |
 | Upstream varlık ağacı `54df29e` ile `f642e0b` | ✔ 4.825 / 4.479 dosya | bu oturum, `git ls-tree` |
 | Ortak 4.478 dosyanın içerik farkı | ✔ **0** (git blob kimlikleri birebir aynı) | bu oturum |

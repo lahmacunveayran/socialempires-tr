@@ -4,7 +4,7 @@
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
     "madde": "GEC-03",
-    "sonraki_adim": "GEC-03 sürüyor: eğitim kuyruğu PR #26 ile birleşti (KYT-04, KAR-11); birlik paketleri (KAR-12) PR #27'de. Sıradaki: GEC-03'ün kalanı (Ada Ocağı collect_game_*, mezarlık, viral teklifler) ve GEC-04'ün geri dönüş testi. İstemcide birlik paketi penceresinin görsel denetimi yapılmadı (S-35)."
+    "sonraki_adim": "GEC-03 sürüyor: eğitim kuyruğu PR #26 ile birleşti (KYT-04, KAR-11); birlik paketleri (KAR-12) PR #27'de. Sıradaki: GEC-03'ün kalanı (Ada Ocağı collect_game_*, mezarlık, viral teklifler) ve GEC-04'ün geri dönüş testi. İstemcide birlik paketi penceresinin görsel denetimi yapılmadı (S-35). GEC-03 bitince bağımsız denetim (KAR-13)."
   },
   "maddeler": [
     {
@@ -1241,6 +1241,19 @@
       "pr": "#27",
       "onay": "Sahibi, 31 Ekim 2026",
       "notlar": "Uygulama GEC-03'te: buy_unit_pack (bedel, alım sayısı) ve get_up_data.php (rastgele sayılar). Paketten çıkan birliği istemci seçer, store_add_items ile depoya bildirir. Paket fiyatları, şansları ve indirimler 1.4.07'nin kendi değerleri; denge değişmedi. ONR-04: Türk birlikleri böylece paketlerden rastgele gelir; ayrıca eğitilebilir olmaları için taslak hâlâ sahibine sorulur."
+    },
+    {
+      "id": "KAR-13",
+      "baslik": "Bağımsız denetim (Lyraska DENETIM-2 yöntemi) GEC-03 bitince yapılır",
+      "sinif": "karar",
+      "onem": "Orta",
+      "durum": "karar_verildi",
+      "isaret": "✔",
+      "kanit": "Sahibi 31.10.2026: 'GEC-03 bitince' (soru: alanlara bölünmüş bağımsız denetim ne zaman yapılsın). Lyraska'da docs/DENETIM-2.md ve docs/denetim-2/ (BRIEF.md ortak kurallar, alan başına rapor, hesap betikleri) okundu; görev kitabı bu depoda zaten aynı yöntemle var, eksik olan bağımsız denetim.",
+      "test": null,
+      "pr": null,
+      "onay": "Sahibi, 31 Ekim 2026",
+      "notlar": "Plan: 6 alan (sunucu ve komutlar; kayıt ve göç; ekonomi ve formüller; bot dünyası, PvP ve turnuva; Türkçe ve arayüz; Android, dağıtım ve güvenlik). Her denetçi salt okunur bir commit'i görür; BULGULAR.json, devlog ve PR'lar okuma yasağında. Ortak kurallar docs/denetim/BRIEF.md, raporlar docs/denetim/<alan>.md, sahibine özet docs/DENETIM.md; bulgular BULGULAR.json'a işlenir. Sınır: denetçiler aynı model ailesinden; insan denetçi kadar bağımsız değil. Başlamadan önce kullanım payı sahibine hatırlatılır."
     }
   ]
 }

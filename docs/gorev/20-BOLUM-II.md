@@ -16,6 +16,7 @@
 | VAR-01 | duzeltildi (◐)  | Ateş topu efektinin ekrandaki görünüşü gözle denetlenmedi (§7.2)                   |
 | KAR-05 | karar_verildi (◐) | Tema setlerinin takvim kipi için açık bir "evet" alınmadı                        |
 | GEC-01 … GEC-09 | acik   | 1.4.07'ye tam geçiş, sırayla (`docs/YOL_HARITASI_1407.md` §3)                     |
+| KAR-13 | karar_verildi | GEC-03 bitince alanlara bölünmüş bağımsız denetim (Lyraska DENETIM-2 yöntemi)     |
 | OYN-11 … OYN-13 | acik   | Küçük işler: günlük ödül başlığı, seviye/XP bilgisi, "Yedek yükle" klavye         |
 | ONR-01 … ONR-04 | acik   | Öneriler; her birinin taslak tanımı başlamadan önce sahibine onaylatılır (§5)       |
 | KYN-02, KYN-04 | acik    | Soul Mixer ve ölü yamalar geçişle (GEC-01 … GEC-03) ele alınır                      |

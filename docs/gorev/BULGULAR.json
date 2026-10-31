@@ -4,7 +4,7 @@
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
     "madde": "GEC-04",
-    "sonraki_adim": "GEC-04 sürüyor: GOR-01 PR #24'te; yeni privateState alanları (KYT-01, kayıt 0.08a) ve ilk alım teklifi (KAR-10) de aynı PR'da. Sıradaki: GEC-04'ün kalanı (geri dönüş testi: yedekten açılan kaydın baytları eski kayıtla aynı) ve GEC-03'ün kuyruk, Ada Ocağı ve günlük ödül komutları; bunların alanları KYT-02'de."
+    "sonraki_adim": "GEC-04 sürüyor: GOR-01 ve KYT-01 PR #24 ile birleşti (kayıt 0.08a). İlk alım teklifi (KAR-10) ayrı PR'da. Sıradaki: GEC-04'ün kalanı (geri dönüş testi: yedekten açılan kaydın baytları eski kayıtla aynı) ve GEC-03'ün kuyruk, Ada Ocağı ve günlük ödül komutları; bunların alanları KYT-02'de."
   },
   "maddeler": [
     {
@@ -1143,7 +1143,7 @@
       "baslik": "Eski görev numaraları 113'ten sonra 1.4.07 hedefleriyle ayrışıyor: yüksek seviyeli eski oyuncuda bazı hedefler yapılmadan bitmiş görünür",
       "sinif": "hata",
       "onem": "Orta",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "Eski missions (228) ile goals.json (206): 181 ortak numara, 95'inde başlık aynı (✔ 31.10.2026). İlk ayrılık 30 ve 94'te metin, 113'ten sonra hedefin kendisi (113: 'Get Treasure Chest!' → 'Train 3 Medium Knights'). Deneme hesapları: SV59 bitmiş 228 görevden 86'sı, SV36 130'dan 9'u, SV13 60'tan 1'i 1.4.07'de başka bir hedefe denk. Ödül tekrar verilmez (rewardedMissions numarayla tutulur).",
       "test": "tests/test_gorev_gocu.py",
@@ -1156,7 +1156,7 @@
       "baslik": "1.4.07 kayıttan 18 yeni privateState alanı okuyor; 6'sının ve saldırı sayılarının yokluğu istemciyi bozuyor",
       "sinif": "hata",
       "onem": "Orta",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "araclar/kayit_alanlari.py (✔ 31.10.2026, 1.4.07 SHA-256 0e4cc178…6a15): privateState'ten okunan 82 alan (0926'da 64), 18'i yeni; liste docs/inceleme/1407-kayit-alanlari.json. Kod karıştırılmış: iki erişimin arasına jump ve hata ayıklama satırı konmuş, ilk tarama graveyardCapacity'yi kaçırdı (S-39). 54 deneme kaydının hiçbirinde bu alanlar yok. Bayt kodundan yokluğun sonucu: ShieldManager isShieldAvailable/buyShield _purchasedShields.indexOf (hata), setPlayerShieldState 0 → -1 ama undefined kalır, buyShield NaN; PopupRecruitment$/canOpen playerRecruitmentPrices.indexOf (hata); loadGraveyardState parseInt(potionsReceived) NaN, pencerede 'NaNx'; SelectionTeamWindow tournament_formations[undefined]; GoalAssaultsWon/Started attacksWon(+attacksLost) NaN, saldırı hedefleri bitmez. Ötekilerin (kuyruk, Ada Ocağı, birlik paketleri, viral teklifler, mezarlık listesi, saldırı günlüğü) for-in'i undefined'da boş geçer.",
       "test": "tests/test_kayit_semasi.py",
@@ -1199,7 +1199,7 @@
       "isaret": "✔",
       "kanit": "Sahibi 31.10.2026: 'Açılsın' (soru: ilk alım teklifi çevrimdışı oyunda açılsın mı). Soru 'gerçek parayla nakit satışı' diye yanlış soruldu; teklif oyunun kendi nakdiyle (28 nakit) alınan bir paket (KYT-02 düzeltmesi), sahibine bildirildi.",
       "test": "tests/test_komutlar.py",
-      "pr": "#24",
+      "pr": null,
       "onay": "Sahibi, 31 Ekim 2026",
       "notlar": "Uygulama: göç firstPurchaseTimestamp 0 ve numDayLogged 1 ekler (oyun/kayit_semasi.py); numDayLogged girişte her yeni takvim gününde artar (oyuncu.giris_gunu_say); set_first_purchase_timestamp pencere ilk açılınca damgayı koyar; buy_first_purchase bedeli düşer, ödülü açık kasabaya ve depoya verir, damgayı 1 yapar (istemci süresi geçmiş sayar, düğme bir daha çıkmaz). Var olan oyuncular için de sayaç göçte 1'den başlar: düğme göçten sonraki ilk 3 günde görünür. Bedel ve ödül 1.4.07'nin kendi değerleri (KNF-02 kararıyla uyumlu). İstemcide görsel denetim yapılmadı (S-35)."
     }

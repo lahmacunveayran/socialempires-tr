@@ -6,6 +6,7 @@
 import json
 import math
 import unittest
+from unittest import mock
 
 from ortak import KomutTesti, bos_kayit
 
@@ -461,6 +462,108 @@ class IlkAlimTeklifi(KomutTesti):
         pi["last_logged_in"] = -1  # yeni köy şablonu
         giris_gunu_say(self.kayit, bugun)
         self.assertEqual(self.ps["numDayLogged"], 2)
+
+
+class EgitimKuyrugu(KomutTesti):
+    """GEC-03: 1.4.07'nin eğitim kuyruğu (BuildingQueueManager); formüller docs/inceleme/1407-formuller.md."""
+
+    KISLA, MIZRAKCI, OKCU, KOC, KOYLU = 38, 509, 515, 519, 500
+
+    def setUp(self):
+        super().setUp()
+        self.harita["items"].append([self.KISLA, 30, 30, 0, 0, 0])
+        yama = mock.patch.object(self.komutlar, "zaman_olcegi", return_value=1.0)
+        yama.start()
+        self.addCleanup(yama.stop)
+
+    def it(self, *args):
+        self.komut("push_queue_unit", 30, 30, self.KISLA, *args)
+
+    def test_kuyruga_ekleme_bedel_yemek_ve_bq(self):
+        self.it(self.MIZRAKCI, 7, 1)
+        self.it(self.MIZRAKCI, 7, 1)
+        q = self.ps["barracksQueues"]["7"]
+        self.assertEqual((q["amount"], q["unit"]), (2, self.MIZRAKCI))
+        self.assertEqual(self.harita["items"][-1][7], {"bq": "7"})
+        self.assertEqual(self.harita["coins"], 50000 - 2 * 30)
+        self.assertEqual(self.harita["food"], 1000 - 2 * 60)  # bedelin iki katı yemek
+
+    def test_koylunun_yemegi_yok_kuyruk_besle_sinirli(self):
+        for _ in range(6):
+            self.it(self.KOYLU, 3, 1)
+        self.assertEqual(self.ps["barracksQueues"]["3"]["amount"], 5)
+        self.assertEqual(self.harita["food"], 1000 - 5 * 50)  # yalnızca kendi bedeli (yemek)
+
+    def test_demirci_ve_universite_indirimi(self):
+        self.harita["items"] += [[22, 50, 50, 0, 0, 0], [25, 60, 60, 0, 0, 0]]
+        self.it(self.OKCU, 1, 1)
+        self.assertEqual(self.harita["coins"], 50000 - 270)
+        self.assertEqual(self.harita["food"], 1000 - 540)
+        self.it(self.KOC, 2, 1)
+        self.assertEqual(self.harita["coins"], 50000 - 270 - 90)
+
+    def test_ruh_karistiricida_bedel_yok(self):
+        self.harita["items"].append([1529, 40, 40, 0, 0, 0])
+        self.komut("push_queue_unit", 40, 40, 1529, self.MIZRAKCI, 4, 0)
+        self.assertEqual((self.harita["coins"], self.harita["food"]), (50000, 1000))
+        self.assertEqual(self.ps["barracksQueues"]["4"]["amount"], 1)
+
+    def test_cikan_birim_haritaya_xp_ve_zincir(self):
+        self.it(self.MIZRAKCI, 7, 1)
+        self.it(self.MIZRAKCI, 7, 1)
+        q = self.ps["barracksQueues"]["7"]
+        q["ts"] = baslangic = q["ts"] - 100
+        self.komut("pop_queue_unit", 7, 33, 34, self.KISLA)
+        self.assertEqual(self.harita["items"][-1][:3], [self.MIZRAKCI, 33, 34])
+        self.assertEqual(self.harita["xp"], 3)
+        self.assertEqual((q["amount"], q["ts"]), (1, baslangic + 5))  # sıradaki, öncekinin bitişinde başlar
+        self.komut("pop_queue_unit", 7, 35, 34, self.KISLA)
+        self.assertNotIn("7", self.ps["barracksQueues"])
+        self.assertNotIn("bq", self.harita["items"][2][7])
+        self.komut("pop_queue_unit", 7, 36, 34, self.KISLA)  # tekrarlanan komut: birim çıkmaz
+        self.assertEqual(sum(1 for e in self.harita["items"] if e[0] == self.MIZRAKCI), 2)
+
+    def test_kuyruktan_cikarma_iade(self):
+        self.it(self.MIZRAKCI, 7, 1)
+        self.it(self.MIZRAKCI, 7, 1)
+        self.komut("unqueue_unit", 7, self.KISLA)
+        self.assertEqual(self.ps["barracksQueues"]["7"]["amount"], 1)
+        self.assertEqual((self.harita["coins"], self.harita["food"]), (50000 - 30, 1000 - 60))
+        self.komut("unqueue_unit", 7, self.KISLA)
+        self.assertNotIn("7", self.ps["barracksQueues"])
+        self.assertEqual((self.harita["coins"], self.harita["food"]), (50000, 1000))
+
+    def test_iade_yalnizca_alinan_kadar(self):
+        # KAR-11: istemcinin returnCost'u köylüde yemek, Ruh Karıştırıcı'da bedel de verir; sunucu vermez
+        self.it(self.KOYLU, 3, 1)
+        self.komut("unqueue_unit", 3, self.KISLA)
+        self.assertEqual(self.harita["food"], 1000)
+        self.harita["items"].append([1529, 40, 40, 0, 0, 0])
+        self.komut("push_queue_unit", 40, 40, 1529, self.MIZRAKCI, 4, 0)
+        self.komut("unqueue_unit", 4, 1529)
+        self.assertEqual((self.harita["coins"], self.harita["food"]), (50000, 1000))
+        self.assertNotIn("4", self.ps["barracksQueues"])
+
+    def test_hizlandirma_kalan_her_saat_bir_nakit(self):
+        self.kayit["playerInfo"]["cash"] = 10
+        self.it(self.MIZRAKCI, 7, 1)
+        self.it(self.MIZRAKCI, 7, 1)
+        q = self.ps["barracksQueues"]["7"]
+        with mock.patch.object(self.komutlar, "egitim_suresi", return_value=3000):
+            self.komut("speed_up_queue", 7)  # kalan 3000 + 3000 sn: 2 saat
+        self.assertEqual(self.cash, 8)
+        self.assertLessEqual(q["ts"] + 2 * 3000, self.komutlar.timestamp_now())  # ikisi de bitmiş görünür
+        self.kayit["playerInfo"]["cash"] = 0
+        self.it(self.MIZRAKCI, 8, 1)
+        with mock.patch.object(self.komutlar, "egitim_suresi", return_value=3000):
+            self.komut("speed_up_queue", 8)  # nakit yetmez
+        self.assertGreater(self.ps["barracksQueues"]["8"]["ts"] + 3000, self.komutlar.timestamp_now())
+
+    def test_sure_istemcinin_gordugu_gibi_olceklenir(self):
+        with mock.patch.object(self.komutlar, "zaman_olcegi", return_value=3.0):
+            self.assertEqual(self.komutlar.egitim_suresi({"training_time": "10"}), 3)
+            self.assertEqual(self.komutlar.egitim_suresi({"sm_training_time": "10000"}, True), 3333)
+        self.assertEqual(self.komutlar.egitim_suresi({}), 0)
 
 
 if __name__ == "__main__":

@@ -206,9 +206,9 @@ EKSIK_1407 = {
     "buy_time_packet", "buy_unit_pack", "buy_viral_offer_all", "buy_viral_offer_friend",
     "clean_attack_log", "collect_game_add_item", "collect_game_buy_all", "collect_game_reward_given",
     "collect_game_speed_up", "collect_game_update_timestamp", "end_attack_new", "end_tournament_match",
-    "finish_si_recruitment", "get_enemy_new", "pop_queue_unit", "push_queue_unit", "reply_attack",
+    "finish_si_recruitment", "get_enemy_new", "reply_attack",
     "reset_dragon", "reset_potions_received", "reset_shield", "reward_viral_offer",
-    "speed_up_queue", "start_quest_new", "time_ff", "unqueue_unit",
+    "start_quest_new", "time_ff",
 }
 
 

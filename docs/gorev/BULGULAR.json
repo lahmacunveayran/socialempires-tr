@@ -4,7 +4,7 @@
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
     "madde": "GEC-03",
-    "sonraki_adim": "GEC-03 sürüyor: eğitim kuyruğunun dört komutu PR #26'da yazıldı (formüller docs/inceleme/1407-formuller.md); KYT-04 için sahibinin kararı bekleniyor. Sıradaki: GEC-03'ün kalanı (Ada Ocağı collect_game_*, mezarlık, viral teklifler, birim paketleri) ve GEC-04'ün geri dönüş testi. PR #25 (KAR-10) sahibinin birleştirmesini bekliyor."
+    "sonraki_adim": "GEC-03 sürüyor: eğitim kuyruğunun dört komutu PR #26'da yazıldı (formüller docs/inceleme/1407-formuller.md); KYT-04 için sahibinin kararı bekleniyor. Sıradaki: GEC-03'ün kalanı (Ada Ocağı collect_game_*, mezarlık, viral teklifler, birim paketleri) ve GEC-04'ün geri dönüş testi. PR #25 (KAR-10) birleşti."
   },
   "maddeler": [
     {

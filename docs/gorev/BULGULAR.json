@@ -4,7 +4,7 @@
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
     "madde": "GEC-03",
-    "sonraki_adim": "GEC-03 sürüyor: eğitim kuyruğu PR #26 ile birleşti (KYT-04, KAR-11); birlik paketleri (KAR-12) yeni PR'da. Sıradaki: GEC-03'ün kalanı (Ada Ocağı collect_game_*, mezarlık, viral teklifler) ve GEC-04'ün geri dönüş testi. İstemcide birlik paketi penceresinin görsel denetimi yapılmadı (S-35)."
+    "sonraki_adim": "GEC-03 sürüyor: eğitim kuyruğu PR #26 ile birleşti (KYT-04, KAR-11); birlik paketleri (KAR-12) PR #27'de. Sıradaki: GEC-03'ün kalanı (Ada Ocağı collect_game_*, mezarlık, viral teklifler) ve GEC-04'ün geri dönüş testi. İstemcide birlik paketi penceresinin görsel denetimi yapılmadı (S-35)."
   },
   "maddeler": [
     {
@@ -1238,7 +1238,7 @@
       "isaret": "◐",
       "kanit": "Sahibi 31.10.2026: 'Hiçbir yoldan gelmeyen birlikleri boşver. Bizim hedefimiz oyunun kendi birlik paketleriyle gelecek olanlar.' Tarama (config'in mağaza, eğitim binası, teklif, turnuva, sıralama ödülü ve görev listeleri; geçici betik, depoda değil): 774 birlik tanımlı; ~265'i bugün elde edilir; birlik paketleriyle (unit_packs: pack_category 2 olan 437 birlik ve paketlerin custom listeleri) ~252'si daha gelir, 880/881/882/885 Türk birlikleri dahil; ~257'si hiçbir yoldan gelmez (düşman, boss, hayvan, araç, ejderha binicisi). Sayılar ◐: kaynak listesinin sınırı tahmine dayalı.",
       "test": "tests/test_komutlar.py",
-      "pr": null,
+      "pr": "#27",
       "onay": "Sahibi, 31 Ekim 2026",
       "notlar": "Uygulama GEC-03'te: buy_unit_pack (bedel, alım sayısı) ve get_up_data.php (rastgele sayılar). Paketten çıkan birliği istemci seçer, store_add_items ile depoya bildirir. Paket fiyatları, şansları ve indirimler 1.4.07'nin kendi değerleri; denge değişmedi. ONR-04: Türk birlikleri böylece paketlerden rastgele gelir; ayrıca eğitilebilir olmaları için taslak hâlâ sahibine sorulur."
     }

@@ -1,10 +1,10 @@
 {
-  "surum": "0.06a",
+  "surum": "0.07a",
   "guncelleme": "2026-10-31",
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
     "madde": "GEC-04",
-    "sonraki_adim": "PR #22 (GEC-02) birleşti; sırada GEC-03 ∥ GEC-04. GEC-04'ün ilk işi GOR-01: eski görev numaralarının 1.4.07 hedeflerine göçü."
+    "sonraki_adim": "GEC-04 sürüyor: GOR-01 (görev numaralarının göçü, kayıt 0.07a) PR'da. Sıradaki parça: 1.4.07'nin okuduğu yeni privateState alanlarının bayt kodundan çıkarılması, şeması ve göçü (I(g(s)) = I(s), g(g(s)) = g(s)). GEC-03 bununla koşut yürüyebilir."
   },
   "maddeler": [
     {
@@ -863,7 +863,7 @@
       "test": null,
       "pr": null,
       "onay": null,
-      "notlar": "KAR-08 kararıyla açıldı (30.10.2026)."
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026). İlk parça GOR-01 (31.10.2026): kayıt 0.07a, görev numaralarının göçü; migrate_loaded_save artık göç öncesi yedekten okunan eski numaraları alır (kayit.eski_gorev_numaralari). Sıradaki parça: yeni privateState alanları."
     },
     {
       "id": "GEC-05",
@@ -1143,13 +1143,13 @@
       "baslik": "Eski görev numaraları 113'ten sonra 1.4.07 hedefleriyle ayrışıyor: yüksek seviyeli eski oyuncuda bazı hedefler yapılmadan bitmiş görünür",
       "sinif": "hata",
       "onem": "Orta",
-      "durum": "acik",
+      "durum": "ci_bekliyor",
       "isaret": "✔",
       "kanit": "Eski missions (228) ile goals.json (206): 181 ortak numara, 95'inde başlık aynı (✔ 31.10.2026). İlk ayrılık 30 ve 94'te metin, 113'ten sonra hedefin kendisi (113: 'Get Treasure Chest!' → 'Train 3 Medium Knights'). Deneme hesapları: SV59 bitmiş 228 görevden 86'sı, SV36 130'dan 9'u, SV13 60'tan 1'i 1.4.07'de başka bir hedefe denk. Ödül tekrar verilmez (rewardedMissions numarayla tutulur).",
-      "test": null,
+      "test": "tests/test_gorev_gocu.py",
       "pr": null,
       "onay": null,
-      "notlar": "Göç g'nin bir parçası (GEC-04): başlık ve tür eşleşmesiyle eski numaraları 1.4.07 numaralarına çevirmek."
+      "notlar": "Göç g'nin bir parçası (GEC-04): başlık ve tür eşleşmesiyle eski numaraları 1.4.07 numaralarına çevirmek. Uygulandı (31.10.2026, kayıt 0.07a): araclar/gorev_gocu.py tabloyu config/gorev_gocu.json'a yazar. Kural: başlık (harf/noktalama dışı) ve ödül numarası aynıysa eşleşir; adı değişmiş 10 görev elle denetlenip eklendi (ödül numarası aynı, iş aynı). 228 eski görevden 190'ı eşleşti, 93'ünün numarası değişti, 38'i düştü (1.4.07'de karşılığı yok ya da işi değişti: 30 '3 okçu' → '5 okçu' gibi). Yalnız başlıkla eşlemek yanlıştı: eski 110 'Train 2 villagers' (Town Hall II, ödül 220) eğitimdeki 11'e (ödül 20) düşüyordu; ödül numarası ayırdı. Hangi numara eski: 0.05a ve öncesinde hepsi; 0.06a'da yalnızca göç öncesi yedekte (backups/<kimlik>.goc-0.05a.save.json) olanlar, çünkü 0.06a'da istemci onları bitmiş gösterdi ve yeniden kazanılamadılar; ötekiler 1.4.07'de kazanılmıştır, dokunulmaz. Deneme (✔, geçici klasörde 54 kayıt): hepsi 0.07a, SV59 228 → 190, SV36 130 → 111, SV13 60 → 55; karşılığı olmayan hedef 0; ikinci yüklemede değişen kayıt 0; yalnızca göç g ile 54 kayıtta I(g(s)) = I(s) ve g(g(s)) = g(s). Bir bot kaydında seviye 7 → 8 oldu: göçten değil, eski yükleme düzeltmesinden (_seviyeyi_duzelt, XP 899 seviye 8 demek). Kalan sınır (?): başka cihazdan yüklenen 0.06a kaydının göç öncesi yedeği bu cihazda yoksa numaraları çevrilmez. İstemcide görsel denetim yapılmadı (S-35)."
     }
   ]
 }

@@ -22,6 +22,7 @@ sys.path.insert(0, KOK)
 
 from oyun.yollar import SAVES_DIR, VILLAGES_DIR  # noqa: E402
 from oyun.surum import version_code  # noqa: E402
+from oyun.kayit_semasi import eksikleri_tamamla  # noqa: E402
 from oyun.bot_kimlik import ISIMLER, portre  # noqa: E402
 
 KISILIKLER = ["agresif", "savunmaci", "tuccar", "dengeli"]
@@ -212,6 +213,7 @@ def bot_uret(adet=50):
         ps["rewardedMissions"] = []
         ps["gifts"] = []
         ps["unlockedQuestIndex"] = 0
+        eksikleri_tamamla(ps)
 
         yol = os.path.join(SAVES_DIR, f"{pid}.save.json")
         with open(yol, "w", encoding="utf-8") as f:

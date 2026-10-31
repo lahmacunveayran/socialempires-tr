@@ -1,15 +1,65 @@
+import json
+import os
 import random
 
 from oyun.ekonomi import timestamp_now
+from oyun.kayit_semasi import eksikleri_tamamla
+from oyun.yollar import CONFIG_DIR
 
-version_name = "alpha 0.06"
-version_code = "0.06a"
+version_name = "alpha 0.08"
+version_code = "0.08a"
 
-def migrate_loaded_save(save: dict) -> bool:
+# 1.4.07'den önceki sürümler: bu kayıtlardaki görev numaraları 0926 istemcisinin numaralarıdır.
+ESKI_ISTEMCI_SURUMLERI = ("0.01a", "0.02a", "0.03a", "0.04a", "0.05a")
+_GOREV_TABLOSU = None
+
+
+def gorev_tablosu() -> dict:
+    """Eski görev numarası → 1.4.07 hedef numarası (config/gorev_gocu.json, araclar/gorev_gocu.py üretir)."""
+    global _GOREV_TABLOSU
+    if _GOREV_TABLOSU is None:
+        with open(os.path.join(CONFIG_DIR, "gorev_gocu.json"), encoding="utf-8") as f:
+            _GOREV_TABLOSU = {int(k): int(v) for k, v in json.load(f)["tablo"].items()}
+    return _GOREV_TABLOSU
+
+
+def gorev_numaralarini_cevir(ps: dict, eski_numaralar=None) -> bool:
+    """completedMissions ve rewardedMissions'taki eski numaraları 1.4.07 numaralarına çevirir (GOR-01).
+
+    `eski_numaralar` verilirse yalnızca onlar eski sayılır; ötekiler 1.4.07'de kazanılmıştır, dokunulmaz.
+    None ise hepsi eskidir. Karşılığı olmayan eski numara düşer: aynı numaralı yeni hedef başka bir iştir,
+    oyuncu onu kendisi yapar.
+    """
+    tablo = gorev_tablosu()
+    degisti = False
+    for alan in ("completedMissions", "rewardedMissions"):
+        liste = ps.get(alan)
+        if not isinstance(liste, list):
+            continue
+        yeni = []
+        for numara in liste:
+            eski = isinstance(numara, int) and (eski_numaralar is None or numara in eski_numaralar)
+            hedef = tablo.get(numara) if eski else numara
+            if hedef is not None and hedef not in yeni:
+                yeni.append(hedef)
+        if yeni != liste:
+            ps[alan] = yeni
+            degisti = True
+    return degisti
+
+
+def migrate_loaded_save(save: dict, eski_gorevler=None) -> bool:
+    """Kaydı bu sürüme getirir.
+
+    `eski_gorevler`: 0.06a'daki bir kayıtta hâlâ eski numaralı olan görevler (göç öncesi yedekten okunur,
+    bkz. kayit.eski_gorev_numaralari). 0.06a'dan eski kayıtta bütün numaralar eskidir, bu değer kullanılmaz.
+    """
 
     # discard current version saves
     if save.get("version") == version_code:
         return False
+
+    eski_istemci = save.get("version") in ESKI_ISTEMCI_SURUMLERI or save.get("version") is None
     
     # fix 0.01a saves
     if "version" not in save or save["version"] is None:
@@ -80,5 +130,22 @@ def migrate_loaded_save(save: dict) -> bool:
     if save["version"] == "0.05a":
         save["version"] = "0.06a"
         print("   > migrated to 0.06a")
+
+    # 0.06a -> 0.07a: görev numaraları 1.4.07'nin hedeflerine çevrilir (GOR-01). 0.06a'da göç edip oynanmış kayıtta
+    # numaraların bir kısmı 1.4.07'de kazanılmıştır; eskiler yalnızca göç öncesi yedekte olanlardır.
+    if save["version"] == "0.06a":
+        eski = None if eski_istemci else set(eski_gorevler or ())
+        if gorev_numaralarini_cevir(save.setdefault("privateState", {}), eski):
+            print("   > gorev numaralari 1.4.07'ye cevrildi")
+        save["version"] = "0.07a"
+        print("   > migrated to 0.07a")
+
+    # 0.07a -> 0.08a: 1.4.07'nin yokluğunda bozulduğu privateState alanları eklenir (oyun/kayit_semasi.py)
+    if save["version"] == "0.07a":
+        eklenen = eksikleri_tamamla(save.setdefault("privateState", {}))
+        if eklenen:
+            print(f"   > 1.4.07 alanlari: {', '.join(eklenen)}")
+        save["version"] = "0.08a"
+        print("   > migrated to 0.08a")
 
     return True

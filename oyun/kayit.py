@@ -13,7 +13,8 @@ from werkzeug.utils import safe_join, secure_filename
 
 from oyun import denge
 from oyun.ekonomi import timestamp_now
-from oyun.surum import migrate_loaded_save, version_code
+from oyun.kayit_semasi import eksikleri_tamamla, guvence_hatalari
+from oyun.surum import ESKI_ISTEMCI_SURUMLERI, migrate_loaded_save, version_code
 from oyun.yollar import SAVES_DIR, VILLAGES_DIR, json_oku
 
 # Sunucu çok iş parçacıklı çalıştığı için kayıt değiştiren işlemler bu
@@ -126,6 +127,9 @@ def kaydi_dogrula(save):
         migrate_loaded_save(deneme)
         deneme["playerInfo"]["map_names"][deneme["playerInfo"].get("default_map", 0)]
         int(deneme["maps"][0]["level"])
+        eksik = guvence_hatalari(deneme["privateState"])
+        if eksik:
+            raise ValueError(f"1.4.07 alanlari eksik ya da yanlis turde: {', '.join(eksik)}")
     except Exception as hata:
         raise ValueError(f"kayit acilamiyor: {type(hata).__name__}: {hata}") from hata
     return save
@@ -172,9 +176,37 @@ def goc_oncesi_yedek(save: dict):
     return hedef
 
 
+def eski_gorev_numaralari(save: dict):
+    """0.06a kaydında hâlâ 0926 numarasıyla duran görevler: 1.4.07'den önceki göç öncesi yedekte olanlar.
+
+    0.06a'da istemci bu numaraları 1.4.07 hedefi sayıp bitmiş gösterdi, oyuncu onları yeniden kazanamadı; bu yüzden
+    yedekte olan numara bugün de eskidir. Yedekte olmayanlar 1.4.07'de kazanılmıştır. Yedek yoksa (kayıt 0.06a'da
+    doğdu) eski numara yoktur.
+    """
+    if save.get("version") != "0.06a":
+        return None
+    uid = str(save.get("playerInfo", {}).get("pid", ""))
+    if not gecerli_uid(uid) or secure_filename(uid) != uid:
+        return set()
+    numaralar = set()
+    for surum in ESKI_ISTEMCI_SURUMLERI + ("surumsuz",):
+        yol = os.path.join(BACKUP_DIR, f"{uid}.goc-{surum}.save.json")
+        if not os.path.exists(yol):
+            continue
+        try:
+            ps = json_oku(yol).get("privateState", {})
+        except Exception as hata:
+            print(f" ! Goc oncesi yedek okunamadi ({yol}): {hata}")
+            continue
+        for alan in ("completedMissions", "rewardedMissions"):
+            numaralar.update(n for n in ps.get(alan, []) if isinstance(n, int))
+    return numaralar
+
+
 def _yukleme_duzeltmeleri(save: dict) -> bool:
+    eski_gorevler = eski_gorev_numaralari(save)
     goc_oncesi_yedek(save)
-    modified = migrate_loaded_save(save)  # check save version for migration
+    modified = migrate_loaded_save(save, eski_gorevler)  # check save version for migration
     if _seviyeyi_duzelt(save):
         modified = True
     return modified
@@ -218,6 +250,7 @@ def new_village() -> str:
     village["maps"][0]["timestamp"] = timestamp_now()
     village["privateState"]["dartsRandomSeed"] = abs(int((2**16 - 1) * random.random()))
     village["privateState"]["shield_until"] = timestamp_now() + denge.YENI_OYUNCU_KALKANI
+    eksikleri_tamamla(village["privateState"])
     # Memory saves
     __saves[USERID] = village
     # Generate save file

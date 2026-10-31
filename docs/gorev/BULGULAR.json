@@ -4,7 +4,7 @@
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
     "madde": "GEC-03",
-    "sonraki_adim": "GEC-03 sürüyor: eğitim kuyruğunun dört komutu PR #26'da yazıldı (formüller docs/inceleme/1407-formuller.md); KYT-04 için sahibinin kararı bekleniyor. Sıradaki: GEC-03'ün kalanı (Ada Ocağı collect_game_*, mezarlık, viral teklifler, birim paketleri) ve GEC-04'ün geri dönüş testi. PR #25 (KAR-10) birleşti."
+    "sonraki_adim": "GEC-03 sürüyor: eğitim kuyruğunun dört komutu PR #26'da yazıldı (formüller docs/inceleme/1407-formuller.md); KYT-04 KAR-11 ile karara bağlandı (fazla iade verilmez). Sıradaki: GEC-03'ün kalanı (Ada Ocağı collect_game_*, mezarlık, viral teklifler, birim paketleri) ve GEC-04'ün geri dönüş testi. PR #25 (KAR-10) birleşti."
   },
   "maddeler": [
     {
@@ -1208,13 +1208,26 @@
       "baslik": "Eğitim kuyruğundan çıkarmada istemcinin iadesi fazla: köylüde yemek, Ruh Karıştırıcı'da bedel iade ediliyor",
       "sinif": "hata",
       "onem": "Düşük",
-      "durum": "onay_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "BuildingQueueManager/addUnit köylüden yemek almaz (SUBCATFUNC_UNIT_PEASANT → 0) ve Ruh Karıştırıcı'da (1529) bedel almaz; BuildingQueueData/returnCost ikisini de ayırmadan bedel ve ceil(bedel × 2) yemek iade eder. Köylü I (50 yemek) kuyruğa alınıp çıkarılınca 100 yemek kazanılır. Sunucu istemciyle aynı yapıyor (kayıt istemcinin gösterdiğiyle aynı): tests/test_komutlar.py test_koylu_iadesi_istemci_gibi_yemek_de_verir.",
       "test": "tests/test_komutlar.py",
       "pr": "#26",
-      "onay": null,
-      "notlar": "Denge kararı sahibinin: istemci gibi bırakılır ya da sunucu fazlayı vermez (o zaman yeniden yüklemede kaynak istemcinin gösterdiğinden az görünür). Ruh Karıştırıcı'da kuyruktan çıkarma arayüzü olup olmadığı denenmedi."
+      "onay": "Sahibi, 31 Ekim 2026 (KAR-11)",
+      "notlar": "Denge kararı sahibinin: istemci gibi bırakılır ya da sunucu fazlayı vermez (o zaman yeniden yüklemede kaynak istemcinin gösterdiğinden az görünür). Ruh Karıştırıcı'da kuyruktan çıkarma arayüzü olup olmadığı denenmedi. Karar KAR-11: sunucu yalnızca alınanı iade eder (egitim_odemesi); test_iade_yalnizca_alinan_kadar. İstemci fazlayı o oturumda gösterir, yeniden yüklenince kayıttaki değer görünür."
+    },
+    {
+      "id": "KAR-11",
+      "baslik": "Eğitim kuyruğundan çıkarmada yalnızca alınan iade edilir (istemcinin fazla iadesi verilmez)",
+      "sinif": "karar",
+      "onem": "Düşük",
+      "durum": "karar_verildi",
+      "isaret": "✔",
+      "kanit": "Sahibi 31.10.2026: 'Fazlayı verme' (soru: kuyruktan çıkarınca oyunun verdiği fazla iade kalsın mı, KYT-04).",
+      "test": "tests/test_komutlar.py",
+      "pr": "#26",
+      "onay": "Sahibi, 31 Ekim 2026",
+      "notlar": "Köylüde yemek, Ruh Karıştırıcı'da bedel iade edilmez. İstemci aynı oturumda fazlayı gösterir; kayıt doğru değeri tutar, yeniden yüklemede düzelir. İstemci kodu değiştirilmedi."
     }
   ]
 }

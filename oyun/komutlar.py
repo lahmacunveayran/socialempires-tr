@@ -597,6 +597,17 @@ def egitim_bedeli(h, birim):
     return bedel, math.ceil(bedel * EGITIM_YEMEGI)
 
 
+def egitim_odemesi(h, birim, bina_id):
+    """[(kaynak, miktar), ...]: eğitimde alınan. Ruh Karıştırıcı'da bedel yok, köylüde yemek yok."""
+    if bina_id == RUH_KARISTIRICI:
+        return []
+    bedel, yemek = egitim_bedeli(h, birim)
+    odeme = [(birim.get("cost_type"), bedel)]
+    if int(birim.get("subcat_functional", 0) or 0) != KOYLU:
+        odeme.append(("f", yemek))
+    return odeme
+
+
 @komut("push_queue_unit")
 def push_queue_unit(save, a):
     """[bina_x, bina_y, bina_id, birim_id, kuyruk_no, ruh_karistirici_degil] - açık kasabada."""
@@ -617,11 +628,8 @@ def push_queue_unit(save, a):
         kuyruk["unit"] = birim_id
     else:
         kuyruklar(save)[qid] = {"ts": timestamp_now(), "amount": 1, "unit": birim_id}
-    if bina_id != RUH_KARISTIRICI:
-        bedel, yemek = egitim_bedeli(h, birim)
-        kaynak_ekle(save, h, birim.get("cost_type"), -bedel)
-        if int(birim.get("subcat_functional", 0) or 0) != KOYLU:
-            kaynak_ekle(save, h, "f", -yemek)
+    for tur, miktar in egitim_odemesi(h, birim, bina_id):
+        kaynak_ekle(save, h, tur, -miktar)
 
 
 def _kuyruk_ve_bina(save, h, qid):
@@ -661,10 +669,11 @@ def pop_queue_unit(save, a):
 
 @komut("unqueue_unit")
 def unqueue_unit(save, a):
-    """[kuyruk_no, bina_id] - kuyruktan bir birim çıkar, bedeli iade edilir.
+    """[kuyruk_no, bina_id] - kuyruktan bir birim çıkar, eğitimde alınan iade edilir.
 
-    İstemcinin iadesi (BuildingQueueData/returnCost) birebir: köylüde de yemek iade eder, Ruh Karıştırıcı'da da
-    bedel iade eder (KYT-04)."""
+    İstemcinin iadesi (BuildingQueueData/returnCost) köylüde alınmayan yemeği, Ruh Karıştırıcı'da alınmayan bedeli
+    de verir; sahibinin kararıyla sunucu yalnızca alınanı iade eder (KAR-11, KYT-04). İstemci fazlayı o oturumda
+    gösterir, yeniden yüklenince kayıttaki değer görünür."""
     h = harita(save, acik_kasaba(save["playerInfo"].get("pid")))
     qid = a.metin(0)
     kuyruk, bina = _kuyruk_ve_bina(save, h, qid)
@@ -672,9 +681,8 @@ def unqueue_unit(save, a):
         print(" ! kuyruk yok:", qid)
         return
     birim = get_item_from_id(int(kuyruk.get("unit", 0))) or {}
-    bedel, yemek = egitim_bedeli(h, birim)
-    kaynak_ekle(save, h, birim.get("cost_type"), bedel)
-    kaynak_ekle(save, h, "f", yemek)
+    for tur, miktar in egitim_odemesi(h, birim, a.tam(1)):
+        kaynak_ekle(save, h, tur, miktar)
     _kuyruktan_dus(save, qid, kuyruk, bina)  # istemci sondakini çıkarır: sıradakinin başlangıcı değişmez
 
 

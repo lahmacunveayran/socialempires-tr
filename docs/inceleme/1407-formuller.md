@@ -44,10 +44,11 @@ keser (`convert_i`). Sunucu, istemciye gönderdiği ölçekli değeri kullanır:
 ### Kuyruktan çıkarma (`BuildingQueueData/removeUnit`, `returnCost`)
 
 - Sondaki birim çıkar; `ts` değişmez.
-- İade, bedelin aynı formülüyle: `bedel` (indirimli) `cost_type`'a, `ceil(bedel × 2)` yemeğe.
-- İstemcinin iadesi köylüyü ayırmaz (köylü yemeksiz eğitilir ama iadede yemek verir) ve Ruh Karıştırıcı'yı ayırmaz
-  (bedelsiz eğitilir ama iade edilir). Sunucu istemciyle aynı yapar; kayıt istemcinin gösterdiğiyle aynı kalır
-  (KYT-04, sahibinin kararını bekliyor).
+- İstemcinin iadesi bedelin aynı formülüyle: `bedel` (indirimli) `cost_type`'a, `ceil(bedel × 2)` yemeğe. Köylüyü
+  ayırmaz (köylü yemeksiz eğitilir ama iadede yemek verir) ve Ruh Karıştırıcı'yı ayırmaz (bedelsiz eğitilir ama iade
+  edilir), KYT-04.
+- Sunucu, sahibinin kararıyla (KAR-11) yalnızca eğitimde alınanı iade eder: köylüde yemek, Ruh Karıştırıcı'da hiçbir
+  şey verilmez. İstemci fazlayı o oturumda gösterir; yeniden yüklenince kayıttaki değer görünür.
 
 ### Hızlandırma (`BuildingQueueData/speedUp`, `get remainingSeconds`)
 

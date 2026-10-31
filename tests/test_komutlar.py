@@ -533,10 +533,16 @@ class EgitimKuyrugu(KomutTesti):
         self.assertNotIn("7", self.ps["barracksQueues"])
         self.assertEqual((self.harita["coins"], self.harita["food"]), (50000, 1000))
 
-    def test_koylu_iadesi_istemci_gibi_yemek_de_verir(self):
+    def test_iade_yalnizca_alinan_kadar(self):
+        # KAR-11: istemcinin returnCost'u köylüde yemek, Ruh Karıştırıcı'da bedel de verir; sunucu vermez
         self.it(self.KOYLU, 3, 1)
         self.komut("unqueue_unit", 3, self.KISLA)
-        self.assertEqual(self.harita["food"], 1000 + 100)  # KYT-04: returnCost köylüyü ayırmaz
+        self.assertEqual(self.harita["food"], 1000)
+        self.harita["items"].append([1529, 40, 40, 0, 0, 0])
+        self.komut("push_queue_unit", 40, 40, 1529, self.MIZRAKCI, 4, 0)
+        self.komut("unqueue_unit", 4, 1529)
+        self.assertEqual((self.harita["coins"], self.harita["food"]), (50000, 1000))
+        self.assertNotIn("4", self.ps["barracksQueues"])
 
     def test_hizlandirma_kalan_her_saat_bir_nakit(self):
         self.kayit["playerInfo"]["cash"] = 10

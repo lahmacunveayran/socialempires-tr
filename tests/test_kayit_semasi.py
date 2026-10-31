@@ -81,8 +81,10 @@ class Goc(unittest.TestCase):
     def test_yoklugu_ozelligi_kapali_tutan_alan_eklenmez(self):
         k = _kayit_07()
         migrate_loaded_save(k)
-        for ad in ("numDayLogged", "showDailyBonus", "firstPurchaseTimestamp", "collectGame", "barracksQueues"):
+        for ad in ("showDailyBonus", "collectGame", "barracksQueues", "resurrectableUnits"):
             self.assertNotIn(ad, k["privateState"])
+        # ilk alım teklifi sahibinin kararıyla açık (KAR-10): ilk 3 gün görünür
+        self.assertEqual((k["privateState"]["firstPurchaseTimestamp"], k["privateState"]["numDayLogged"]), (0, 1))
 
     def test_var_olan_deger_korunur_yanlis_tur_duzelir(self):
         k = _kayit_07()

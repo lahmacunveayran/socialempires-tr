@@ -394,5 +394,74 @@ class PvpKomutlari(KomutTesti):
         self.assertEqual(self.ps["attacksReceived"], [{"time": 1}, {"time": 2}])
 
 
+class IlkAlimTeklifi(KomutTesti):
+    """KAR-10: ilk alım teklifi 1.4.07'nin kendi bedeli ve ödülüyle, bir kez (PopupFirstBuy/onBuy)."""
+
+    def setUp(self):
+        super().setUp()
+        from oyun.config import get_game_config
+        self.g = get_game_config()["globals"]
+        self.kayit["playerInfo"]["cash"] = 100
+        self.ps.update(firstPurchaseTimestamp=0, numDayLogged=1)
+
+    def test_pencere_acilinca_damga_konur_bir_kez(self):
+        self.komut("set_first_purchase_timestamp")
+        damga = self.ps["firstPurchaseTimestamp"]
+        self.assertGreater(damga, 1)
+        self.komut("set_first_purchase_timestamp")  # yeniden açmak süreyi uzatmaz
+        self.assertEqual(self.ps["firstPurchaseTimestamp"], damga)
+        self.komut("set_first_purchase_timestamp", 0)  # geliştirici paneli sıfırlar
+        self.assertEqual(self.ps["firstPurchaseTimestamp"], 0)
+
+    def test_alim_bedel_ve_odul_bir_kez(self):
+        odul = self.g["POPUP_FIRST_PURCHASE_OFFER_REWARD"]
+        bedel = self.g["POPUP_FIRST_PURCHASE_OFFER_COST"]
+        self.komut("set_first_purchase_timestamp")
+        altin, yemek = self.harita["coins"], self.harita["food"]
+        self.komut("buy_first_purchase")
+        self.assertEqual(self.kayit["playerInfo"]["cash"], 100 - bedel)
+        self.assertEqual(self.harita["coins"], altin + odul["g"])
+        self.assertEqual(self.harita["food"], yemek + odul["f"])
+        for birim in odul["units"]:
+            self.assertEqual(self.ps["gifts"][birim], 1)
+        self.assertEqual(self.ps["firstPurchaseTimestamp"], self.komutlar.ILK_ALIM_ALINDI)
+        self.komut("buy_first_purchase")  # ikinci kez alınmaz
+        self.assertEqual(self.kayit["playerInfo"]["cash"], 100 - bedel)
+
+    def test_pencere_acilmadan_sure_gecince_nakit_yetmezse_alinmaz(self):
+        self.komut("buy_first_purchase")  # damga 0: pencere açılmadı
+        self.ps["firstPurchaseTimestamp"] = self.komutlar.timestamp_now() - self.g["POPUP_FIRST_PURCHASE_OFFER_TIME"] - 3600
+        self.komut("buy_first_purchase")  # süre geçti
+        self.komut("set_first_purchase_timestamp", self.komutlar.timestamp_now())
+        self.kayit["playerInfo"]["cash"] = self.g["POPUP_FIRST_PURCHASE_OFFER_COST"] - 1
+        self.komut("buy_first_purchase")  # nakit yetmiyor
+        self.assertEqual(self.ps["gifts"], [])
+        self.assertEqual(self.kayit["playerInfo"]["cash"], self.g["POPUP_FIRST_PURCHASE_OFFER_COST"] - 1)
+
+    def test_odul_acik_kasabaya_gider(self):
+        from oyun import oyuncu
+        ikinci = dict(self.harita, id=1, coins=0, food=0)
+        self.kayit["maps"].append(ikinci)
+        oyuncu._acik_kasabalar["test"] = 1
+        self.addCleanup(oyuncu._acik_kasabalar.pop, "test", None)
+        self.komut("set_first_purchase_timestamp")
+        self.komut("buy_first_purchase")
+        self.assertEqual(ikinci["coins"], self.g["POPUP_FIRST_PURCHASE_OFFER_REWARD"]["g"])
+
+    def test_giris_gunu_yeni_gunde_artar(self):
+        from oyun.oyuncu import giris_gunu_say
+        pi = self.kayit["playerInfo"]
+        bugun = 1_760_000_000
+        pi["last_logged_in"] = bugun - 60
+        giris_gunu_say(self.kayit, bugun)
+        self.assertEqual(self.ps["numDayLogged"], 1)  # aynı gün
+        pi["last_logged_in"] = bugun - 2 * 86400
+        giris_gunu_say(self.kayit, bugun)
+        self.assertEqual(self.ps["numDayLogged"], 2)
+        pi["last_logged_in"] = -1  # yeni köy şablonu
+        giris_gunu_say(self.kayit, bugun)
+        self.assertEqual(self.ps["numDayLogged"], 2)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

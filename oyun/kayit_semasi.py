@@ -7,8 +7,8 @@ kullandığından.
 
 Göçün ilkesi: göç, istemcinin bugünkü davranışını değiştirmez. Bir alan yalnızca yokluğu istemciyi bozuyorsa
 (`undefined.indexOf` hatası, NaN, olmayan sıraya erişim) eklenir; eklenen değer "hiç yok" anlamındaki boş değerdir.
-Yokluğu bir özelliği kapalı tutan alanlar (günlük ödül, ilk alım teklifi, Ada Ocağı...) eklenmez; onları işleyen
-komutlarla birlikte açılırlar (GEC-03, GEC-05).
+Yokluğu bir özelliği kapalı tutan alanlar (günlük ödül, Ada Ocağı...) eklenmez; onları işleyen komutlarla birlikte
+açılırlar (GEC-03, GEC-05). İstisna: ilk alım teklifi; sahibi açılmasını istedi (KAR-10), komutları da yazıldı.
 """
 
 # ad: (tür, boş değer ya da None, istemcide okuyan yöntem ve yokluğunun sonucu)
@@ -31,8 +31,10 @@ ALANLAR = {
     "viralOffers": (dict, None, "SpecialDayOfferManager/setPlayerInfo for-in; yokluğu boş gibi"),
     "resurrectableUnits": (list, None, "Base/loadGraveyardState for-in; yokluğu boş mezarlık gibi (GEC-03)"),
     "graveyardCapacity": (int, None, "Base/loadGraveyardState parseInt; Main.graveyardCapacity başka yerde okunmuyor"),
-    "firstPurchaseTimestamp": (int, None, "FirstOfferButton/isActive; yokluğu ilk alım teklifini kapalı tutar"),
-    "numDayLogged": (int, None, "DailyBonusManager, FirstOfferButton; yokluğu yeni günlük ödülü kapalı tutar"),
+    "firstPurchaseTimestamp": (int, 0, "FirstOfferButton/isActive: 0 iken ve numDayLogged < 3 iken teklif görünür; "
+                                       "yokluğu teklifi kapalı tutar, sahibi açılmasını istedi (KAR-10)"),
+    "numDayLogged": (int, 1, "FirstOfferButton/isActive, DailyBonusManager; girişte her yeni gün artar "
+                             "(oyuncu.giris_gunu_say). Yeni günlük ödülü açmaz: o showDailyBonus'a bağlı"),
     "showDailyBonus": (int, None, "Base/loadPlayerInfoSuccess, DailyBonusButton; yokluğu düğmeyi kapalı tutar"),
 }
 

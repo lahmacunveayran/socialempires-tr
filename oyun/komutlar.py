@@ -19,6 +19,7 @@ from oyun.config import (get_game_config, get_item_from_id, get_item_from_subcat
                          get_level_from_xp)
 from oyun.ekonomi import apply_collect, apply_collect_xp, apply_cost, timestamp_now
 from oyun.kayit import all_saves_userid, neighbor_session, save_session, session
+from oyun.oyuncu import acik_kasaba
 from oyun.yollar import SAVES_DIR, VILLAGES_DIR
 
 KOMUTLAR = {}
@@ -797,6 +798,52 @@ def buy_super_offer_pack(save, a):
         if parca.strip().isdigit():
             depo_ekle(save, int(parca))
     cash_ekle(save, -a.tam(3))
+
+
+# İlk alım teklifi (PopupFirstBuy, KYT-02). Teklif penceresi ilk açıldığında firstPurchaseTimestamp konur;
+# POPUP_FIRST_PURCHASE_OFFER_TIME saniye içinde bir kez alınır. Alınınca damga 1 olur: istemcinin
+# FirstOfferButton/isActive'i bunu süresi geçmiş sayar, düğme bir daha çıkmaz.
+ILK_ALIM_ALINDI = 1
+SAAT_PAYI = 300  # sn; istemcinin saati sunucununkinden biraz geride olabilir
+
+
+@komut("set_first_purchase_timestamp")
+def set_first_purchase_timestamp(save, a):
+    """[] teklif penceresi ilk açılınca; [damga] geliştirici panelinden (AdminPanel/setFP)."""
+    ps = save["privateState"]
+    if len(a):
+        ps["firstPurchaseTimestamp"] = max(0, a.tam(0))
+    elif not ps.get("firstPurchaseTimestamp"):
+        ps["firstPurchaseTimestamp"] = timestamp_now()
+
+
+@komut("buy_first_purchase")
+def buy_first_purchase(save, a):
+    """[] - PopupFirstBuy/onBuy: POPUP_FIRST_PURCHASE_OFFER_COST nakit düşer, ..._REWARD verilir.
+
+    Kaynaklar açık kasabaya, birimler depoya gider (istemci storeItem ile depoya koyar)."""
+    ps = save["privateState"]
+    g = globals_()
+    damga = int(ps.get("firstPurchaseTimestamp", 0) or 0)
+    sure = int(g.get("POPUP_FIRST_PURCHASE_OFFER_TIME", 86400))
+    bedel = int(g.get("POPUP_FIRST_PURCHASE_OFFER_COST", 0))
+    if damga <= ILK_ALIM_ALINDI or timestamp_now() - damga > sure + SAAT_PAYI:
+        print(" ! ilk alim teklifi acik degil")
+        return
+    if int(save["playerInfo"].get("cash", 0)) < bedel:
+        print(" ! ilk alim teklifi icin nakit yetmiyor")
+        return
+    cash_ekle(save, -bedel)
+    odul = g.get("POPUP_FIRST_PURCHASE_OFFER_REWARD") or {}
+    h = harita(save, acik_kasaba(save["playerInfo"].get("pid")))
+    for tur in ("g", "c", "w", "f", "s", "m"):
+        if odul.get(tur):
+            kaynak_ekle(save, h, tur, odul[tur])
+    if odul.get("exp"):
+        h["xp"] = int(h.get("xp", 0)) + int(odul["exp"])
+    for birim in odul.get("units") or []:
+        depo_ekle(save, int(birim))
+    ps["firstPurchaseTimestamp"] = ILK_ALIM_ALINDI
 
 
 # ---------------------------------------------------------------------------

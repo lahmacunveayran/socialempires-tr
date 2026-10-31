@@ -2,6 +2,7 @@
 
 import json
 import os
+import time
 
 from oyun.ekonomi import timestamp_now
 from oyun.kayit import session, neighbor_session, neighbors
@@ -15,10 +16,39 @@ def _harita(kayit, map_number):
     return haritalar[map_number]
 
 
+# Oyuncunun en son açtığı kasaba (kasaba değiştirince istemci get_player_info'yu o kasabayla ister). Kasaba numarası
+# taşımayan komutlar (buy_first_purchase) kaynağı buraya yazar. Kayda yazılmaz: açılışta istemci yeniden ister.
+_acik_kasabalar = {}
+
+
+def acik_kasaba(USERID) -> int:
+    return _acik_kasabalar.get(str(USERID), 0)
+
+
+def giris_gunu_say(kayit, ts_now):
+    """numDayLogged: yeni bir takvim gününde ilk girişte bir artar (1.4.07'nin günlük sayacı, KYT-02)."""
+    ps = kayit["privateState"]
+    onceki = int(kayit["playerInfo"].get("last_logged_in", 0) or 0)
+    if not isinstance(ps.get("numDayLogged"), int):
+        ps["numDayLogged"] = 1
+    elif 0 < onceki < ts_now and _gun(onceki) != _gun(ts_now):
+        ps["numDayLogged"] += 1
+
+
+def _gun(ts):
+    """Yerel takvim günü; bozuk damgada (Windows'ta erimin dışı) None."""
+    try:
+        return time.localtime(ts)[:3]
+    except (OSError, OverflowError, ValueError):
+        return None
+
+
 def get_player_info(USERID, map_number=0):
     kayit = session(USERID)
     ts_now = timestamp_now()
+    giris_gunu_say(kayit, ts_now)
     kayit["playerInfo"]["last_logged_in"] = ts_now
+    _acik_kasabalar[str(USERID)] = map_number if 0 <= map_number < len(kayit["maps"]) else 0
     return {
         "result": "ok",
         "processed_errors": 0,

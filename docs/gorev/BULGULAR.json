@@ -4,7 +4,7 @@
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
     "madde": "GEC-04",
-    "sonraki_adim": "PR #22 (GEC-02) birleşince GEC-03 ∥ GEC-04. GEC-04'ün ilk işi GOR-01: eski görev numaralarının 1.4.07 hedeflerine göçü. Sahibinden: KNF-02 (1.4.07 fiyatları) onayı."
+    "sonraki_adim": "PR #22 (GEC-02) birleşti; sırada GEC-03 ∥ GEC-04. GEC-04'ün ilk işi GOR-01: eski görev numaralarının 1.4.07 hedeflerine göçü."
   },
   "maddeler": [
     {
@@ -831,7 +831,7 @@
       "baslik": "İstemcinin 1.4.07'ye geçmesi: SWF, sabit kaynak 54df29e ve SHA-256, config hattı, goals, Türkçe yama, kayıt sürümü; 0926'nın kaldırılması",
       "sinif": "ozellik",
       "onem": "Yüksek",
-      "durum": "ci_bekliyor",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "✔ çalıştırıldı, 31.10.2026. İstemci: oyun/kaynaklar.py ISTEMCI = SocialEmpires1.4.07sec_fixed.swf, kaynak 54df29e, SHA-256 0e4cc178…6a15; oyun/varliklar.py ozet_uyuyor: özeti uymayan istemci sunulmaz, indirilen yeniden indirilir. Formdaki GAMEVERSION'a bakılmaz. Config: upstream'in 0-language_en, 1-mega_patch, 2-unit_patch yamaları ve goals.json config/'e alındı; mega_patch'in kapsadığı 11 eski yama silindi; kompu.json yalnızca kompu_offers ve KOMPU_WIZZARD_COSTS (KNF-03); turnuva.json (KNF-04); yeni_icerik.json kaldı. config['goals'] = 206 hedef, resimleri images'a eklenir (oyun/config.py hedefleri_ekle). reward_mission ödülü goals'tan. Türkçe SWF yaması 1.4.07'de 521 alan değiştiriyor (0926: 582), çıktı yeniden okunabiliyor; 1.4.07 hâlâ p.miniFireball2 istiyor, fx_yama kalır. Kayıt: sürüm 0.06a, göçten önceki hâl backups/<kimlik>.goc-<sürüm>.save.json (bir kez, silinmez). Çeviri: CEV-02. Deneme (geçici kayıt klasörü, S-36): yeni imparatorluk ve 0.05a'ya çekilmiş 51 kayıt (50 bot + oyuncu) açıldı, 51'i göç etti, 51 yedek; tarayıcıda konsol hatası 0, bütün istekler 200, eğitim Türkçe; göç etmiş oyuncu kaydı istemcide açıldı. Yüksek seviye: botlardan SV13, SV36, SV59 oyuncu hesabı (eski görev listeleriyle) yapıldı; 54 kaydın her biri için oyuncu bilgisi ve komşu ziyareti ok, config'de karşılığı olmayan eşya 0. SV59'un istemcide görsel denetimi yapılamadı (S-35). 0926'ya özel 3 test kaldırıldı, 6 test eklendi; 228 test geçiyor.",
       "test": "tests/test_onindirme.py, tests/test_sistemler.py, tests/test_komutlar.py, tests/test_denetim.py",
@@ -1091,13 +1091,13 @@
       "baslik": "Denge: 1.4.07'nin kendi değerleri eskilerinden farklı (iksir fiyatı, 12 eşyanın fiyatı)",
       "sinif": "karar",
       "onem": "Orta",
-      "durum": "onay_bekliyor",
+      "durum": "karar_verildi",
       "isaret": "✔",
       "kanit": "Eski config (0.04a yamalarıyla) ile yeni config karşılaştırıldı (31.10.2026). GRAVEYARD_POTIONS: 100 nakde 1 iksir → 5 nakde 25. Fiyatı değişen eşyalar: Black Castle 6000 altın → 15 nakit, Golden Castle 5000 altın → 20 nakit, Soul Mixer 2000 altın → 100 nakit, Necro King 10 nakit → 6800 altın, Necro King Barracks 14000 altın → 30 nakit, Golden Hall 35 nakit → 150000 (all), Dragon Breeding Nest 6000 → 0, Yellow/Red Tree 1 → 225 altın, Happy Tree 1 → 390, Soldier Statue 1 → 700. Yeni alanlar (eski oyunda yoktu): training_time 771 eşyada (kuyruk), GRAVEYARD_CAPACITY, PVP_*, HONOR_POINT_*, QUEST_GOLD_REWARD. Değerler 1.4.07'nin (upstream mega_patch) değerleri; PR'da bunlar kullanılıyor.",
       "test": null,
       "pr": "#22",
-      "onay": null,
-      "notlar": "Sahibine soruldu: 1.4.07'nin kendi fiyatları mı, eskiler mi (eskiler kendi yamamızla geri yazılabilir)."
+      "onay": "Sahibi, 31 Ekim 2026: \"1.4.07 fiyatları kalsın\"",
+      "notlar": "Sahibine soruldu: 1.4.07'nin kendi fiyatları mı, eskiler mi (eskiler kendi yamamızla geri yazılabilir). Karar: 1.4.07'nin kendi değerleri kalır; eski fiyatları geri yazan yama yapılmaz."
     },
     {
       "id": "KNF-03",

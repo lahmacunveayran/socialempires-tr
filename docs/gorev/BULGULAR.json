@@ -1,10 +1,10 @@
 {
-  "surum": "0.07a",
+  "surum": "0.08a",
   "guncelleme": "2026-10-31",
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
     "madde": "GEC-04",
-    "sonraki_adim": "GEC-04 sürüyor: GOR-01 (görev numaralarının göçü, kayıt 0.07a) PR #24'te. Sıradaki parça: 1.4.07'nin okuduğu yeni privateState alanlarının bayt kodundan çıkarılması, şeması ve göçü (I(g(s)) = I(s), g(g(s)) = g(s)). GEC-03 bununla koşut yürüyebilir."
+    "sonraki_adim": "GEC-04 sürüyor: GOR-01 PR #24'te; yeni privateState alanları (KYT-01, kayıt 0.08a) de aynı PR'da. Sıradaki: GEC-04'ün kalanı (geri dönüş testi: yedekten açılan kaydın baytları eski kayıtla aynı) ve GEC-03'ün kuyruk, Ada Ocağı ve günlük ödül komutları; bunların alanları KYT-02'de."
   },
   "maddeler": [
     {
@@ -863,7 +863,7 @@
       "test": null,
       "pr": null,
       "onay": null,
-      "notlar": "KAR-08 kararıyla açıldı (30.10.2026). İlk parça GOR-01 (31.10.2026): kayıt 0.07a, görev numaralarının göçü; migrate_loaded_save artık göç öncesi yedekten okunan eski numaraları alır (kayit.eski_gorev_numaralari). Sıradaki parça: yeni privateState alanları."
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026). İlk parça GOR-01 (31.10.2026): kayıt 0.07a, görev numaralarının göçü; migrate_loaded_save artık göç öncesi yedekten okunan eski numaraları alır (kayit.eski_gorev_numaralari). Sıradaki parça: yeni privateState alanları. İkinci parça KYT-01 (31.10.2026): kayıt 0.08a, 1.4.07'nin yokluğunda bozulduğu alanlar; şema oyun/kayit_semasi.py; kaydi_dogrula eksik alanı reddeder. Kalan: geri dönüş testi."
     },
     {
       "id": "GEC-05",
@@ -1150,6 +1150,45 @@
       "pr": "#24",
       "onay": null,
       "notlar": "Göç g'nin bir parçası (GEC-04): başlık ve tür eşleşmesiyle eski numaraları 1.4.07 numaralarına çevirmek. Uygulandı (31.10.2026, kayıt 0.07a): araclar/gorev_gocu.py tabloyu config/gorev_gocu.json'a yazar. Kural: başlık (harf/noktalama dışı) ve ödül numarası aynıysa eşleşir; adı değişmiş 10 görev elle denetlenip eklendi (ödül numarası aynı, iş aynı). 228 eski görevden 190'ı eşleşti, 93'ünün numarası değişti, 38'i düştü (1.4.07'de karşılığı yok ya da işi değişti: 30 '3 okçu' → '5 okçu' gibi). Yalnız başlıkla eşlemek yanlıştı: eski 110 'Train 2 villagers' (Town Hall II, ödül 220) eğitimdeki 11'e (ödül 20) düşüyordu; ödül numarası ayırdı. Hangi numara eski: 0.05a ve öncesinde hepsi; 0.06a'da yalnızca göç öncesi yedekte (backups/<kimlik>.goc-0.05a.save.json) olanlar, çünkü 0.06a'da istemci onları bitmiş gösterdi ve yeniden kazanılamadılar; ötekiler 1.4.07'de kazanılmıştır, dokunulmaz. Deneme (✔, geçici klasörde 54 kayıt): hepsi 0.07a, SV59 228 → 190, SV36 130 → 111, SV13 60 → 55; karşılığı olmayan hedef 0; ikinci yüklemede değişen kayıt 0; yalnızca göç g ile 54 kayıtta I(g(s)) = I(s) ve g(g(s)) = g(s). Bir bot kaydında seviye 7 → 8 oldu: göçten değil, eski yükleme düzeltmesinden (_seviyeyi_duzelt, XP 899 seviye 8 demek). Kalan sınır (?): başka cihazdan yüklenen 0.06a kaydının göç öncesi yedeği bu cihazda yoksa numaraları çevrilmez. İstemcide görsel denetim yapılmadı (S-35)."
+    },
+    {
+      "id": "KYT-01",
+      "baslik": "1.4.07 kayıttan 18 yeni privateState alanı okuyor; 6'sının ve saldırı sayılarının yokluğu istemciyi bozuyor",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "ci_bekliyor",
+      "isaret": "✔",
+      "kanit": "araclar/kayit_alanlari.py (✔ 31.10.2026, 1.4.07 SHA-256 0e4cc178…6a15): privateState'ten okunan 82 alan (0926'da 64), 18'i yeni; liste docs/inceleme/1407-kayit-alanlari.json. Kod karıştırılmış: iki erişimin arasına jump ve hata ayıklama satırı konmuş, ilk tarama graveyardCapacity'yi kaçırdı (S-39). 54 deneme kaydının hiçbirinde bu alanlar yok. Bayt kodundan yokluğun sonucu: ShieldManager isShieldAvailable/buyShield _purchasedShields.indexOf (hata), setPlayerShieldState 0 → -1 ama undefined kalır, buyShield NaN; PopupRecruitment$/canOpen playerRecruitmentPrices.indexOf (hata); loadGraveyardState parseInt(potionsReceived) NaN, pencerede 'NaNx'; SelectionTeamWindow tournament_formations[undefined]; GoalAssaultsWon/Started attacksWon(+attacksLost) NaN, saldırı hedefleri bitmez. Ötekilerin (kuyruk, Ada Ocağı, birlik paketleri, viral teklifler, mezarlık listesi, saldırı günlüğü) for-in'i undefined'da boş geçer.",
+      "test": "tests/test_kayit_semasi.py",
+      "pr": "#24",
+      "onay": null,
+      "notlar": "Çözüm (kayıt 0.08a): oyun/kayit_semasi.py şeması; göç yalnızca yokluğu bozanları boş değerle ekler (purchasedShields [], shieldEndTime 0, shieldCooldown 0, recruitmentPrices [], potionsReceived 0, tournamentFormation 0), saldırı sayıları rapordan; var olana dokunmaz, türü yanlışı düzeltir. Yeni köy ve botlar bu alanlarla doğar; kaydi_dogrula göç edilmiş kopyada eksik alanı reddeder. 54 kayıtta g: I(g(s)) = I(s), g(g(s)) = g(s), ikinci yüklemede değişen 0. Upstream (54df29e version.py, yalnızca okundu) bu alanları ve daha fazlasını ekliyor; adlar ve varsayılanlar bayt koduyla karşılaştırıldı, kod alınmadı. İstemcide görsel denetim yapılmadı (S-35)."
+    },
+    {
+      "id": "KYT-02",
+      "baslik": "Yeni günlük ödül, ilk alım teklifi, Ada Ocağı, kuyruklar ve mezarlık alanları yokken bu özellikler kapalı",
+      "sinif": "ozellik",
+      "onem": "Orta",
+      "durum": "acik",
+      "isaret": "◐",
+      "kanit": "Bayt kodu (31.10.2026): DailyBonusManager/initPlayerData numDayLogged/lastDayRewarded/nextDayReward, DailyBonusButton/isActive showDailyBonus; FirstOfferButton/isActive firstPurchaseTimestamp ve numDayLogged < 3; CollectGameManager collectGame; BuildingQueueManager barracksQueues; loadGraveyardState resurrectableUnits, graveyardCapacity. Alan yokken bu yollar boş ya da kapalı geçiyor; hata vermiyor (yeni imparatorluk ve göç etmiş kayıtta konsol hatası 0, GEC-02).",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "Göç bunları bilerek eklemiyor (davranışı değiştirirler). Her biri onu işleyen komutla açılır: GEC-03 (kuyruk, collect_game, mezarlık) ve OYN-11 (1.4.07'nin 5 günlük ödül penceresi). İlk alım teklifi gerçek parayla nakit satışıdır; çevrimdışı oyunda açılıp açılmayacağı sahibine sorulur. Kaynak sınırı: initPlayerData'nın okuduğu lastDayRewarded/nextDayReward parametreden okunuyor, araç bunları bulmaz (◐)."
+    },
+    {
+      "id": "KYT-03",
+      "baslik": "İki kalkan: sunucunun yeni oyuncu kalkanı (shield_until) ile 1.4.07'nin kalkanı (shieldEndTime) ayrı",
+      "sinif": "hata",
+      "onem": "Düşük",
+      "durum": "acik",
+      "isaret": "?",
+      "kanit": "oyun/kayit.py new_village privateState.shield_until = şimdi + denge.YENI_OYUNCU_KALKANI; 1.4.07 istemcisi kalkanı shieldEndTime'dan gösterir (ShieldManager). Yeni oyuncunun sunucudaki kalkanı istemcide görünmüyor olabilir; denenmedi.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "GEC-05'te (yeni PvP ve kalkan komutları) tek kalkana indirilir."
     }
   ]
 }

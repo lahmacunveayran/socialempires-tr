@@ -15,6 +15,7 @@ from oyun.config import get_client_game_config, get_game_config, kompu_teklifi
 from oyun.ekonomi import timestamp_now
 from oyun.kayit import (gecerli_uid, neighbor_session, save_lock, save_session,
                         session as kayit_oturumu)
+from oyun.kayit_semasi import saldiri_sonuclari
 from oyun.komutlar import command, depo_ekle, listeye_ekle
 from oyun.oyuncu import get_neighbor_info, get_player_info, get_quest_map
 from oyun.sunucu import OYUN_DILI, app
@@ -253,10 +254,7 @@ def get_public_player_info_response():
     if kayit is None:
         return {}
     pi = kayit["playerInfo"]
-    # Sonucu bilinen saldırılar (bot akınlarının kaydında sonuç yok)
-    raporlar = [r for r in kayit["privateState"].get("attacksSent") or []
-                if isinstance(r, dict) and isinstance(r.get("description"), dict)]
-    kazanilan = sum(1 for r in raporlar if r["description"].get("win") in (1, "1"))
+    kazanilan, kaybedilen = saldiri_sonuclari(kayit["privateState"])
     return {
         "pid": str(pi.get("pid", "")),
         "name": pi.get("name", ""),
@@ -266,7 +264,7 @@ def get_public_player_info_response():
         "country": pi.get("country", "TR"),
         "last_logged_in": int(pi.get("last_logged_in", 0) or 0),
         "attacks_won": kazanilan,
-        "attacks_lost": len(raporlar) - kazanilan,
+        "attacks_lost": kaybedilen,
     }
 
 

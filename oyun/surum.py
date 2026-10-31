@@ -3,10 +3,11 @@ import os
 import random
 
 from oyun.ekonomi import timestamp_now
+from oyun.kayit_semasi import eksikleri_tamamla
 from oyun.yollar import CONFIG_DIR
 
-version_name = "alpha 0.07"
-version_code = "0.07a"
+version_name = "alpha 0.08"
+version_code = "0.08a"
 
 # 1.4.07'den önceki sürümler: bu kayıtlardaki görev numaraları 0926 istemcisinin numaralarıdır.
 ESKI_ISTEMCI_SURUMLERI = ("0.01a", "0.02a", "0.03a", "0.04a", "0.05a")
@@ -138,5 +139,13 @@ def migrate_loaded_save(save: dict, eski_gorevler=None) -> bool:
             print("   > gorev numaralari 1.4.07'ye cevrildi")
         save["version"] = "0.07a"
         print("   > migrated to 0.07a")
+
+    # 0.07a -> 0.08a: 1.4.07'nin yokluğunda bozulduğu privateState alanları eklenir (oyun/kayit_semasi.py)
+    if save["version"] == "0.07a":
+        eklenen = eksikleri_tamamla(save.setdefault("privateState", {}))
+        if eklenen:
+            print(f"   > 1.4.07 alanlari: {', '.join(eklenen)}")
+        save["version"] = "0.08a"
+        print("   > migrated to 0.08a")
 
     return True

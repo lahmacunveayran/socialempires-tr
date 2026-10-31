@@ -13,6 +13,7 @@ from werkzeug.utils import safe_join, secure_filename
 
 from oyun import denge
 from oyun.ekonomi import timestamp_now
+from oyun.kayit_semasi import eksikleri_tamamla, guvence_hatalari
 from oyun.surum import ESKI_ISTEMCI_SURUMLERI, migrate_loaded_save, version_code
 from oyun.yollar import SAVES_DIR, VILLAGES_DIR, json_oku
 
@@ -126,6 +127,9 @@ def kaydi_dogrula(save):
         migrate_loaded_save(deneme)
         deneme["playerInfo"]["map_names"][deneme["playerInfo"].get("default_map", 0)]
         int(deneme["maps"][0]["level"])
+        eksik = guvence_hatalari(deneme["privateState"])
+        if eksik:
+            raise ValueError(f"1.4.07 alanlari eksik ya da yanlis turde: {', '.join(eksik)}")
     except Exception as hata:
         raise ValueError(f"kayit acilamiyor: {type(hata).__name__}: {hata}") from hata
     return save
@@ -246,6 +250,7 @@ def new_village() -> str:
     village["maps"][0]["timestamp"] = timestamp_now()
     village["privateState"]["dartsRandomSeed"] = abs(int((2**16 - 1) * random.random()))
     village["privateState"]["shield_until"] = timestamp_now() + denge.YENI_OYUNCU_KALKANI
+    eksikleri_tamamla(village["privateState"])
     # Memory saves
     __saves[USERID] = village
     # Generate save file

@@ -1,0 +1,71 @@
+{
+ "istemci": "SocialEmpires1.4.07sec_fixed.swf",
+ "eski": "SocialEmpires0926bsec.swf",
+ "okunan": 82,
+ "eskide_okunan": 64,
+ "yeni": {
+  "PVPattacksReceived": [
+   "PlayerStatus/Init"
+  ],
+  "attacksLost": [
+   "GoalAssaultsStarted/onMapaInicializado"
+  ],
+  "barracksQueues": [
+   "BuildingQueueManager/init"
+  ],
+  "collectGame": [
+   "Base/loadPlayerInfoSuccess"
+  ],
+  "collectGameGivenPrizes": [
+   "Base/loadPlayerInfoSuccess"
+  ],
+  "firstPurchaseTimestamp": [
+   "FirstOfferButton/isActive",
+   "FirstOfferButton/timeLeft",
+   "FirstOfferButton/updateTimer",
+   "PopupFirstBuy/<kurucu>",
+   "PopupFirstBuy/timeLeft"
+  ],
+  "graveyardCapacity": [
+   "Base/loadGraveyardState"
+  ],
+  "numDayLogged": [
+   "FirstOfferButton/isActive"
+  ],
+  "potionsReceived": [
+   "Base/loadGraveyardState"
+  ],
+  "purchasedShields": [
+   "Base/loadMapHandler",
+   "Base/loadPlayerInfoSuccess"
+  ],
+  "recruitmentPrices": [
+   "Base/loadPlayerInfoSuccess"
+  ],
+  "resurrectableUnits": [
+   "Base/loadGraveyardState"
+  ],
+  "shieldCooldown": [
+   "Base/loadMapHandler",
+   "Base/loadPlayerInfoSuccess"
+  ],
+  "shieldEndTime": [
+   "Base/loadMapHandler",
+   "Base/loadPlayerInfoSuccess"
+  ],
+  "showDailyBonus": [
+   "Base/loadPlayerInfoSuccess"
+  ],
+  "tournamentFormation": [
+   "SelectionTeamWindow/init",
+   "TournamentManager$/joinTournament"
+  ],
+  "unitPacks": [
+   "Base/loadPlayerInfoSuccess"
+  ],
+  "viralOffers": [
+   "Base/loadPlayerInfoSuccess"
+  ]
+ },
+ "kalkan": []
+}

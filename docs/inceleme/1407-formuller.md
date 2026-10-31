@@ -59,3 +59,28 @@ keser (`convert_i`). Sunucu, istemciye gönderdiği ölçekli değeri kullanır:
   `pop_queue_unit` gönderir.
 - Upstream'den ayrılık: upstream yalnızca sıradaki birimin kalan süresini ücretlendirir; burada istemcinin
   gösterdiği ve düştüğü bedel (bekleyenler dahil) uygulanır.
+
+## Birlik paketleri (`buy_unit_pack`, `get_up_data.php`)
+
+Uygulama: `oyun/komutlar.py`, `oyun/istemci.py`; testler: `tests/test_komutlar.py` (`BirlikPaketleri`),
+`tests/test_http.py`. Karar: KAR-12.
+
+### Alım (`UnitPacksManager/buyPack`)
+
+- Argümanlar `[paket_no, adet]`. Fiyat `unit_packs[].price`'ta: `g` (açık kasabanın altını) ya da `c` (nakit).
+- `toplam = int(fiyat × adet)`; `adet ≥ 8` ise `toplam = int(toplam × 0.85 + 0.5)` (`NUM_SECOND_DISCOUNT`,
+  `SECOND_DISCOUNT`), değilse `adet ≥ 2` ise `toplam = int(toplam × 0.9 + 0.5)` (`NUM_FIRST_DISCOUNT`, `FIRST_DISCOUNT`).
+- Kaynak yetmezse istemci göndermez; sunucu da uygulamaz.
+- `max_purchable` 0 değilse toplam alım onu geçemez. Alınan adet `privateState.unitPacks[paket_no]`'da
+  (`initPlayerData`).
+- `price.p` (paket eşyası 1534 ile ödeme) istemcide var ama 1.4.07'nin config'inde hiçbir paket kullanmıyor; eşya
+  1534 config'te yok.
+
+### Birliklerin seçimi (`get_up_data.php`, `onGetRamdomNumbers`, `selectUnits`)
+
+- İstemci `{n: adet × units_given}` gönderir; sunucu `data` olarak n tane `[r0, r1, r2]` döner (0 ≤ r < 1).
+- Her üçlü bir birlik seçer: `r0 × 100` paket türünü (`pack_num` ağırlıkları), `r1 × 100` kategoriyi
+  (`pack_category` ağırlıkları: `custom` listesi ya da birliklerin `pack_category`'si), `r2` kategoride
+  `pack_chance` ağırlıklı rulet. Aynı alımda çıkmış birlik yeniden çıkarsa istemci `Math.random` ile yeniden çeker.
+- Seçilen her birlik `Base/storeItem` ile depoya konur; istemci bunu `store_add_items ["[birim_id]"]` komutuyla
+  bildirir. Sunucu seçimi yeniden yapmaz (istemcinin yeniden çekişi sunucuda bilinemez).

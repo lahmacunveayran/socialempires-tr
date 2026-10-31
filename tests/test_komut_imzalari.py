@@ -203,7 +203,7 @@ class SunucuOkuma(unittest.TestCase):
 # liste yalnızca küçülür (yeni bir eksik çıkarsa test kırılır).
 EKSIK_1407 = {
     "begin_attack_new", "buy_graveyard_capacity", "buy_powerups", "buy_shield",
-    "buy_time_packet", "buy_unit_pack", "buy_viral_offer_all", "buy_viral_offer_friend",
+    "buy_time_packet", "buy_viral_offer_all", "buy_viral_offer_friend",
     "clean_attack_log", "collect_game_add_item", "collect_game_buy_all", "collect_game_reward_given",
     "collect_game_speed_up", "collect_game_update_timestamp", "end_attack_new", "end_tournament_match",
     "finish_si_recruitment", "get_enemy_new", "reply_attack",

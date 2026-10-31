@@ -566,5 +566,37 @@ class EgitimKuyrugu(KomutTesti):
         self.assertEqual(self.komutlar.egitim_suresi({}), 0)
 
 
+class BirlikPaketleri(KomutTesti):
+    """GEC-03, KAR-12: oyunun kendi birlik paketleri (UnitPacksManager/buyPack)."""
+
+    def test_altinla_ilk_paket_bir_kez(self):
+        self.komut("buy_unit_pack", 1, 1)  # The Guardian: 50 altın, en çok 1
+        self.assertEqual(self.harita["coins"], 50000 - 50)
+        self.assertEqual(self.ps["unitPacks"], {"1": 1})
+        self.komut("buy_unit_pack", 1, 1)
+        self.assertEqual(self.harita["coins"], 50000 - 50)
+
+    def test_nakitle_toplu_alim_indirimi(self):
+        self.kayit["playerInfo"]["cash"] = 1000
+        self.komut("buy_unit_pack", 3, 2)  # 6 nakit × 2 = 12, %10 indirim: int(10,8 + 0,5) = 11
+        self.assertEqual(self.cash, 1000 - 11)
+        self.komut("buy_unit_pack", 3, 8)  # 48, %15 indirim: int(40,8 + 0,5) = 41
+        self.assertEqual(self.cash, 1000 - 11 - 41)
+        self.assertEqual(self.ps["unitPacks"], {"3": 10})
+
+    def test_kaynak_yetmezse_ve_bilinmeyen_paket_alinmaz(self):
+        self.kayit["playerInfo"]["cash"] = 5
+        self.komut("buy_unit_pack", 3, 1)
+        self.komut("buy_unit_pack", 99, 1)
+        self.komut("buy_unit_pack", 2, 4)  # 4 × 20.000 altın > 50.000
+        self.assertEqual((self.cash, self.harita["coins"]), (5, 50000))
+        self.assertNotIn("unitPacks", self.ps)
+
+    def test_paketten_cikan_birlik_depoya(self):
+        # istemci seçtiği birliği Base/storeItem ile store_add_items [JSON] olarak bildirir
+        self.komut("store_add_items", "[880]")
+        self.assertEqual(self.ps["gifts"][880], 1)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

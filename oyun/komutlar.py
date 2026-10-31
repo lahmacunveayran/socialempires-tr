@@ -710,6 +710,52 @@ def speed_up_queue(save, a):
     kuyruk["ts"] = simdi - adet * sure
 
 
+# Birlik paketleri (1.4.07, UnitPacksManager). Bedel burada düşülür; paketten çıkan birlikleri istemci
+# get_up_data.php'nin rastgele sayılarıyla kendisi seçer ve her birini store_add_items ile depoya bildirir.
+# Kayıtta privateState.unitPacks = {paket_no: alınan adet} (initPlayerData).
+PAKET_INDIRIMI = ((8, 0.85), (2, 0.9))  # NUM_SECOND_DISCOUNT / SECOND_DISCOUNT, NUM_FIRST_ / FIRST_
+
+
+def paket_bedeli(paket, adet):
+    """(kaynak, toplam) - UnitPacksManager/buyPack: adet × fiyat; 8 ve üstünde %15, 2 ve üstünde %10 indirim."""
+    fiyat = paket.get("price") or {}
+    tur = "g" if fiyat.get("g") is not None else "c" if fiyat.get("c") is not None else None
+    if tur is None:
+        return None, 0
+    toplam = int(float(fiyat[tur]) * adet)
+    for sinir, carpan in PAKET_INDIRIMI:
+        if adet >= sinir:
+            toplam = int(toplam * carpan + 0.5)
+            break
+    return tur, toplam
+
+
+@komut("buy_unit_pack")
+def buy_unit_pack(save, a):
+    """[paket_no, adet] - açık kasabanın altınıyla ya da nakitle."""
+    no, adet = a.tam(0), a.tam(1)
+    paket = next((p for p in get_game_config().get("unit_packs", []) if int(p.get("id", -1)) == no), None)
+    if paket is None or adet <= 0:
+        print(" ! birlik paketi yok:", no)
+        return
+    ps = save["privateState"]
+    alinanlar = ps.get("unitPacks") if isinstance(ps.get("unitPacks"), dict) else {}
+    alinan = int(alinanlar.get(str(no), 0) or 0)
+    sinir = int(paket.get("max_purchable", 0) or 0)
+    if sinir and alinan + adet > sinir:
+        print(" ! birlik paketi siniri:", no)
+        return
+    h = harita(save, acik_kasaba(save["playerInfo"].get("pid")))
+    tur, toplam = paket_bedeli(paket, adet)
+    eldeki = int(save["playerInfo"].get("cash", 0)) if tur == "c" else int(h.get("coins", 0))
+    if tur is None or eldeki < toplam:
+        print(" ! birlik paketi icin kaynak yetmiyor")
+        return
+    kaynak_ekle(save, h, tur, -toplam)
+    alinanlar[str(no)] = alinan + adet
+    ps["unitPacks"] = alinanlar
+
+
 @komut("add_unit_warehouse")
 def add_unit_warehouse(save, a):
     """[x, y, kasaba, birim_id]"""

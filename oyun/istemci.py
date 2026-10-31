@@ -122,6 +122,26 @@ def command_response():
 
 
 # ---------------------------------------------------------------------------
+# Birlik paketleri: istemci, paketten çıkacak birlikleri bu sayılarla seçer (UnitPacksManager/selectUnits)
+# ---------------------------------------------------------------------------
+
+PAKET_SAYI_SINIRI = 100  # MAX_PACKS_ALLOWED_TO_BUY (8) × units_given; bozuk istekte büyük liste dönmesin
+
+
+@app.route(DINAMIK + "/get_up_data.php", methods=["POST"])
+def get_up_data_response():
+    """{n} -> data: n tane [r0, r1, r2] (0 ≤ r < 1): paket türü, kategori, kategorideki birlik."""
+    if kayit_oturumu(request.values.get("USERID", "")) is None:
+        return imzali({"result": "error"})
+    try:
+        n = int(servis_govdesi().get("n", 1))
+    except (TypeError, ValueError):
+        n = 1
+    n = max(1, min(PAKET_SAYI_SINIRI, n))
+    return imzali({"result": "success", "data": [[random.random() for _ in range(3)] for _ in range(n)]})
+
+
+# ---------------------------------------------------------------------------
 # Büyücünün İksirleri (kompu): şans oyunu
 # ---------------------------------------------------------------------------
 

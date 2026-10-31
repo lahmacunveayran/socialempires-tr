@@ -154,6 +154,16 @@ class HttpDumanTestleri(unittest.TestCase):
         self.assertEqual(len(ps["kompuCompleted"]), 1)
         ps.update(kompuSpells=0, kompuSteps=[], kompuCompleted=[])
 
+    def test_birlik_paketi_rastgele_sayilari(self):
+        cevap = self._servis("get_up_data.php", {"n": 3})
+        self.assertEqual(cevap["result"], "success")
+        self.assertEqual(len(cevap["data"]), 3)
+        for uclu in cevap["data"]:
+            self.assertEqual(len(uclu), 3)
+            self.assertTrue(all(0 <= r < 1 for r in uclu))
+        self.assertEqual(len(self._servis("get_up_data.php", {"n": 10 ** 6})["data"]), 100)
+        self.assertEqual(len(self._servis("get_up_data.php", {"n": "bozuk"})["data"]), 1)
+
     def test_istemci_hatasi_ve_kayip_esya(self):
         self.assertEqual(self._servis("report_error.php", {"error_id": "1"})["result"], "success")
         from oyun.kayit import session

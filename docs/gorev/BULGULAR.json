@@ -4,7 +4,7 @@
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
     "madde": "GEC-03",
-    "sonraki_adim": "GEC-03 sürüyor: eğitim kuyruğu PR #26 ile birleşti (KYT-04, KAR-11); birlik paketleri (KAR-12) PR #27'de. Sıradaki: GEC-03'ün kalanı (Ada Ocağı collect_game_*, mezarlık, viral teklifler) ve GEC-04'ün geri dönüş testi. İstemcide birlik paketi penceresinin görsel denetimi yapılmadı (S-35). GEC-03 bitince bağımsız denetim (KAR-13)."
+    "sonraki_adim": "GEC-03 sürüyor: eğitim kuyruğu (#26) birleşti; birlik paketleri (KAR-12) PR #27'de; mezarlık ve viral teklifler yeni PR'da. Sıradaki: Ada Ocağı (collect_game_*, 5 komut), sonra buy_powerups, buy_time_packet/time_ff, finish_si_recruitment, start_quest_new, reset_dragon. GEC-03 bitince bağımsız denetim (KAR-13)."
   },
   "maddeler": [
     {
@@ -850,7 +850,7 @@
       "test": "tests/test_komutlar.py",
       "pr": null,
       "onay": null,
-      "notlar": "KAR-08 kararıyla açıldı (30.10.2026). 31.10.2026: eğitim kuyruğunun dört komutu (push_queue_unit, pop_queue_unit, unqueue_unit, speed_up_queue) PR #26'da bayt kodundaki formüllerle yazıldı; formüller docs/inceleme/1407-formuller.md, 9 test (EgitimKuyrugu). Eksik komut 29 → 25 (docs/inceleme/1407-komutlar.md). Hızlandırma bedeli upstream'den ayrı: istemci bekleyen birimleri de ücretlendirir. İstemcide görsel denetim yapılmadı (S-35). Kalan: Ada Ocağı (collect_game_*), mezarlık, viral teklifler, birim paketleri ve diğerleri. 31.10.2026: birlik paketleri (KAR-12): buy_unit_pack ve get_up_data.php yazıldı, formül docs/inceleme/1407-formuller.md; 5 test. Eksik komut 25 → 24."
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026). 31.10.2026: eğitim kuyruğunun dört komutu (push_queue_unit, pop_queue_unit, unqueue_unit, speed_up_queue) PR #26'da bayt kodundaki formüllerle yazıldı; formüller docs/inceleme/1407-formuller.md, 9 test (EgitimKuyrugu). Eksik komut 29 → 25 (docs/inceleme/1407-komutlar.md). Hızlandırma bedeli upstream'den ayrı: istemci bekleyen birimleri de ücretlendirir. İstemcide görsel denetim yapılmadı (S-35). Kalan: Ada Ocağı (collect_game_*), mezarlık, viral teklifler, birim paketleri ve diğerleri. 31.10.2026: birlik paketleri (KAR-12): buy_unit_pack ve get_up_data.php yazıldı, formül docs/inceleme/1407-formuller.md; 5 test. Eksik komut 25 → 24. 31.10.2026: mezarlık (buy_graveyard_capacity, reset_potions_received) ve viral teklifler (buy_viral_offer_friend, buy_viral_offer_all, reward_viral_offer) yazıldı; 4 test. Viral teklifler 1.4.07'nin config'inde kapalı (starts_at ve duration 0, düğme görünmez); açılması ayrı karar. Eksik komut 24 → 19 (8'i GEC-05'in PvP, kalkan ve turnuva komutları)."
     },
     {
       "id": "GEC-04",
@@ -876,7 +876,7 @@
       "test": null,
       "pr": null,
       "onay": null,
-      "notlar": "KAR-08 kararıyla açıldı (30.10.2026)."
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026). 31.10.2026 (GEC-03'ten): saldırıda ölen kendi birliklerin mezarlığa girişi (IsoFightingElement/kill → addUnitToResurrectableUnits, checkPutToGraveyard → Main.deadUnits) yalnızca ASSAULT kipinde; sunucuya ayrı komut gelmez, kill/sell'den çıkarılmalı. privateState.resurrectableUnits GEC-05'te."
     },
     {
       "id": "GEC-06",

@@ -756,6 +756,58 @@ def buy_unit_pack(save, a):
     ps["unitPacks"] = alinanlar
 
 
+# Viral teklifler (1.4.07, SpecialDayOfferManager). Arkadaş yardımı yerine yardımcılar nakitle alınır; hepsi
+# toplanınca birim verilir. Kayıtta privateState.viralOffers = {no: {"id", "friends": [...], "rewarded"}}.
+# 1.4.07'nin config'inde hepsinin starts_at ve duration'ı 0: düğme görünmez (timeLeft 0), komutlar gelmez.
+
+
+def _viral_teklif(save, no):
+    teklif = (get_game_config().get("viral_offers") or {}).get(str(no))
+    if not teklif:
+        return None, None
+    ps = save["privateState"]
+    if not isinstance(ps.get("viralOffers"), dict):
+        ps["viralOffers"] = {}
+    durum = ps["viralOffers"].setdefault(str(no), {"id": no, "friends": [], "rewarded": 0})
+    if not isinstance(durum.get("friends"), list):
+        durum["friends"] = []
+    return teklif, durum
+
+
+def _viral_ode(save, fiyatlar, sira):
+    """Fiyat listesinin sıradaki elemanı nakitle; yoksa ya da nakit yetmezse False."""
+    if not 0 <= sira < len(fiyatlar or []) or int(save["playerInfo"].get("cash", 0)) < int(fiyatlar[sira]):
+        print(" ! viral teklif alinamadi")
+        return False
+    cash_ekle(save, -int(fiyatlar[sira]))
+    return True
+
+
+@komut("buy_viral_offer_friend")
+def buy_viral_offer_friend(save, a):
+    """[teklif_no] - bir yardımcı: buy_cost[alınmış yardımcı sayısı] nakit."""
+    teklif, durum = _viral_teklif(save, a.tam(0))
+    if teklif and _viral_ode(save, teklif.get("buy_cost"), len(durum["friends"])):
+        durum["friends"].append(-1)
+
+
+@komut("buy_viral_offer_all")
+def buy_viral_offer_all(save, a):
+    """[teklif_no] - kalan bütün yardımcılar: buy_all_cost[alınmış yardımcı sayısı] nakit."""
+    teklif, durum = _viral_teklif(save, a.tam(0))
+    if teklif and _viral_ode(save, teklif.get("buy_all_cost"), len(durum["friends"])):
+        durum["friends"] += [-1] * max(0, int(teklif.get("num_workers", 0)) - len(durum["friends"]))
+
+
+@komut("reward_viral_offer")
+def reward_viral_offer(save, a):
+    """[teklif_no, x, y, yon, kasaba] - ödül verildi işareti. Birimi istemci depoya koyar ve bunu
+    store_add_items ile ayrıca bildirir (Base/storeItem); burada birim eklenmez."""
+    teklif, durum = _viral_teklif(save, a.tam(0))
+    if teklif and len(durum["friends"]) >= int(teklif.get("num_workers", 0)):
+        durum["rewarded"] = 1
+
+
 @komut("add_unit_warehouse")
 def add_unit_warehouse(save, a):
     """[x, y, kasaba, birim_id]"""
@@ -1199,6 +1251,29 @@ def graveyard_buy_potions(save, a):
     cash_ekle(save, -int(iksir["price"]["c"]))
     ps = save["privateState"]
     ps["potion"] = int(ps.get("potion", 0)) + int(iksir["amount"])
+
+
+@komut("buy_graveyard_capacity")
+def buy_graveyard_capacity(save, a):
+    """[] - PopupBuyGraveyardCapacity/onBuy: GRAVEYARD_CAPACITY bedeli nakitle, kapasite amount kadar artar
+    (GRAVEYARD_MAX_CAPACITY'yi geçmez)."""
+    g = globals_()
+    kapasite = g.get("GRAVEYARD_CAPACITY") or {}
+    bedel = int((kapasite.get("price") or {}).get("c", 0) or 0)
+    if int(save["playerInfo"].get("cash", 0)) < bedel:
+        print(" ! mezarlik kapasitesi icin nakit yetmiyor")
+        return
+    cash_ekle(save, -bedel)
+    ps = save["privateState"]
+    simdi = int(ps.get("graveyardCapacity", 0) or 0)
+    ps["graveyardCapacity"] = min(int(g.get("GRAVEYARD_MAX_CAPACITY", simdi + int(kapasite.get("amount", 0)))),
+                                  simdi + int(kapasite.get("amount", 0) or 0))
+
+
+@komut("reset_potions_received")
+def reset_potions_received(save, a):
+    """[] - PopupGraveyard/onFrameConstructed: arkadaştan gelen iksirlerin bildirimi gösterildi."""
+    save["privateState"]["potionsReceived"] = 0
 
 
 def mezarliga_ekle(save, birim_id):

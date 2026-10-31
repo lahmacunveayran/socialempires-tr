@@ -52,7 +52,7 @@ oynar, dener ve karar verir. Onunla her zaman **Türkçe**, sade ve adım adım 
 Hepsi ✔ (bu depodan okundu ya da çalıştırıldı, 30 Ekim 2026, `master` @ `cd80a86`), aksi belirtilmedikçe.
 
 - Python 3.12 (CI) / Flask + Waitress (8 iş parçacığı); ayrıntı `oyun/sunucu.py` `calistir`. Bu ortamda Python 3.13.
-- Testler: `python -m unittest discover -s tests` → 262 test (✔ çalıştırıldı, 31 Ekim 2026, sahibinin Windows'unda, GEC-03 birlik paketleri);
+- Testler: `python -m unittest discover -s tests` → 266 test (✔ çalıştırıldı, 31 Ekim 2026, sahibinin Windows'unda, GEC-03 mezarlık ve viral teklifler);
   `node --test tests/js/*.test.js` → 3 test (✔ 30 Ekim 2026, bulut oturumu). Yeni konteynerde önce bağımlılıklar
   kurulur (`SORUN_COZUM.md` S-01, Windows'ta S-27).
 - Proje sahibinin bilgisayarında `D:\socialempires-tr` (S-25). Orada Python 3.12, Node yok (S-28), konsol cp1254 (S-26).

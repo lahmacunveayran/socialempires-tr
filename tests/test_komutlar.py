@@ -598,5 +598,49 @@ class BirlikPaketleri(KomutTesti):
         self.assertEqual(self.ps["gifts"][880], 1)
 
 
+class MezarlikVeViralTeklifler(KomutTesti):
+    """GEC-03: mezarlık kapasitesi ve iksir bildirimi; viral teklifler (SpecialDayOfferManager)."""
+
+    def test_mezarlik_kapasitesi_bedel_ve_tavan(self):
+        from oyun.config import get_game_config
+        g = get_game_config()["globals"]
+        bedel, artis = g["GRAVEYARD_CAPACITY"]["price"]["c"], g["GRAVEYARD_CAPACITY"]["amount"]
+        self.kayit["playerInfo"]["cash"] = bedel - 1
+        self.komut("buy_graveyard_capacity")  # nakit yetmiyor
+        self.assertNotIn("graveyardCapacity", self.ps)
+        self.kayit["playerInfo"]["cash"] = 2 * bedel
+        self.komut("buy_graveyard_capacity")
+        self.komut("buy_graveyard_capacity")
+        self.assertEqual(self.cash, 0)
+        self.assertEqual(self.ps["graveyardCapacity"], min(2 * artis, g["GRAVEYARD_MAX_CAPACITY"]))
+
+    def test_gelen_iksir_bildirimi_sifirlanir(self):
+        self.ps["potionsReceived"] = 4
+        self.komut("reset_potions_received")
+        self.assertEqual(self.ps["potionsReceived"], 0)
+
+    def test_viral_yardimci_tek_tek_ve_hepsi(self):
+        # teklif 1: 3 yardımcı, tek tek 40, hepsi [100, 70, 40]
+        self.kayit["playerInfo"]["cash"] = 200
+        self.komut("buy_viral_offer_friend", 1)
+        self.assertEqual(self.cash, 160)
+        self.komut("buy_viral_offer_all", 1)  # 1 alınmış: kalan ikisi 70
+        self.assertEqual(self.cash, 90)
+        self.assertEqual(self.ps["viralOffers"]["1"]["friends"], [-1, -1, -1])
+        self.komut("buy_viral_offer_all", 1)  # hepsi alınmış: fiyat yok
+        self.assertEqual(self.cash, 90)
+        self.komut("reward_viral_offer", 1, 50, 50, 0, 0)
+        self.assertEqual(self.ps["viralOffers"]["1"]["rewarded"], 1)
+        self.assertEqual(self.harita["items"], bos_kayit()["maps"][0]["items"])  # birim store_add_items'la gelir
+
+    def test_viral_eksik_yardimcida_odul_yok_nakit_yetmezse_alinmaz(self):
+        self.kayit["playerInfo"]["cash"] = 39
+        self.komut("buy_viral_offer_friend", 1)
+        self.komut("reward_viral_offer", 1, 50, 50, 0, 0)
+        self.komut("buy_viral_offer_friend", 999)
+        self.assertEqual(self.cash, 39)
+        self.assertEqual(self.ps["viralOffers"]["1"], {"id": 1, "friends": [], "rewarded": 0})
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

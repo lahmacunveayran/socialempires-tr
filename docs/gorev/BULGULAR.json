@@ -4,7 +4,7 @@
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
     "madde": "GEC-03",
-    "sonraki_adim": "GEC-03 sürüyor: eğitim kuyruğunun dört komutu PR #26'da yazıldı (formüller docs/inceleme/1407-formuller.md); KYT-04 KAR-11 ile karara bağlandı (fazla iade verilmez). Sıradaki: GEC-03'ün kalanı (Ada Ocağı collect_game_*, mezarlık, viral teklifler, birim paketleri) ve GEC-04'ün geri dönüş testi. PR #25 (KAR-10) birleşti."
+    "sonraki_adim": "GEC-03 sürüyor: eğitim kuyruğu (#26) birleşti; birlik paketleri (KAR-12) PR #27'de; mezarlık ve viral teklifler PR #28'de. Sıradaki: Ada Ocağı (collect_game_*, 5 komut), sonra buy_powerups, buy_time_packet/time_ff, finish_si_recruitment, start_quest_new, reset_dragon. GEC-03 bitince bağımsız denetim (KAR-13)."
   },
   "maddeler": [
     {
@@ -850,7 +850,7 @@
       "test": "tests/test_komutlar.py",
       "pr": null,
       "onay": null,
-      "notlar": "KAR-08 kararıyla açıldı (30.10.2026). 31.10.2026: eğitim kuyruğunun dört komutu (push_queue_unit, pop_queue_unit, unqueue_unit, speed_up_queue) PR #26'da bayt kodundaki formüllerle yazıldı; formüller docs/inceleme/1407-formuller.md, 9 test (EgitimKuyrugu). Eksik komut 29 → 25 (docs/inceleme/1407-komutlar.md). Hızlandırma bedeli upstream'den ayrı: istemci bekleyen birimleri de ücretlendirir. İstemcide görsel denetim yapılmadı (S-35). Kalan: Ada Ocağı (collect_game_*), mezarlık, viral teklifler, birim paketleri ve diğerleri."
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026). 31.10.2026: eğitim kuyruğunun dört komutu (push_queue_unit, pop_queue_unit, unqueue_unit, speed_up_queue) PR #26'da bayt kodundaki formüllerle yazıldı; formüller docs/inceleme/1407-formuller.md, 9 test (EgitimKuyrugu). Eksik komut 29 → 25 (docs/inceleme/1407-komutlar.md). Hızlandırma bedeli upstream'den ayrı: istemci bekleyen birimleri de ücretlendirir. İstemcide görsel denetim yapılmadı (S-35). Kalan: Ada Ocağı (collect_game_*), mezarlık, viral teklifler, birim paketleri ve diğerleri. 31.10.2026: birlik paketleri (KAR-12): buy_unit_pack ve get_up_data.php yazıldı, formül docs/inceleme/1407-formuller.md; 5 test. Eksik komut 25 → 24. 31.10.2026: mezarlık (buy_graveyard_capacity, reset_potions_received) ve viral teklifler (buy_viral_offer_friend, buy_viral_offer_all, reward_viral_offer) PR #28'de yazıldı; 4 test. Viral teklifler 1.4.07'nin config'inde kapalı (starts_at ve duration 0, düğme görünmez); açılması ayrı karar. Eksik komut 24 → 19 (8'i GEC-05'in PvP, kalkan ve turnuva komutları)."
     },
     {
       "id": "GEC-04",
@@ -876,7 +876,7 @@
       "test": null,
       "pr": null,
       "onay": null,
-      "notlar": "KAR-08 kararıyla açıldı (30.10.2026)."
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026). 31.10.2026 (GEC-03'ten): saldırıda ölen kendi birliklerin mezarlığa girişi (IsoFightingElement/kill → addUnitToResurrectableUnits, checkPutToGraveyard → Main.deadUnits) yalnızca ASSAULT kipinde; sunucuya ayrı komut gelmez, kill/sell'den çıkarılmalı. privateState.resurrectableUnits GEC-05'te."
     },
     {
       "id": "GEC-06",
@@ -1019,7 +1019,7 @@
       "test": null,
       "pr": null,
       "onay": null,
-      "notlar": "Uygulamadan önce taslak tanım sahibine onaylatılır (önerinin harfiyen uygulanması kuralı). Görseller yalnızca oyunun kendi dosyaları."
+      "notlar": "Uygulamadan önce taslak tanım sahibine onaylatılır (önerinin harfiyen uygulanması kuralı). Görseller yalnızca oyunun kendi dosyaları. 31.10.2026: dört Türk birliği oyunun kendi birlik paketlerinde (pack_category 2) var; paketler açılınca (KAR-12) rastgele gelebilir."
     },
     {
       "id": "KAR-09",
@@ -1228,6 +1228,32 @@
       "pr": "#26",
       "onay": "Sahibi, 31 Ekim 2026",
       "notlar": "Köylüde yemek, Ruh Karıştırıcı'da bedel iade edilmez. İstemci aynı oturumda fazlayı gösterir; kayıt doğru değeri tutar, yeniden yüklemede düzelir. İstemci kodu değiştirilmedi."
+    },
+    {
+      "id": "KAR-12",
+      "baslik": "Hedef: oyunun kendi birlik paketleriyle gelen birlikler açılır; hiçbir yoldan gelmeyenler eklenmez",
+      "sinif": "karar",
+      "onem": "Orta",
+      "durum": "karar_verildi",
+      "isaret": "◐",
+      "kanit": "Sahibi 31.10.2026: 'Hiçbir yoldan gelmeyen birlikleri boşver. Bizim hedefimiz oyunun kendi birlik paketleriyle gelecek olanlar.' Tarama (config'in mağaza, eğitim binası, teklif, turnuva, sıralama ödülü ve görev listeleri; geçici betik, depoda değil): 774 birlik tanımlı; ~265'i bugün elde edilir; birlik paketleriyle (unit_packs: pack_category 2 olan 437 birlik ve paketlerin custom listeleri) ~252'si daha gelir, 880/881/882/885 Türk birlikleri dahil; ~257'si hiçbir yoldan gelmez (düşman, boss, hayvan, araç, ejderha binicisi). Sayılar ◐: kaynak listesinin sınırı tahmine dayalı.",
+      "test": "tests/test_komutlar.py",
+      "pr": "#27",
+      "onay": "Sahibi, 31 Ekim 2026",
+      "notlar": "Uygulama GEC-03'te: buy_unit_pack (bedel, alım sayısı) ve get_up_data.php (rastgele sayılar). Paketten çıkan birliği istemci seçer, store_add_items ile depoya bildirir. Paket fiyatları, şansları ve indirimler 1.4.07'nin kendi değerleri; denge değişmedi. ONR-04: Türk birlikleri böylece paketlerden rastgele gelir; ayrıca eğitilebilir olmaları için taslak hâlâ sahibine sorulur."
+    },
+    {
+      "id": "KAR-13",
+      "baslik": "Bağımsız denetim (Lyraska DENETIM-2 yöntemi) GEC-03 bitince yapılır",
+      "sinif": "karar",
+      "onem": "Orta",
+      "durum": "karar_verildi",
+      "isaret": "✔",
+      "kanit": "Sahibi 31.10.2026: 'GEC-03 bitince' (soru: alanlara bölünmüş bağımsız denetim ne zaman yapılsın). Lyraska'da docs/DENETIM-2.md ve docs/denetim-2/ (BRIEF.md ortak kurallar, alan başına rapor, hesap betikleri) okundu; görev kitabı bu depoda zaten aynı yöntemle var, eksik olan bağımsız denetim.",
+      "test": null,
+      "pr": null,
+      "onay": "Sahibi, 31 Ekim 2026",
+      "notlar": "Plan: 6 alan (sunucu ve komutlar; kayıt ve göç; ekonomi ve formüller; bot dünyası, PvP ve turnuva; Türkçe ve arayüz; Android, dağıtım ve güvenlik). Her denetçi salt okunur bir commit'i görür; BULGULAR.json, devlog ve PR'lar okuma yasağında. Ortak kurallar docs/denetim/BRIEF.md, raporlar docs/denetim/<alan>.md, sahibine özet docs/DENETIM.md; bulgular BULGULAR.json'a işlenir. Sınır: denetçiler aynı model ailesinden; insan denetçi kadar bağımsız değil. Başlamadan önce kullanım payı sahibine hatırlatılır."
     }
   ]
 }

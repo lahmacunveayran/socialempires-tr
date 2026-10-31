@@ -202,13 +202,10 @@ class SunucuOkuma(unittest.TestCase):
 # 1.4.07'nin sunucuda henüz işleyicisi olmayan komutları. GEC-03 ve GEC-05 bu listeyi boşaltır;
 # liste yalnızca küçülür (yeni bir eksik çıkarsa test kırılır).
 EKSIK_1407 = {
-    "begin_attack_new", "buy_graveyard_capacity", "buy_powerups", "buy_shield",
-    "buy_time_packet", "buy_unit_pack", "buy_viral_offer_all", "buy_viral_offer_friend",
-    "clean_attack_log", "collect_game_add_item", "collect_game_buy_all", "collect_game_reward_given",
-    "collect_game_speed_up", "collect_game_update_timestamp", "end_attack_new", "end_tournament_match",
-    "finish_si_recruitment", "get_enemy_new", "reply_attack",
-    "reset_dragon", "reset_potions_received", "reset_shield", "reward_viral_offer",
-    "start_quest_new", "time_ff",
+    "begin_attack_new", "buy_powerups", "buy_shield", "buy_time_packet", "clean_attack_log",
+    "collect_game_add_item", "collect_game_buy_all", "collect_game_reward_given", "collect_game_speed_up",
+    "collect_game_update_timestamp", "end_attack_new", "end_tournament_match", "finish_si_recruitment",
+    "get_enemy_new", "reply_attack", "reset_dragon", "reset_shield", "start_quest_new", "time_ff",
 }
 
 

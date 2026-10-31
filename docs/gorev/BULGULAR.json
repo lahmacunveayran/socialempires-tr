@@ -4,7 +4,7 @@
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
     "madde": "GEC-03",
-    "sonraki_adim": "GEC-03 sürüyor: eğitim kuyruğunun dört komutu yazıldı (formüller docs/inceleme/1407-formuller.md); KYT-04 için sahibinin kararı bekleniyor. Sıradaki: GEC-03'ün kalanı (Ada Ocağı collect_game_*, mezarlık, viral teklifler, birim paketleri) ve GEC-04'ün geri dönüş testi. PR #25 (KAR-10) sahibinin birleştirmesini bekliyor."
+    "sonraki_adim": "GEC-03 sürüyor: eğitim kuyruğunun dört komutu PR #26'da yazıldı (formüller docs/inceleme/1407-formuller.md); KYT-04 için sahibinin kararı bekleniyor. Sıradaki: GEC-03'ün kalanı (Ada Ocağı collect_game_*, mezarlık, viral teklifler, birim paketleri) ve GEC-04'ün geri dönüş testi. PR #25 (KAR-10) sahibinin birleştirmesini bekliyor."
   },
   "maddeler": [
     {
@@ -850,7 +850,7 @@
       "test": "tests/test_komutlar.py",
       "pr": null,
       "onay": null,
-      "notlar": "KAR-08 kararıyla açıldı (30.10.2026). 31.10.2026: eğitim kuyruğunun dört komutu (push_queue_unit, pop_queue_unit, unqueue_unit, speed_up_queue) bayt kodundaki formüllerle yazıldı; formüller docs/inceleme/1407-formuller.md, 9 test (EgitimKuyrugu). Eksik komut 29 → 25 (docs/inceleme/1407-komutlar.md). Hızlandırma bedeli upstream'den ayrı: istemci bekleyen birimleri de ücretlendirir. İstemcide görsel denetim yapılmadı (S-35). Kalan: Ada Ocağı (collect_game_*), mezarlık, viral teklifler, birim paketleri ve diğerleri."
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026). 31.10.2026: eğitim kuyruğunun dört komutu (push_queue_unit, pop_queue_unit, unqueue_unit, speed_up_queue) PR #26'da bayt kodundaki formüllerle yazıldı; formüller docs/inceleme/1407-formuller.md, 9 test (EgitimKuyrugu). Eksik komut 29 → 25 (docs/inceleme/1407-komutlar.md). Hızlandırma bedeli upstream'den ayrı: istemci bekleyen birimleri de ücretlendirir. İstemcide görsel denetim yapılmadı (S-35). Kalan: Ada Ocağı (collect_game_*), mezarlık, viral teklifler, birim paketleri ve diğerleri."
     },
     {
       "id": "GEC-04",
@@ -1212,7 +1212,7 @@
       "isaret": "✔",
       "kanit": "BuildingQueueManager/addUnit köylüden yemek almaz (SUBCATFUNC_UNIT_PEASANT → 0) ve Ruh Karıştırıcı'da (1529) bedel almaz; BuildingQueueData/returnCost ikisini de ayırmadan bedel ve ceil(bedel × 2) yemek iade eder. Köylü I (50 yemek) kuyruğa alınıp çıkarılınca 100 yemek kazanılır. Sunucu istemciyle aynı yapıyor (kayıt istemcinin gösterdiğiyle aynı): tests/test_komutlar.py test_koylu_iadesi_istemci_gibi_yemek_de_verir.",
       "test": "tests/test_komutlar.py",
-      "pr": null,
+      "pr": "#26",
       "onay": null,
       "notlar": "Denge kararı sahibinin: istemci gibi bırakılır ya da sunucu fazlayı vermez (o zaman yeniden yüklemede kaynak istemcinin gösterdiğinden az görünür). Ruh Karıştırıcı'da kuyruktan çıkarma arayüzü olup olmadığı denenmedi."
     }

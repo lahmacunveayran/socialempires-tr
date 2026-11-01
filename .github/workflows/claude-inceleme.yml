@@ -1,0 +1,61 @@
+name: claude-inceleme
+
+# Her PR'da değişen kodu Claude'a kalite ve hata açısından inceletir.
+# Gerekli: depo ayarlarında ANTHROPIC_API_KEY adlı bir Actions secret'ı.
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+
+# Aynı PR'a yeni commit gelirse eski inceleme iptal edilir (kredi boşa gitmesin).
+concurrency:
+  group: claude-inceleme-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  inceleme:
+    # Taslak PR'lar ve Dependabot PR'ları incelenmez.
+    if: github.event.pull_request.draft == false && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ github.token }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMARASI: ${{ github.event.pull_request.number }}
+
+            Bu PR'ı incele. Yalnızca bu PR'da değişen koda bak; `gh pr diff` ile
+            değişikliği, gerekirse çevresindeki dosyaları oku. Kuralların için
+            depodaki CLAUDE.md'ye uy. Bu, Social Empires oyununun tek kişilik,
+            çevrimdışı Türkçe yerel sunucusu (Python/Flask + tarayıcı JS).
+
+            Öncelik sırasıyla:
+            1. Hatalar: yanlış mantık, unutulmuş durum, çökme, bozulan çağrılar,
+               kayıt (save) verisinin bozulması ya da kaybolması.
+            2. Güvenlik: istemciden gelen veriyi doğrulamadan kullanmak, dosya
+               yolu ile oynama, tehlikeli eval/exec.
+            3. Kalite: tekrar eden kod, gereksiz karmaşıklık, eksik test
+               (testler `tests/` altında, unittest ve node --test).
+
+            Kurallar:
+            - Her somut sorunu ilgili satıra satır içi yorum olarak yaz: ne yanlış,
+              hangi durumda ortaya çıkıyor, nasıl düzelir.
+            - Emin olmadığın şeyi kesin gibi yazma; "olabilir" de.
+            - Zevk meselesi ve küçük biçim önerileri yazma.
+            - Sonunda `gh pr comment` ile tek bir kısa özet yorumu bırak.
+              Sorun yoksa bunu açıkça söyle.
+            - Bütün yorumlar Türkçe olsun.
+          claude_args: |
+            --model claude-opus-5-5
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"

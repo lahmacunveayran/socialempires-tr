@@ -1,6 +1,6 @@
 {
   "surum": "0.08a",
-  "guncelleme": "2026-10-31",
+  "guncelleme": "2026-11-01",
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
     "madde": "GEC-03",
@@ -1254,6 +1254,32 @@
       "pr": null,
       "onay": "Sahibi, 31 Ekim 2026",
       "notlar": "Plan: 6 alan (sunucu ve komutlar; kayıt ve göç; ekonomi ve formüller; bot dünyası, PvP ve turnuva; Türkçe ve arayüz; Android, dağıtım ve güvenlik). Her denetçi salt okunur bir commit'i görür; BULGULAR.json, devlog ve PR'lar okuma yasağında. Ortak kurallar docs/denetim/BRIEF.md, raporlar docs/denetim/<alan>.md, sahibine özet docs/DENETIM.md; bulgular BULGULAR.json'a işlenir. Sınır: denetçiler aynı model ailesinden; insan denetçi kadar bağımsız değil. Başlamadan önce kullanım payı sahibine hatırlatılır."
+    },
+    {
+      "id": "DAG-13",
+      "baslik": "PR'lara otomatik kod incelemesi (hata, güvenlik, kalite; Türkçe yorum)",
+      "sinif": "ozellik",
+      "onem": "Orta",
+      "durum": "duzeltildi",
+      "isaret": "✔",
+      "kanit": "PR #30'da koşu 41297894349 (8 tur) ve 41298525677 (10 tur) geçti; satır içi ve özet yorumu Türkçe bıraktı. İlk inceleme kendi iş akışında iki haklı bulgu verdi (Dependabot ayrımı koşuyu tetikleyene bakıyordu; model adı dosyadaydı), düzeltildi. Ardından bağımsız denetim (ayrı bir ajan, kurucunun açıklaması verilmeden): kritik bulgu yok; tur sınırı, belge PR'larını atlama, değişken yedeği, SHA sabitleme, persist-credentials: false uygulandı.",
+      "test": null,
+      "pr": "#30",
+      "onay": "Sahibi, 1 Kasım 2026 ('kalite ve hata denetimi')",
+      "notlar": "Kimlik CLAUDE_CODE_OAUTH_TOKEN (Max aboneliği); yaklaşık bir yıl geçerli, Kasım 2027'de yenilenmeli. Model depo değişkeni INCELEME_MODELI'nde. Açık kalan küçük notlar: her push'ta yorumlar birikebilir, büyük PR'da tur sınırı dolabilir. Kullanılmayan ANTHROPIC_API_KEY secret'ını sahibi silecek."
+    },
+    {
+      "id": "DAG-14",
+      "baslik": "Max planının API kredisiyle inceleme 'Credit balance is too low' veriyordu",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "duzeltildi",
+      "isaret": "✔",
+      "kanit": "Koşu 41296144848 tam çıktısı: billing_error 400, kredi Console'da 100 $ ve Playground çalışıyor. Anthropic belgesi (api-credits-for-subscribers): bu kredi Claude Code'da geçmez; claude-code-action Claude Code'u çalıştırır. OAuth token'a geçince koşu 41297894349 geçti.",
+      "test": null,
+      "pr": "#30",
+      "onay": null,
+      "notlar": "Ayrıntı ve token'ın satırlara bölünüp yarım kaydedilmesi: SORUN_COZUM.md S-45."
     }
   ]
 }

@@ -236,7 +236,7 @@ def incele(model, metin):
         cevap = akis.get_final_message()
     k = cevap.usage
     maliyet = (f"{cevap.model} · girdi {k.input_tokens:,} · çıktı {k.output_tokens:,} token · "
-               f"istek {cevap._request_id}")
+               f"ileti {cevap.id}")
     print(maliyet, "· durma:", cevap.stop_reason)
     if cevap.stop_reason == "refusal":
         return None, "Model isteği reddetti; inceleme yapılamadı.", maliyet

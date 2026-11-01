@@ -1,13 +1,15 @@
 name: claude-inceleme
 
 # Her PR'da değişen kodu Claude'a kalite ve hata açısından inceletir.
-# Gerekli: depo ayarlarında ANTHROPIC_API_KEY adlı bir Actions secret'ı.
+# Gerekli: depo ayarlarında CLAUDE_CODE_OAUTH_TOKEN adlı bir Actions secret'ı
+# (`claude setup-token` ile alınır; Max aboneliğinin kullanım hakkından düşer).
+# Max planıyla gelen API kredisi Claude Code'da geçmediği için API anahtarı kullanılmıyor.
 
 on:
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
 
-# Aynı PR'a yeni commit gelirse eski inceleme iptal edilir (kredi boşa gitmesin).
+# Aynı PR'a yeni commit gelirse eski inceleme iptal edilir (kullanım hakkı boşa gitmesin).
 concurrency:
   group: claude-inceleme-${{ github.event.pull_request.number }}
   cancel-in-progress: true
@@ -29,7 +31,7 @@ jobs:
 
       - uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ github.token }}
           prompt: |
             REPO: ${{ github.repository }}

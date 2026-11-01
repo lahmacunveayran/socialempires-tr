@@ -63,16 +63,19 @@ jobs:
                (testler `tests/` altında, unittest ve node --test).
 
             Kurallar:
-            - Her somut sorunu ilgili satıra satır içi yorum olarak yaz: ne yanlış,
-              hangi durumda ortaya çıkıyor, nasıl düzelir.
+            - Önce `gh pr view --comments` ile önceki incelemelerin yorumlarına bak.
+              Daha önce yazılmış bir bulguyu yeniden yazma; master'a birleştirmek için
+              her satır içi yorumun çözülmesi gerekiyor, tekrar sahibine iş çıkarır.
+            - Her yeni ve somut sorunu ilgili satıra satır içi yorum olarak yaz: ne
+              yanlış, hangi durumda ortaya çıkıyor, nasıl düzelir.
             - Emin olmadığın şeyi kesin gibi yazma; "olabilir" de.
             - Zevk meselesi ve küçük biçim önerileri yazma.
-            - Sonunda `gh pr comment` ile tek bir kısa özet yorumu bırak.
-              Sorun yoksa bunu açıkça söyle.
+            - Sonunda özeti `gh pr comment --edit-last --create-if-none` ile yaz;
+              böylece PR'da hep tek bir özet yorumu olur. Sorun yoksa bunu açıkça söyle.
             - Bütün yorumlar Türkçe olsun.
           # Model, depo değişkeni INCELEME_MODELI'nden gelir (CLAUDE.md: depo dosyalarına model adı yazılmaz);
-          # değişken silinirse Claude Code'un "opus" kısaltması kullanılır. Tur sınırı kaçak kullanımı keser.
+          # değişken yoksa --model hiç verilmez, Claude Code'un varsayılanı kullanılır. Tur sınırı kaçak kullanımı keser.
           claude_args: |
-            --model ${{ vars.INCELEME_MODELI || 'opus' }}
+            ${{ vars.INCELEME_MODELI && format('--model {0}', vars.INCELEME_MODELI) || '' }}
             --max-turns 25
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"

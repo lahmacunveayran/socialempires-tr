@@ -1266,7 +1266,7 @@
       "test": null,
       "pr": "#30",
       "onay": "Sahibi, 1 Kasım 2026 ('kalite ve hata denetimi')",
-      "notlar": "Kimlik CLAUDE_CODE_OAUTH_TOKEN (Max aboneliği); yaklaşık bir yıl geçerli, Kasım 2027'de yenilenmeli. Model depo değişkeni INCELEME_MODELI'nde. Açık kalan küçük notlar: her push'ta yorumlar birikebilir, büyük PR'da tur sınırı dolabilir. Kullanılmayan ANTHROPIC_API_KEY secret'ını sahibi silecek."
+      "notlar": "Kimlik CLAUDE_CODE_OAUTH_TOKEN (Max aboneliği); yaklaşık bir yıl geçerli, Kasım 2027'de yenilenmeli. Model depo değişkeni INCELEME_MODELI'nde. İnceleme önceki yorumları okuyup tekrar etmez, özeti tek yorumda günceller (master konuşmaların çözülmesini istiyor). Açık kalan küçük notlar: satır içi yorumlar sayfalamasız okunur, bir PR'da 30'u geçerse tekrar olabilir; büyük PR'da 25 tur sınırı dolabilir. Kullanılmayan ANTHROPIC_API_KEY secret'ını sahibi silecek."
     },
     {
       "id": "DAG-14",

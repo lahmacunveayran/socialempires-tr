@@ -8,6 +8,10 @@ name: claude-inceleme
 on:
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
+    # Yalnızca belge değişen PR'lar incelenmez (kullanım hakkı boşa gitmesin).
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
 
 # Aynı PR'a yeni commit gelirse eski inceleme iptal edilir (kullanım hakkı boşa gitmesin).
 concurrency:
@@ -29,11 +33,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      # Eylemler commit'e sabitlendi (token alan üçüncü taraf eylemi etiket değişse de değişmesin);
+      # Dependabot günceller.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 1
+          # Depo token'ı diske yazılmaz; eylem kendi token'ını github_token'dan alır.
+          persist-credentials: false
 
-      - uses: anthropics/claude-code-action@v1
+      - uses: anthropics/claude-code-action@d535f5172dec02b204866b393d6b20b9b2aaf98d # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ github.token }}
@@ -62,7 +70,9 @@ jobs:
             - Sonunda `gh pr comment` ile tek bir kısa özet yorumu bırak.
               Sorun yoksa bunu açıkça söyle.
             - Bütün yorumlar Türkçe olsun.
-          # Model, depo değişkeni INCELEME_MODELI'nden gelir (CLAUDE.md: depo dosyalarına model adı yazılmaz).
+          # Model, depo değişkeni INCELEME_MODELI'nden gelir (CLAUDE.md: depo dosyalarına model adı yazılmaz);
+          # değişken silinirse Claude Code'un "opus" kısaltması kullanılır. Tur sınırı kaçak kullanımı keser.
           claude_args: |
-            --model ${{ vars.INCELEME_MODELI }}
+            --model ${{ vars.INCELEME_MODELI || 'opus' }}
+            --max-turns 15
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"

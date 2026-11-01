@@ -1,0 +1,83 @@
+name: claude-inceleme
+
+# Her PR'da değişen kodu Claude'a kalite ve hata açısından inceletir.
+# Gerekli: depo ayarlarında CLAUDE_CODE_OAUTH_TOKEN adlı bir Actions secret'ı
+# (`claude setup-token` ile alınır; Max aboneliğinin kullanım hakkından düşer).
+# Max planıyla gelen API kredisi Claude Code'da geçmediği için API anahtarı kullanılmıyor.
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+    # Yalnızca belge değişen PR'lar incelenmez (kullanım hakkı boşa gitmesin).
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+
+# Aynı PR'a yeni commit gelirse eski inceleme iptal edilir (kullanım hakkı boşa gitmesin).
+concurrency:
+  group: claude-inceleme-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  inceleme:
+    # Taslak PR'lar, Dependabot PR'ları ve fork'tan gelen PR'lar incelenmez
+    # (son ikisinde secret gelmez). PR'ı açana bakılır, koşuyu tetikleyene değil.
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      # Eylemler commit'e sabitlendi (token alan üçüncü taraf eylemi etiket değişse de değişmesin);
+      # Dependabot günceller.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 1
+          # Depo token'ı diske yazılmaz; eylem kendi token'ını github_token'dan alır.
+          persist-credentials: false
+
+      - uses: anthropics/claude-code-action@d535f5172dec02b204866b393d6b20b9b2aaf98d # v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMARASI: ${{ github.event.pull_request.number }}
+
+            Bu PR'ı incele. Yalnızca bu PR'da değişen koda bak; `gh pr diff` ile
+            değişikliği, gerekirse çevresindeki dosyaları oku. Kuralların için
+            depodaki CLAUDE.md'ye uy. Bu, Social Empires oyununun tek kişilik,
+            çevrimdışı Türkçe yerel sunucusu (Python/Flask + tarayıcı JS).
+
+            Öncelik sırasıyla:
+            1. Hatalar: yanlış mantık, unutulmuş durum, çökme, bozulan çağrılar,
+               kayıt (save) verisinin bozulması ya da kaybolması.
+            2. Güvenlik: istemciden gelen veriyi doğrulamadan kullanmak, dosya
+               yolu ile oynama, tehlikeli eval/exec.
+            3. Kalite: tekrar eden kod, gereksiz karmaşıklık, eksik test
+               (testler `tests/` altında, unittest ve node --test).
+
+            Kurallar:
+            - Önce önceki incelemelerin yorumlarına bak: özetler için `gh pr view --comments`,
+              satır içi yorumlar için
+              `gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/comments`.
+              Daha önce yazılmış bir bulguyu yeniden yazma; master'a birleştirmek için
+              her satır içi yorumun çözülmesi gerekiyor, tekrar sahibine iş çıkarır.
+            - Her yeni ve somut sorunu ilgili satıra satır içi yorum olarak yaz: ne
+              yanlış, hangi durumda ortaya çıkıyor, nasıl düzelir.
+            - Emin olmadığın şeyi kesin gibi yazma; "olabilir" de.
+            - Zevk meselesi ve küçük biçim önerileri yazma.
+            - Sonunda özeti `gh pr comment --edit-last --create-if-none` ile yaz;
+              böylece PR'da hep tek bir özet yorumu olur. Sorun yoksa bunu açıkça söyle.
+            - Bütün yorumlar Türkçe olsun.
+          # Model, depo değişkeni INCELEME_MODELI'nden gelir (CLAUDE.md: depo dosyalarına model adı yazılmaz);
+          # değişken yoksa --model hiç verilmez, Claude Code'un varsayılanı kullanılır. Tur sınırı kaçak kullanımı keser.
+          claude_args: |
+            ${{ vars.INCELEME_MODELI && format('--model {0}', vars.INCELEME_MODELI) || '' }}
+            --max-turns 25
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/comments)"

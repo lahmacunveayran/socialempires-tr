@@ -15,7 +15,7 @@ Son güncelleme: 30 Ekim 2026. Push'tan önce yerel kapılar temiz olur; CI kap�
 
 | Kapı                | Komut                                       | Son sonuç                |
 | ------------------- | ------------------------------------------- | ------------------------ |
-| Python testleri     | `python -m unittest discover -s tests`      | ✔ 266 test (31 Ekim, GEC-03 mezarlık ve viral teklifler) |
+| Python testleri     | `python -m unittest discover -s tests`      | ✔ 276 test (5 Kasım, GEC-03 Ada Ocağı) |
 | Tarayıcı JS testleri | `node --test tests/js/*.test.js`           | ✔ 3 test (PR #19)        |
 | Sözdizimi           | `python -m compileall -q .`                 | ✔                        |
 | JS sözdizimi        | `node --check templates/js/*.js`            | ✔                        |

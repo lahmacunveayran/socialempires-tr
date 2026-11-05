@@ -642,5 +642,75 @@ class MezarlikVeViralTeklifler(KomutTesti):
         self.assertEqual(self.ps["viralOffers"]["1"], {"id": 1, "friends": [], "rewarded": 0})
 
 
+class AdaOcagi(KomutTesti):
+    """GEC-03: Ada Ocağı (CollectGameManager). Malzemeler 1.4.07'nin collect_game_items'ından."""
+
+    def test_odenen_malzeme_bedeli_ve_sinir(self):
+        # bakır (1): 15 gerekli, tek bedel 8, son bedel 8
+        self.kayit["playerInfo"]["cash"] = 20
+        self.ps["collectGame"] = {"1": {"id": 1, "counter": 13, "timestamp": 7}}
+        self.komut("collect_game_add_item", 1, 1)
+        self.komut("collect_game_add_item", 1, 1)
+        self.komut("collect_game_add_item", 1, 1)  # dolu: bedel alınmaz
+        self.assertEqual(self.cash, 4)
+        self.assertEqual(self.ps["collectGame"]["1"], {"id": 1, "counter": 15, "timestamp": 7})
+        self.komut("collect_game_add_item", 2, 1)  # diş: 5 nakit, 4 kaldı
+        self.komut("collect_game_add_item", 99, 0)
+        self.assertEqual((self.cash, self.ps["collectGame"]["2"]["counter"]), (4, 0))
+
+    def test_toplama_ani_ve_hizlandirma(self):
+        simdi = self.komutlar.timestamp_now()
+        self.komut("collect_game_add_item", 3, 0)  # ödenmeyen: nakit yok, toplama anı yazılır
+        self.assertEqual(self.ps["collectGame"]["3"]["counter"], 1)
+        self.assertGreaterEqual(self.ps["collectGame"]["3"]["timestamp"], simdi)
+        self.komut("collect_game_update_timestamp", 1)
+        self.assertGreaterEqual(self.ps["collectGame"]["1"]["timestamp"], simdi)
+        # diş (2): hızlandırma 1 nakit, bekleme 300 sn
+        self.kayit["playerInfo"]["cash"] = 1
+        self.komut("collect_game_speed_up", 2)
+        self.komut("collect_game_speed_up", 2)  # nakit bitti
+        self.assertEqual(self.cash, 0)
+        self.assertLessEqual(self.ps["collectGame"]["2"]["timestamp"], self.komutlar.timestamp_now() - 300)
+        self.assertGreaterEqual(self.ps["collectGame"]["2"]["timestamp"], simdi - 300)
+
+    def test_boru_viral_teklif_2nin_yardimcisidir(self):
+        # boru (5): 5 gerekli, bedel 10; istemci ayrıca buy_viral_offer_friend [2] gönderir
+        self.kayit["playerInfo"]["cash"] = 25
+        self.komut("collect_game_add_item", 5, 1)
+        self.komut("buy_viral_offer_friend", 2)
+        self.assertEqual(self.cash, 15)
+        self.assertEqual(self.ps["viralOffers"]["2"]["friends"], [-1])
+        self.assertEqual(self.ps["collectGame"]["5"]["counter"], 0)
+
+    def test_hepsini_al_bedeli_ve_tamamlanma(self):
+        # boş adada (gerekli - 1) × tek + son: 120 + 125 + 125 + 160 + 50 + 60 (çekiçte bedel 0, hızlandırma 3)
+        # = 640; %21 indirim, ilerleme 0: ceil(640 - 640 × 0,21) = 506
+        self.assertEqual(self.komutlar.ada_paket_bedeli(self.kayit), 506)
+        self.kayit["playerInfo"]["cash"] = 505
+        self.komut("collect_game_buy_all", 1)
+        self.assertNotIn("collectGame", self.ps)
+        self.kayit["playerInfo"]["cash"] = 506
+        self.komut("collect_game_buy_all", 1)
+        self.assertEqual(self.cash, 0)
+        sayaclar = {no: m["counter"] for no, m in self.ps["collectGame"].items()}
+        self.assertEqual(sayaclar, {"1": 15, "2": 25, "3": 25, "4": 20, "5": 0, "6": 20})
+        self.assertEqual(len(self.ps["viralOffers"]["2"]["friends"]), 5)
+        self.assertEqual(self.komutlar.ada_paket_bedeli(self.kayit), 0)
+        self.komut("reward_viral_offer", 2, 0, 0, 0, 0)  # bütün ödüller verilince istemci gönderir
+        self.assertEqual(self.ps["viralOffers"]["2"]["rewarded"], 1)
+
+    def test_ilerledikce_indirim_azalir(self):
+        self.ps["collectGame"] = {"1": {"id": 1, "counter": 14, "timestamp": 0}}
+        # bakırda 8 kaldı: 640 - 14 × 8 = 528; ilerleme 14/110: ceil(528 - 528 × 0,21 × 96/110)
+        self.assertEqual(self.komutlar.ada_paket_bedeli(self.kayit), math.ceil(528 - 528 * 0.21 * 96 / 110))
+
+    def test_odul_bir_kez_yazilir(self):
+        self.komut("collect_game_reward_given", 2272)
+        self.komut("collect_game_reward_given", 2272)
+        self.komut("collect_game_reward_given", 9999)  # adanın ödülü değil
+        self.assertEqual(self.ps["collectGameGivenPrizes"], [2272])
+        self.assertEqual(self.harita["items"], bos_kayit()["maps"][0]["items"])  # birim store_add_items'la gelir
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

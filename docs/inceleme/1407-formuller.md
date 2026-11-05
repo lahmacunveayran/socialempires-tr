@@ -105,3 +105,48 @@ Kayıt: `privateState.viralOffers[no] = {"id", "friends": [...], "rewarded"}` (`
   (`giveReward` → `Base/storeItem`).
 - Düğme yalnızca `starts_at < şimdi` ve `starts_at + duration − şimdi > 0` iken görünür (`checkViralButton`,
   `timeLeft`). 1.4.07'nin config'inde beş teklifin hepsinde ikisi de 0: teklifler kapalı.
+
+## Ada Ocağı (`collect_game_*`)
+
+Uygulama: `oyun/komutlar.py`; testler: `tests/test_komutlar.py` (`AdaOcagi`). Config: `collect_game["1"]` ve
+`collect_game_items`.
+
+### Kayıt (`CollectGameManager/initIslandPlayerData`)
+
+- `privateState.collectGame[no] = {"id", "counter", "timestamp"}`: malzemenin miktarı ve son toplama anı.
+- `privateState.collectGameGivenPrizes`: verilen ödüllerin eşya kimlikleri.
+- Boru (5, `INVITE_ITEM`) sayaç tutmaz: miktarı `min(viralOffers[2].friends'in uzunluğu, required)`.
+- İlerleme bütün malzemelerin miktarlarının toplamı; ödülün eşiği `rewards` sözlüğünün anahtarı (90, 110),
+  toplam `required`'ların toplamı (110).
+
+### Komutlar
+
+| Komut | Kaynak | Sunucu |
+|---|---|---|
+| `collect_game_add_item [no, ödendi]` | `addItem`, `buyItem` | Miktar `required`'dan küçükse 1 artar. Ödendiyse `currentCost` nakit: sıradaki son birimse `last_cost`, değilse `cost`. Ödenmediyse `timestamp = şimdi`. Boruda artış viral teklif 2'ye bir yardımcı (istemcinin ayrıca gönderdiği `buy_viral_offer_friend [2]`'nin bedeli yok, bir şey yapmaz) |
+| `collect_game_update_timestamp [no]` | `collectItem` | `timestamp = şimdi` |
+| `collect_game_speed_up [no]` | `buySpeedup` | `speedup_cost` nakit, `timestamp = şimdi − cooldown` |
+| `collect_game_buy_all [1]` | `buyAll` | Hepsini al bedeli nakit; bütün malzemeler `required`'a, boruda viral teklif 2'nin yardımcıları `required`'a |
+| `collect_game_reward_given [ödül_id]` | `giveReward` | Ödül adanın ödüllerindense ve verilmemişse `collectGameGivenPrizes`'a eklenir. Eşyayı istemci depoya koyar ve `store_add_items` ile bildirir |
+
+Bütün ödüller verilince istemci `reward_viral_offer [2, …]` gönderir; viral teklif 2'nin yardımcıları tamsa
+`rewarded = 1` olur.
+
+### Hepsini al bedeli (`get packCost`)
+
+- Her malzeme için `tek = cost` (0 ise `speedup_cost`), `son = last_cost` (0 ise `speedup_cost`).
+- `kalan += (required − miktar − 1) × tek + son`. İstemci son bedeli `required == miktar − 1` ise eklemez; miktar
+  `required`'ı geçmediğinden bu hiç olmaz, tamamlanmış malzeme `son − tek` katar (1.4.07'de 0).
+- `oran = (toplam − ilerleme) / toplam`; `bedel = ceil(kalan − kalan × discount_price / 100 × oran)`.
+- 1.4.07'de boş adanın bedeli `ceil(640 − 640 × 0,21) = 506` nakit.
+
+### Ücretsiz toplama
+
+İstemci malzemeyi görevde (1), trol öldürünce (2), kaynak toplayınca (3), PvP'de (4) ve günlük toplamada (6)
+şansla verir (`generate`, `calcChances*`); ada açık değilse, toplama dönemi dışındaysa ya da seviye 2'den
+küçükse vermez. Şans istemcide (`Math.random`); sunucu bekleme süresini denetlemez, yalnızca `required`'da keser.
+
+### Açık olma
+
+`active`: `starts_at < şimdi < starts_at + duration` ve en az bir ödül. 1.4.07'nin config'inde `starts_at` ve
+`duration` 0: ada haritada çıkmaz, komutlar gelmez. Açılması ayrı karar.

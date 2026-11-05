@@ -808,6 +808,144 @@ def reward_viral_offer(save, a):
         durum["rewarded"] = 1
 
 
+# Ada Ocağı (1.4.07, CollectGameManager): altı malzeme toplanır, ilerleme ödül eşiklerini geçince ödül seçilir.
+# Kayıtta privateState.collectGame = {no: {"id", "counter", "timestamp"}} ve collectGameGivenPrizes = [ödül_id].
+# Boru (5, INVITE_ITEM) sayacı tutmaz: miktarı viral teklif 2'nin yardımcı sayısıdır (initIslandPlayerData).
+# 1.4.07'nin config'inde collect_game'in starts_at ve duration'ı 0: ada çıkmaz (active false), komutlar gelmez.
+ADA_DAVET_MALZEMESI = 5
+ADA_VIRAL_TEKLIFI = 2
+
+
+def _ada_malzemeleri():
+    return get_game_config().get("collect_game_items") or {}
+
+
+def _ada_kaydi(save, no):
+    """Malzemenin config tanımı ve kaydı; kayıt yoksa açılır."""
+    tanim = _ada_malzemeleri().get(str(no))
+    if not tanim:
+        return None, None
+    ps = save["privateState"]
+    if not isinstance(ps.get("collectGame"), dict):
+        ps["collectGame"] = {}
+    kayit_ = ps["collectGame"].setdefault(str(no), {"id": int(no), "counter": 0, "timestamp": 0})
+    return tanim, kayit_
+
+
+def _ada_miktari(save, no):
+    """İstemcinin girişte gösterdiği miktar (initIslandPlayerData)."""
+    tanim = _ada_malzemeleri().get(str(no)) or {}
+    gerekli = int(tanim.get("required", 0))
+    if int(no) == ADA_DAVET_MALZEMESI:
+        durum = ((save["privateState"].get("viralOffers") or {}).get(str(ADA_VIRAL_TEKLIFI)) or {})
+        return min(len(durum.get("friends") or []), gerekli)
+    return int(((save["privateState"].get("collectGame") or {}).get(str(no)) or {}).get("counter", 0))
+
+
+def _ada_davet_ekle(save, adet):
+    """Borunun miktarı: viral teklif 2'ye yardımcı eklenir (en çok gerekli sayı kadar)."""
+    teklif, durum = _viral_teklif(save, ADA_VIRAL_TEKLIFI)
+    gerekli = int(_ada_malzemeleri().get(str(ADA_DAVET_MALZEMESI), {}).get("required", 0))
+    if teklif:
+        durum["friends"] += [-1] * max(0, min(adet, gerekli - len(durum["friends"])))
+
+
+def ada_paket_bedeli(save):
+    """Hepsini al bedeli (CollectGameManager/get packCost)."""
+    ada = (get_game_config().get("collect_game") or {}).get("1") or {}
+    toplam = ilerleme = kalan = 0
+    for no, tanim in _ada_malzemeleri().items():
+        gerekli, miktar = int(tanim.get("required", 0)), _ada_miktari(save, no)
+        hiz = int(tanim.get("speedup_cost", 0))
+        tek = int(tanim.get("cost", 0)) or hiz
+        son = int(tanim.get("last_cost", 0)) or hiz
+        # istemci gerekli == miktar - 1'e bakar; miktar gerekliyi geçmediğinden son bedel her zaman eklenir
+        kalan += (gerekli - miktar - 1) * tek + (0 if gerekli == miktar - 1 else son)
+        toplam += gerekli
+        ilerleme += miktar
+    oran = (toplam - ilerleme) / toplam if toplam else 0
+    return math.ceil(kalan - kalan * (int(ada.get("discount_price", 0)) / 100) * oran)
+
+
+@komut("collect_game_add_item")
+def collect_game_add_item(save, a):
+    """[malzeme_no, odendi] - bir malzeme. Ödendiyse nakit: tek bedel, sonuncusu son bedel
+    (CollectGameItem/get currentCost); ödenmediyse toplama anı yazılır."""
+    no, odendi = a.tam(0), a.tam(1)
+    tanim, kayit_ = _ada_kaydi(save, no)
+    if not tanim:
+        print(" ! ada malzemesi yok:", no)
+        return
+    gerekli, miktar = int(tanim.get("required", 0)), _ada_miktari(save, no)
+    if miktar >= gerekli:
+        return
+    if odendi:
+        bedel = int(tanim.get("last_cost", 0) if miktar == gerekli - 1 else tanim.get("cost", 0))
+        if int(save["playerInfo"].get("cash", 0)) < bedel:
+            print(" ! ada malzemesi icin nakit yetmiyor")
+            return
+        cash_ekle(save, -bedel)
+    else:
+        kayit_["timestamp"] = timestamp_now()
+    if no == ADA_DAVET_MALZEMESI:
+        # istemci ödenen boru için ayrıca buy_viral_offer_friend [2] gönderir; teklifin bedeli olmadığından
+        # o komut bir şey yapmaz, yardımcı burada eklenir
+        _ada_davet_ekle(save, 1)
+    else:
+        kayit_["counter"] = miktar + 1
+
+
+@komut("collect_game_update_timestamp")
+def collect_game_update_timestamp(save, a):
+    """[malzeme_no] - toplama anı (CollectGameManager/collectItem)."""
+    tanim, kayit_ = _ada_kaydi(save, a.tam(0))
+    if tanim:
+        kayit_["timestamp"] = timestamp_now()
+
+
+@komut("collect_game_speed_up")
+def collect_game_speed_up(save, a):
+    """[malzeme_no] - bekleme biter: speedup_cost nakit, toplama anı cooldown kadar geriye."""
+    tanim, kayit_ = _ada_kaydi(save, a.tam(0))
+    if not tanim:
+        return
+    bedel = int(tanim.get("speedup_cost", 0))
+    if int(save["playerInfo"].get("cash", 0)) < bedel:
+        print(" ! ada hizlandirmasi icin nakit yetmiyor")
+        return
+    cash_ekle(save, -bedel)
+    kayit_["timestamp"] = timestamp_now() - int(tanim.get("cooldown", 0) or 0)
+
+
+@komut("collect_game_buy_all")
+def collect_game_buy_all(save, a):
+    """[1] - kalan bütün malzemeler: ada_paket_bedeli nakit. Ödüller ayrıca collect_game_reward_given ile."""
+    bedel = ada_paket_bedeli(save)
+    if int(save["playerInfo"].get("cash", 0)) < bedel:
+        print(" ! ada paketi icin nakit yetmiyor")
+        return
+    cash_ekle(save, -bedel)
+    for no, tanim in _ada_malzemeleri().items():
+        _, kayit_ = _ada_kaydi(save, no)
+        if int(no) == ADA_DAVET_MALZEMESI:
+            _ada_davet_ekle(save, int(tanim.get("required", 0)))
+        else:
+            kayit_["counter"] = max(int(kayit_.get("counter", 0)), int(tanim.get("required", 0)))
+
+
+@komut("collect_game_reward_given")
+def collect_game_reward_given(save, a):
+    """[ödül_id] - ödül verildi. Birimi istemci depoya koyar, store_add_items ile bildirir (giveReward)."""
+    odul = a.tam(0)
+    oduller = ((get_game_config().get("collect_game") or {}).get("1") or {}).get("rewards") or {}
+    gecerli = {int(r[0]) for r in (oduller.values() if isinstance(oduller, dict) else oduller) if r}
+    ps = save["privateState"]
+    if not isinstance(ps.get("collectGameGivenPrizes"), list):
+        ps["collectGameGivenPrizes"] = []
+    if odul in gecerli and odul not in ps["collectGameGivenPrizes"]:
+        ps["collectGameGivenPrizes"].append(odul)
+
+
 @komut("add_unit_warehouse")
 def add_unit_warehouse(save, a):
     """[x, y, kasaba, birim_id]"""

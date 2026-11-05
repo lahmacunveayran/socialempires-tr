@@ -174,8 +174,10 @@ küçükse vermez. Şans istemcide (`Math.random`); sunucu bekleme süresini den
   kendisi kaydırmaz: hangi zamanın ilerleyeceği sunucunundur (◐). Oyunun metnine göre ("all you buildings,
   missions and PVP"; yardım: kaynaklar, PvP, bölümler, görevler, günlük bonus, Ejderha Yuvası, Binici Akademisi)
   sunucu `hours × 3600` sn geri çeker: eşyaların zaman damgası (`items[i][4]`), eğitim kuyrukları, Ada Ocağı,
-  gönderilen saldırılar, günlük bonus, bakım/binici/kuşatma/dart sayaçları, `lastQuestTimes`, hazine ve takas.
-  10⁹'dan küçük değerler (0, −1, 1) işarettir, kaydırılmaz. Kalkan ve ilk alım teklifi ilerlemez.
+  günlük bonus, bakım/binici/kuşatma/dart sayaçları, `lastQuestTimes`, hazine ve takas.
+  10⁹'dan küçük değerler (0, −1, 1) işarettir, kaydırılmaz. Kalkan ve ilk alım teklifi ilerlemez. Saldırı
+  kayıtlarının zamanı kalır (savaş geçmişinde tarih); PvP hakkı `tsAttacksReset = max(eski, şimdi − 6 sa + süre)`
+  ile hızlanır: o kadar zaman geçseydi pencereden çıkacak saldırılar sayılmaz (#38 incelemesi).
 
 ## Asker Toplama ödülü (`finish_si_recruitment [x, y, kasaba, 387, ödül]`)
 

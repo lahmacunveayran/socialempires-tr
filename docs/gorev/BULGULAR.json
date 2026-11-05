@@ -3,8 +3,8 @@
   "guncelleme": "2026-11-06",
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
-    "madde": "OYN-14",
-    "sonraki_adim": "Bulut oturumu 6.11.2026 (2). #40 (OYN-14, OYN-18) birleşti (da09896). KAR-13 bağımsız denetim sürüyor: 6 alan, salt okunur kopya 187e84f (docs/gorev ve docs/devlog çıkarıldı); her bulgu yeniden üretilip BULGULAR'a işlenecek, raporlar docs/denetim/. TST-04 yeniden ölçümü 7afe6fd üzerinde koşuyor; bitince docs/TEST_OLCUMU.md §12. Sonra GEC-04'ün kalanı ve GEC-05. Sahibinden kararlar: KMT-08, KMT-09, denge sabitleri (TST-04 notları), ONR-01..04, v0.1.0 (GEC-09)."
+    "madde": "KAR-13",
+    "sonraki_adim": "Bulut oturumu 6.11.2026 (2) sahibinin isteğiyle durdu (kullanım payı az). #40 (OYN-14, OYN-18) birleşti (da09896). KAR-13 başlatıldı ama rapor çıkmadan durduruldu: ortak kurallar docs/denetim/BRIEF.md (yollar bulut oturumunun geçici klasörüne göre; yeni oturumda salt okunur kopya yeniden kurulur: git archive <commit>, docs/gorev ve docs/devlog silinir, istemci SWF ayrı klasöre). Yeniden başlamadan önce sahibine kullanım payı hatırlatılır; altı alan aynı anda yerine ikişer ikişer koşmak payı korur. TST-04 yeniden ölçümü 7afe6fd üzerinde yerelde sürüyordu (oturum kapanırsa sonuç kaybolur; baştan koşulur, ~2,5 saat). Sonra docs/TEST_OLCUMU.md §12, GEC-04'ün kalanı, GEC-05. Sahibinden kararlar: KMT-08, KMT-09, denge sabitleri (TST-04 notları), ONR-01..04, v0.1.0 (GEC-09)."
   },
   "maddeler": [
     {

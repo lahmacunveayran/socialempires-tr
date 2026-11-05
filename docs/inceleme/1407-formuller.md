@@ -150,3 +150,39 @@ küçükse vermez. Şans istemcide (`Math.random`); sunucu bekleme süresini den
 
 `active`: `starts_at < şimdi < starts_at + duration` ve en az bir ödül. 1.4.07'nin config'inde `starts_at` ve
 `duration` 0: ada haritada çıkmaz, komutlar gelmez. Açılması ayrı karar.
+
+## Koleksiyon ödülü (`finish_collection`)
+
+- `popupCollections/onExchange [c]` ve `onBuy [c, 1, bedel]` ikisi de `CollectableManager$/getReward`'ı çağırır.
+- Ödül `arCollections[c][0]` (sınıf kurucusu, c = 1..23; değerler `Constants.ID_*`): 176, 177, 178, 179, 180, 551,
+  546, 544, 552, 553, 206, 207, 208, 209, 124, 561, 562, 563, 564, 565, 875, 853, 1410.
+- `Base.storeItem(ref, false, false)`: üçüncü argüman false olunca komut gönderilmez (@149); sunucu ödülü depoya
+  ekler (KMT-05). Sıfırdan büyük her parça 1 azalır; `collections[c][0] = 1` (yüklemede `arCollected[c][0]`).
+
+## Ruh Karıştırıcı güçlendirmesi (`buy_powerups [sira]`)
+
+- `PopupSoulMixer/onBtnPowerUp@31-106`: i. tıklama `POWERUPS[min(i, son)].cash_cost` nakit;
+  `POWERUPS = globals.SOUL_MIXER_POWERUPS_LEVELS` (mega patch: 1, 2, 4, 8, 15, 20).
+- `sendPowerUps@49-76`: karıştırınca her güçlendirme için `[min(i, son)]`; ardından `push_queue_unit`. Güçlendirme
+  kayda yazılmaz (`attrs.soulMixerItem` bellekte bir `SoulMixerItem` nesnesi).
+
+## Zaman Makinesi (`buy_time_packet`, `time_ff`)
+
+- Paket no = `globals.TIME_MACHINE` sırası: `{hours, price}` = (0,5; 2), (1; 4), (4; 12), (8; 25), (12; 40), (24; 75).
+- `onBuy`: `canAfford(price)` ise nakit düşer, `privateState.countTimePacket[no] + 1` (yüklemede `PlayerStatus/Init`).
+- `onUse`: `amountInStock > 0` ise sayaç 1 azalır, `time_ff` gider, istemci haritayı yeniden yükler. İstemci zamanı
+  kendisi kaydırmaz: hangi zamanın ilerleyeceği sunucunundur (◐). Oyunun metnine göre ("all you buildings,
+  missions and PVP"; yardım: kaynaklar, PvP, bölümler, görevler, günlük bonus, Ejderha Yuvası, Binici Akademisi)
+  sunucu `hours × 3600` sn geri çeker: eşyaların zaman damgası (`items[i][4]`), eğitim kuyrukları, Ada Ocağı,
+  günlük bonus, bakım/binici/kuşatma/dart sayaçları, `lastQuestTimes`, hazine ve takas.
+  10⁹'dan küçük değerler (0, −1, 1) işarettir, kaydırılmaz. Kalkan ve ilk alım teklifi ilerlemez. Saldırı
+  kayıtlarının zamanı kalır (savaş geçmişinde tarih); PvP hakkı `tsAttacksReset = max(eski, şimdi − 6 sa + süre)`
+  ile hızlanır: o kadar zaman geçseydi pencereden çıkacak saldırılar sayılmaz (#38 incelemesi).
+
+## Asker Toplama ödülü (`finish_si_recruitment [x, y, kasaba, 387, ödül]`)
+
+- Ödül `game_config.recruitment_prices[id]` (`units` "a,b", `num_recruitments`). Bedel yok.
+- Birimler `storeItem(..., false, false, false)` ile komutsuz depoya (@213): sunucu ekler.
+- `attrs.si = si.slice(0, min(len, 4) − num_recruitments)` (@250-318); ödül `privateState.recruitmentPrices`'a
+  (@340). Alınmış ödül bir daha sunulmaz.
+- Çevrimdışı ulaşılamıyor: `si` yalnızca `showPopupSEHelpSocialItem` (JS, arkadaş daveti) ile dolar.

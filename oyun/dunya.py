@@ -16,7 +16,7 @@ import threading
 import time
 
 from oyun import ayarlar, denge
-from oyun.config import get_game_config
+from oyun.config import get_game_config, get_level_from_xp
 from oyun.kayit import all_saves_userid, save_lock, save_session, session
 from oyun.turkce import cevirileri_yukle
 from oyun.zaman import zaman_olcegi
@@ -529,11 +529,8 @@ class Dunya:
                     f"{kayit['playerInfo'].get('name', uid)} ordusuna bir {turkce_ad(secim)} kattı")
 
         # Seviye atlama
-        seviyeler = get_game_config()["levels"]
-        xp = int(harita.get("xp", 0))
-        yeni = seviye
-        while yeni + 1 < len(seviyeler) and xp >= int(seviyeler[yeni + 1]["exp_required"]):
-            yeni += 1
+        # İstemci gibi yalnızca yukarı (PlayerStatus/checkForLevelUp); eşik okuması config'te tek yerde (OYN-14)
+        yeni = max(seviye, get_level_from_xp(int(harita.get("xp", 0))))
         if yeni != seviye:
             harita["level"] = yeni
             self.olay("seviye", f"{kayit['playerInfo'].get('name', uid)} seviye {yeni} oldu")

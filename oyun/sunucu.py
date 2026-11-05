@@ -228,11 +228,8 @@ DINAMIK_YOL = "/dynamic.flash1.dev.socialpoint.es/appsfb/socialempiresdev/srvemp
 
 def _xp_araligi(bilgi):
     """Başlıktaki XP çubuğu için (şimdiki, seviye başı, sonraki seviye)."""
-    from oyun.config import get_game_config
-    seviyeler = get_game_config()["levels"]
-    sv = max(0, min(int(bilgi.get("level", 0)), len(seviyeler) - 1))
-    bas = int(seviyeler[sv]["exp_required"])
-    son = int(seviyeler[sv + 1]["exp_required"]) if sv + 1 < len(seviyeler) else bas
+    from oyun.config import seviye_araligi
+    bas, son = seviye_araligi(int(bilgi.get("level", 0)))
     return {"simdi": int(bilgi.get("xp", 0)), "bas": bas, "son": son}
 
 

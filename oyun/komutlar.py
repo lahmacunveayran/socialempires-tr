@@ -235,8 +235,11 @@ def _gunluge_yaz(USERID, komutlar):
 @komut("game_status", "ping", "system_set_count_hack", "perform_city_quest",
        "spy_player", "reset_position_univers",
        "rt_publish_achievement_unit", "start_quest", "gold_statue_conversion",
-       # Yalnızca istemcideki geliştirici panelinden gelenler:
-       "fast_forward", "load_map", "save_map", "reset", "clear_tiles_area", "set_variables")
+       # Quest$/start@81: argümansız, start_quest'in ardından; istemci başka bir şey değiştirmez
+       "start_quest_new",
+       # Yalnızca istemcideki geliştirici panelinden gelenler (reset_dragon: AdminPanel/resetPopupDragon,
+       # o da hiçbir yerden çağrılmıyor):
+       "fast_forward", "load_map", "save_map", "reset", "clear_tiles_area", "set_variables", "reset_dragon")
 def kayitsiz(save, a):
     pass
 
@@ -1645,6 +1648,105 @@ def darts_shoot_balloon(save, a):
 
 
 # ---------------------------------------------------------------------------
+# Zaman Makinesi (bina 1463, PopupSelectTime)
+# ---------------------------------------------------------------------------
+
+def _zaman_paketi(no):
+    """globals.TIME_MACHINE[no] = {hours, price} (PopupSelectTime/bindData: düğmenin packetID'si sıradır)."""
+    paketler = globals_().get("TIME_MACHINE") or []
+    return paketler[no] if 0 <= no < len(paketler) else None
+
+
+def _paket_sayaci(save, no):
+    """privateState.countTimePacket[no]: elde kalan paket (PlayerStatus/Init@484 okur; eksik sıra 0 sayılır)."""
+    ps = save["privateState"]
+    if not isinstance(ps.get("countTimePacket"), list):
+        ps["countTimePacket"] = []
+    sayac = ps["countTimePacket"]
+    while len(sayac) <= no:
+        sayac.append(0)
+    return sayac
+
+
+@komut("buy_time_packet")
+def buy_time_packet(save, a):
+    """[paket] - PopupSelectTime/onBuy: canAfford(price) ise price nakit düşer, countTimePacket[paket] + 1."""
+    no = a.tam(0, -1)
+    paket = _zaman_paketi(no)
+    if paket is None:
+        print(" ! zaman paketi yok:", no)
+        return
+    bedel = int(paket.get("price", 0))
+    if int(save["playerInfo"].get("cash", 0)) < bedel:
+        print(" ! zaman paketi icin nakit yetmiyor")
+        return
+    cash_ekle(save, -bedel)
+    sayac = _paket_sayaci(save, no)
+    sayac[no] = int(sayac[no] or 0) + 1
+
+
+# Zamanı ileri alınan alanlar. İstemci time_ff'te kendisi hiçbir zamanı kaydırmaz; komutu gönderip haritayı
+# sunucudan yeniden yükler (PopupSelectTime/onUse@272 reloadMap). Hangi zamanların ilerleyeceğini oyunun kendi
+# metni söyler (0-language_en: "Advances the time of all you buildings, missions and PVP"; yardım: kaynaklar,
+# PvP, bölümler, görevler, günlük bonus, Ejderha Yuvası, Binici Akademisi). Kalkan ve ilk alım teklifi ilerlemez.
+ZAMAN_ALANLARI_OYUNCU = (
+    "timestampLastBonus", "timeStampTakeCare", "timeStampTakeCareMonster", "riderTimeStamp",
+    "timeStampHeavySiegePeriod", "timeStampHeavySiegeAttack", "timeStampDartsReset", "timeStampDartsNewFree",
+    "tsAttacksReset", "tsSpyingsReset", "kompuLastTimeStamp",
+)
+ZAMAN_ALANLARI_HARITA = ("timestampLastTreasure", "timestampLastTrade")
+GERCEK_ZAMAN = 1_000_000_000  # bundan küçük değer zaman değil işarettir (0, -1, 1): kaydırılmaz
+
+
+def zamani_ilerlet(save, saniye):
+    """Kayıttaki bütün zaman damgalarını `saniye` geri çeker: oyuncu için o kadar zaman geçmiş olur."""
+    def kaydir(v):
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or v < GERCEK_ZAMAN:
+            return v
+        return type(v)(v - saniye)
+
+    ps = save["privateState"]
+    for k in ZAMAN_ALANLARI_OYUNCU:
+        if k in ps:
+            ps[k] = kaydir(ps[k])
+    for kuyruk in (ps.get("barracksQueues") or {}).values():
+        if isinstance(kuyruk, dict) and "ts" in kuyruk:
+            kuyruk["ts"] = kaydir(kuyruk["ts"])
+    for oyun in (ps.get("collectGame") or {}).values():
+        if isinstance(oyun, dict) and "timestamp" in oyun:
+            oyun["timestamp"] = kaydir(oyun["timestamp"])
+    for saldiri in ps.get("attacksSent") or []:
+        if isinstance(saldiri, dict) and "time" in saldiri:
+            saldiri["time"] = kaydir(saldiri["time"])
+    for h in save.get("maps") or []:
+        for k in ZAMAN_ALANLARI_HARITA:
+            if k in h:
+                h[k] = kaydir(h[k])
+        if isinstance(h.get("lastQuestTimes"), list):
+            h["lastQuestTimes"] = [kaydir(t) for t in h["lastQuestTimes"]]
+        for esya in h.get("items") or []:
+            if isinstance(esya, list) and len(esya) > 4:
+                esya[4] = kaydir(esya[4])
+
+
+@komut("time_ff")
+def time_ff(save, a):
+    """[paket] - PopupSelectTime/onUse: elde paket varsa (amountInStock > 0) bir azalır, zaman hours * 3600 sn
+    ilerler."""
+    no = a.tam(0, -1)
+    paket = _zaman_paketi(no)
+    if paket is None:
+        print(" ! zaman paketi yok:", no)
+        return
+    sayac = _paket_sayaci(save, no)
+    if int(sayac[no] or 0) <= 0:
+        print(" ! zaman paketi elde yok:", no)
+        return
+    sayac[no] = int(sayac[no]) - 1
+    zamani_ilerlet(save, int(round(float(paket.get("hours", 0)) * 3600)))
+
+
+# ---------------------------------------------------------------------------
 # Koleksiyonlar
 # ---------------------------------------------------------------------------
 
@@ -1797,6 +1899,33 @@ def finish_si(save, a):
             ozellik["si"] = []
         else:
             ozellik.pop("si", None)
+
+
+@komut("finish_si_recruitment")
+def finish_si_recruitment(save, a):
+    """[x, y, kasaba, bina(387), odul] - Asker Toplama ödülü (PopupRecruitment/onOpenBuilding).
+
+    Ödül game_config recruitment_prices[id]'dir. İstemci her birimi storeItem(ref, false, false, false) ile
+    komutsuz depoya koyar (@213; KMT-05 ile aynı yol), attrs.si'yi si.slice(0, min(len, 4) - num_recruitments)
+    yapar (@250-318), ödül id'sini playerRecruitmentPrices'a ekler (@340; yüklemede privateState
+    .recruitmentPrices'tan okunur). Bedel yoktur. Alınmış ödül istemcide bir daha sunulmaz (kurucu@361)."""
+    ps = save["privateState"]
+    odul_id = a.tam(4)
+    odul = next((r for r in get_game_config().get("recruitment_prices") or []
+                 if int(r.get("id", -1)) == odul_id), None)
+    alinanlar = ps.get("recruitmentPrices")
+    if odul is None or (isinstance(alinanlar, list) and odul_id in alinanlar):
+        print(" ! asker toplama odulu yok ya da alinmis:", odul_id)
+        return
+    for parca in str(odul.get("units", "")).split(","):
+        if parca.strip().isdigit():
+            depo_ekle(save, int(parca))
+    esya = esya_bul(harita(save, a.tam(2)), a.tam(0), a.tam(1), a.tam(3))
+    if esya:
+        ozellik = ozellikler(esya)
+        si = ozellik.get("si") if isinstance(ozellik.get("si"), list) else []
+        ozellik["si"] = si[:min(len(si), 4) - int(odul.get("num_recruitments", 0))]
+    listeye_ekle(ps, "recruitmentPrices", odul_id)
 
 
 # ---------------------------------------------------------------------------

@@ -123,5 +123,97 @@ class RuhKaristiriciGuclendirme(KomutTesti):
         self.assertEqual(self.cash, 100 - 40)
 
 
+class ZamanMakinesi(KomutTesti):
+    """PopupSelectTime: paket no = globals.TIME_MACHINE sırası (bindData@46-210). game_config_20120826:
+    [{0.5 sa, 2}, {1, 4}, {4, 12}, {8, 25}, {12, 40}, {24, 75}]. onBuy@98-193: canAfford(price) ise nakit düşer,
+    countTimePacket[no] + 1. onUse@102-137: amountInStock > 0 ise bir azalır ve time_ff gider; ardından istemci
+    haritayı sunucudan yeniden yükler (@272), zamanı kendisi kaydırmaz."""
+
+    def test_paket_alma(self):
+        self.komut("buy_time_packet", 2)
+        self.komut("buy_time_packet", 2)
+        self.komut("buy_time_packet", 0)
+        self.assertEqual(self.cash, 100 - 12 - 12 - 2)
+        self.assertEqual(self.ps["countTimePacket"], [1, 0, 2])
+
+    def test_nakit_yetmezse_alinmaz(self):
+        self.ps["countTimePacket"] = []
+        self.komut("buy_time_packet", 5)  # 75
+        self.assertEqual(self.cash, 25)
+        self.komut("buy_time_packet", 5)
+        self.assertEqual(self.cash, 25)
+        self.assertEqual(self.ps["countTimePacket"], [0, 0, 0, 0, 0, 1])
+
+    def test_kullanma_paketi_harcar_ve_zamani_ilerletir(self):
+        # 1 saatlik paket (sıra 1): her gerçek zaman damgası 3600 sn geri çekilir; 0 ve -1 gibi işaretler kalır
+        simdi = self.komutlar.timestamp_now()
+        self.ps["countTimePacket"] = [0, 1]
+        self.ps.update(timestampLastBonus=simdi - 10, riderTimeStamp=-1, timeStampTakeCare=0,
+                       shield_until=simdi + 999)
+        self.ps["barracksQueues"] = {"q1": {"ts": simdi + 500, "amount": 1}}
+        self.ps["attacksSent"] = [{"time": simdi - 60, "victim_id": "k"}]
+        self.harita["items"] = [[19, 20, 20, 0, simdi - 5, 0], [512, 3, 4, 0, 0, 0]]
+        self.komut("time_ff", 1)
+        self.assertEqual(self.ps["countTimePacket"], [0, 0])
+        self.assertEqual(self.ps["timestampLastBonus"], simdi - 10 - 3600)
+        self.assertEqual((self.ps["riderTimeStamp"], self.ps["timeStampTakeCare"]), (-1, 0))
+        self.assertEqual(self.ps["barracksQueues"]["q1"]["ts"], simdi + 500 - 3600)
+        self.assertEqual(self.ps["attacksSent"][0]["time"], simdi - 60 - 3600)
+        self.assertEqual(self.harita["items"][0][4], simdi - 5 - 3600)
+        self.assertEqual(self.harita["items"][1][4], 0)
+        self.assertEqual(self.ps["shield_until"], simdi + 999)  # kalkan ilerlemez (oyunun metninde yok)
+
+    def test_yarim_saatlik_paket(self):
+        self.ps["countTimePacket"] = [1]
+        simdi = self.komutlar.timestamp_now()
+        self.ps["timestampLastBonus"] = simdi
+        self.komut("time_ff", 0)
+        self.assertEqual(self.ps["timestampLastBonus"], simdi - 1800)
+
+    def test_elde_paket_yoksa_zaman_ilerlemez(self):
+        simdi = self.komutlar.timestamp_now()
+        self.ps["countTimePacket"] = [0, 0, 0]
+        self.ps["timestampLastBonus"] = simdi
+        self.komut("time_ff", 2)
+        self.komut("time_ff", 9)
+        self.assertEqual(self.ps["timestampLastBonus"], simdi)
+        self.assertEqual(self.ps["countTimePacket"], [0, 0, 0])
+
+
+class AskerToplama(KomutTesti):
+    """PopupRecruitment/onOpenBuilding: [x, y, kasaba, 387, ödül]. Ödül game_config recruitment_prices
+    (config/patch/1-mega_patch.json): id 4 = units "569,569", num_recruitments 2; id 1 = "556", 1. Birimler
+    storeItem(..., false, false, false) ile komutsuz depoya (@213); attrs.si = si.slice(0, min(len, 4) - num)
+    (@250-318); ödül recruitmentPrices'a (@340). Bedel yok."""
+
+    def bina(self, si):
+        self.harita["items"].append([387, 30, 31, 0, 0, 0, [], {"si": list(si)}])
+        return self.harita["items"][-1][7]
+
+    def test_iki_birimlik_odul(self):
+        oz = self.bina(["a", "b", "c", "d"])
+        self.ps["gifts"] = []
+        self.komut("finish_si_recruitment", 30, 31, 0, 387, 4)
+        self.assertEqual(self.ps["gifts"][569], 2)
+        self.assertEqual(sum(self.ps["gifts"]), 2)
+        self.assertEqual(oz["si"], ["a", "b"])
+        self.assertEqual(self.ps["recruitmentPrices"], [4])
+        self.assertEqual(self.cash, 100)
+
+    def test_dortten_fazla_yardim_kirpilir(self):
+        oz = self.bina(["a", "b", "c", "d", "e", "f"])
+        self.komut("finish_si_recruitment", 30, 31, 0, 387, 1)
+        self.assertEqual(oz["si"], ["a", "b", "c"])  # min(6, 4) - 1 = 3
+
+    def test_alinmis_ya_da_olmayan_odul(self):
+        self.bina(["a"])
+        self.ps["gifts"] = []
+        self.ps["recruitmentPrices"] = [1]
+        self.komut("finish_si_recruitment", 30, 31, 0, 387, 1)
+        self.komut("finish_si_recruitment", 30, 31, 0, 387, 99)
+        self.assertEqual(self.ps["gifts"], [])
+        self.assertEqual(self.ps["recruitmentPrices"], [1])
+
+
 if __name__ == "__main__":
     unittest.main()

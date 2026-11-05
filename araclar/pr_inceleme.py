@@ -12,8 +12,8 @@ Akış:
 
 Ortam: ANTHROPIC_API_KEY, GH_TOKEN, REPO (sahip/ad), PR (numara), MODEL (depo değişkeni).
 
-Komut satırı (yerelde yalnızca istemi görmek için, API çağrılmaz):
-    python araclar/pr_inceleme.py --kuru
+Komut satırı (yerelde yalnızca istemi görmek için, API çağrılmaz; `gh` girişi gerekir):
+    REPO=sahip/ad PR=31 python araclar/pr_inceleme.py --kuru
 """
 
 import argparse
@@ -94,39 +94,52 @@ def yorumlanabilir_satirlar(fark):
     """Birleşik farkta yeni dosya tarafında yorum yazılabilen satırlar: {dosya: {satır, ...}}.
 
     GitHub satır içi yorumu yalnızca farkın parçalarında (eklenen ya da bağlam satırı) kabul eder.
+    Parçanın içi, başlığındaki satır sayılarıyla izlenir: içeriği "++ " ya da "-- " ile başlayan bir satır
+    ("+++ ...", "--- ...") dosya başlığı sanılmaz.
     """
     satirlar = {}
     dosya = None
-    yeni = None
+    yeni = eski_kalan = yeni_kalan = 0
     for s in fark.splitlines():
-        if s.startswith("+++ "):
+        if eski_kalan > 0 or yeni_kalan > 0:
+            if s.startswith("\\"):
+                continue  # "\ No newline at end of file"
+            if s.startswith("-"):
+                eski_kalan -= 1  # yeni tarafta yer tutmaz
+                continue
+            if s.startswith("+"):
+                yeni_kalan -= 1
+            else:  # bağlam satırı (" " ya da boş)
+                eski_kalan -= 1
+                yeni_kalan -= 1
+            if dosya is not None:
+                satirlar[dosya].add(yeni)
+            yeni += 1
+        elif s.startswith("+++ "):
             yol = s[4:].strip()
             dosya = None if yol == "/dev/null" else re.sub(r"^b/", "", yol)
             if dosya is not None:
                 satirlar.setdefault(dosya, set())
-            yeni = None
         elif s.startswith("@@"):
-            m = re.match(r"@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@", s)
-            yeni = int(m.group(1)) if m else None
-        elif dosya is None or yeni is None:
-            continue
-        elif s.startswith("+"):
-            satirlar[dosya].add(yeni)
-            yeni += 1
-        elif s.startswith(" ") or s == "":
-            satirlar[dosya].add(yeni)
-            yeni += 1
-        elif s.startswith("\\"):
-            continue  # "\ No newline at end of file"
-        # "-" satırları yeni tarafta yer tutmaz
+            m = re.match(r"@@ -\d+(?:,(\d+))? \+(\d+)(?:,(\d+))? @@", s)
+            if m:
+                eski_kalan = int(m.group(1) or 1)
+                yeni, yeni_kalan = int(m.group(2)), int(m.group(3) or 1)
     return satirlar
 
 
 def dosya_baglami(dosyalar, sinir=DOSYA_SINIRI):
-    """Değişen dosyaların tam hâli (silinenler ve ikili dosyalar hariç), toplamda sınır içinde."""
+    """Değişen dosyaların tam hâli (silinenler ve ikili dosyalar hariç), toplamda sınır içinde.
+
+    Sembolik bağlar ve depo dışına çıkan yollar okunmaz: iş, PR'ın kodunu secret'larla çalıştırıyor;
+    `/proc/self/environ`'a giden bir bağ anahtarları isteme, oradan da herkese açık yoruma taşıyabilir.
+    """
     parcalar, toplam, atlanan = [], 0, []
+    kok = os.path.realpath(KOK)
     for yol in dosyalar:
         tam = os.path.join(KOK, yol)
+        if os.path.islink(tam) or os.path.commonpath([kok, os.path.realpath(tam)]) != kok:
+            continue
         try:
             with open(tam, encoding="utf-8") as f:
                 icerik = f.read()
@@ -223,6 +236,37 @@ def incele(model, metin):
     import anthropic  # yalnızca CI'da kurulu; testler içe aktarmadan çalışsın
 
     istemci = anthropic.Anthropic()
+    try:
+        cevap = _akis(istemci, model, metin)
+    except anthropic.APIStatusError as e:  # kredi bitmesi (400), 401, 429, 5xx
+        return None, f"API hatası ({e.status_code}): {e.message}", ""
+    except anthropic.APIConnectionError:
+        return None, "API'ye bağlanılamadı.", ""
+    k = cevap.usage
+    maliyet = (f"{cevap.model} · girdi {k.input_tokens:,} · çıktı {k.output_tokens:,} token · "
+               f"ileti {cevap.id}")
+    print(maliyet, "· durma:", cevap.stop_reason)
+    if cevap.stop_reason == "refusal":
+        return None, "Model isteği reddetti; inceleme yapılamadı.", maliyet
+    if cevap.stop_reason == "max_tokens":
+        return None, "Cevap çıktı sınırına takıldı; inceleme tamamlanamadı.", maliyet
+    sonuc, hata = cevabi_coz(next((b.text for b in cevap.content if b.type == "text"), ""))
+    return sonuc, hata, maliyet
+
+
+def cevabi_coz(metin):
+    """(sonuç ya da None, hata metni): bozuk ya da şemaya uymayan cevap çökertmez."""
+    try:
+        sonuc = json.loads(metin)
+    except json.JSONDecodeError:
+        return None, "Cevap JSON olarak çözülemedi; inceleme tamamlanamadı."
+    if not (isinstance(sonuc, dict) and isinstance(sonuc.get("ozet"), str)
+            and isinstance(sonuc.get("bulgular"), list)):
+        return None, "Cevap beklenen biçimde değil; inceleme tamamlanamadı."
+    return sonuc, None
+
+
+def _akis(istemci, model, metin):
     with istemci.beta.messages.stream(
         model=model,
         max_tokens=32000,
@@ -233,17 +277,7 @@ def incele(model, metin):
         betas=["server-side-fallback-2026-07-01"],
         fallbacks="default",
     ) as akis:
-        cevap = akis.get_final_message()
-    k = cevap.usage
-    maliyet = (f"{cevap.model} · girdi {k.input_tokens:,} · çıktı {k.output_tokens:,} token · "
-               f"ileti {cevap.id}")
-    print(maliyet, "· durma:", cevap.stop_reason)
-    if cevap.stop_reason == "refusal":
-        return None, "Model isteği reddetti; inceleme yapılamadı.", maliyet
-    if cevap.stop_reason == "max_tokens":
-        return None, "Cevap çıktı sınırına takıldı; inceleme tamamlanamadı.", maliyet
-    metin = next((b.text for b in cevap.content if b.type == "text"), "")
-    return json.loads(metin), None, maliyet
+        return akis.get_final_message()
 
 
 # ---------------------------------------------------------------------------
@@ -253,7 +287,9 @@ def main():
     ap.add_argument("--kuru", action="store_true", help="API'yi çağırma, istemin boyutunu yaz")
     a = ap.parse_args()
 
-    repo, pr = os.environ["REPO"], os.environ["PR"]
+    repo, pr = os.environ.get("REPO", "").strip(), os.environ.get("PR", "").strip()
+    if not repo or not pr:
+        sys.exit("REPO (sahip/ad) ve PR (numara) ortam değişkenleri gerekli, ör. REPO=sahip/ad PR=31.")
     model = os.environ.get("MODEL", "").strip()
     if not model and not a.kuru:
         sys.exit("MODEL boş: depo değişkeni INCELEME_MODELI tanımlı değil.")
@@ -288,7 +324,13 @@ def main():
     ozet = sonuc["ozet"]
     if atlanan:
         ozet += "\n\nTam hâli bağlama sığmayan dosyalar (yalnızca farkı okundu): " + ", ".join(atlanan)
-    satir_ici_yaz(repo, pr, pr_bilgi["headRefOid"], icerde)
+    try:
+        satir_ici_yaz(repo, pr, pr_bilgi["headRefOid"], icerde)
+    except subprocess.CalledProcessError as e:
+        # ör. 422: arada yeni commit geldi; bulgular kaybolmasın, özete düşsün
+        print("satır içi yorum yazılamadı:", (e.stderr or "").strip()[:500])
+        disarda, icerde = icerde + disarda, []
+        ozet += "\n\nSatır içi yorumlar GitHub'a yazılamadı; bütün bulgular aşağıda."
     ozet_yaz(repo, pr, ozet_metni(ozet, disarda, maliyet), onceki_ozet)
     print(f"{len(icerde)} satır içi, {len(disarda)} özette bulgu")
 

@@ -37,7 +37,8 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 1
           persist-credentials: false
-      - uses: actions/setup-python@v7
+      # Bu işte secret var: eylemler etikete değil commit SHA'sına sabit (Dependabot günceller).
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: "3.12"
       - name: Bağımlılık

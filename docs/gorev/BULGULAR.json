@@ -4,7 +4,7 @@
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
     "madde": "OYN-14",
-    "sonraki_adim": "Bulut oturumu 6.11.2026 (2). #39 birleşti (7afe6fd). OYN-14 düzeltildi, PR açık (claude/keen-keller-83oji2): sahibinin onayıyla birleşir. TST-04 yeniden ölçümü bulutta 7afe6fd üzerinde koşuyor (4 çekirdek, 3 işçi, ~2,5 saat); bitince docs/TEST_OLCUMU.md §12'ye yazılıp ayrı PR açılır. Sonra KAR-13 bağımsız denetim (başlamadan önce sahibine kullanım payı hatırlatılır), GEC-04'ün kalanı ve GEC-05. Sahibinden kararlar: KMT-08, KMT-09, denge sabitleri (TST-04 notları), ONR-01..04, v0.1.0 (GEC-09)."
+    "sonraki_adim": "Bulut oturumu 6.11.2026 (2). #39 birleşti (7afe6fd). OYN-14 düzeltildi, PR #40 açık (claude/keen-keller-83oji2): sahibinin onayıyla birleşir. TST-04 yeniden ölçümü bulutta 7afe6fd üzerinde koşuyor (4 çekirdek, 3 işçi, ~2,5 saat); bitince docs/TEST_OLCUMU.md §12'ye yazılıp ayrı PR açılır. Sonra KAR-13 bağımsız denetim (başlamadan önce sahibine kullanım payı hatırlatılır), GEC-04'ün kalanı ve GEC-05. Sahibinden kararlar: KMT-08, KMT-09, denge sabitleri (TST-04 notları), ONR-01..04, v0.1.0 (GEC-09)."
   },
   "maddeler": [
     {
@@ -978,7 +978,7 @@
       "isaret": "✔",
       "kanit": "oyun/dunya.py:535 _ekonomi levels[n].exp_required'ı n. seviyenin eşiği sayar; config.get_level_from_xp (kayit._seviyeyi_duzelt her yüklemede) levels[i]'yi i+1'in eşiği sayar (test_komutlar: 'eşikler 0, 29, 60: 29 xp ile 2. seviye'). Alt ajan iki yolu çalıştırarak gösterdi; kod okunarak doğrulandı. 6.11.2026: istemcinin kuralı bayt kodundan okundu (araclar/abc_okur.py, SocialEmpires1.4.07sec_fixed.swf, SHA-256 doğrulandı): PlayerStatus/checkForLevelUp iExperience >= arLevelList[iLevel].exp_required ise iLevel + 1; PlayerStatus/Init XP çubuğu arLevelList[iLevel - 1] .. arLevelList[iLevel], iLevel >= length ise length - 1. Yani levels[i] (i+1). seviyenin eşiği: config.get_level_from_xp istemciyle aynı; dunya._ekonomi, rt_level_up, sunucu._xp_araligi, hile paneli ve get_xp_from_level bir kayıktı.",
       "test": "tests/test_seviye.py; tests/test_dunya.py: test_bot_istemcinin_esiginde_seviye_atlar",
-      "pr": null,
+      "pr": "#40",
       "onay": null,
       "notlar": "Etki: botlar bir seviye geç atlar, sunucu yeniden açılınca seviyeleri +1 sıçrar. rt_level_up, get_xp_from_level ve sunucu._xp_araligi de levels[n] = n okumasını kullanıyor: iki okuma karışık. Hangisinin istemciyle aynı olduğu istemciden okunup tek yola bağlanmalı. test_dunya bu yüzden yalnızca iki okumada da doğru olanı sınar. Düzeltme (6.11.2026): config'te tek okuma (en_yuksek_seviye, get_xp_from_level = levels[seviye - 1], seviye_araligi, get_level_from_xp); beş yol buna bağlandı. araclar/bot_koy_uret.py zaten istemcinin okumasını kullanıyor (xp = levels[seviye - 1] + 1), dokunulmadı. 10 bozmanın 10'u testte düştü; yeni testler eski kodda 8 yerde düşüyor. Oyuncuya etkisi OYN-18."
     },
@@ -1524,7 +1524,7 @@
       "isaret": "✔",
       "kanit": "Çalıştırıldı (6.11.2026, master 7afe6fd): seviye 1, 29 XP; rt_level_up [2] sonrası xp 60 (levels[2]); kayit._seviyeyi_duzelt 'seviye duzeltildi: 2 -> 3'. Hile panelindeki '+1 seviye' de XP'yi bir sonraki eşiğe koyuyordu (aynı sonuç); 'En yüksek seviye' XP'yi 2016089205 yapıyordu. Kök neden OYN-14.",
       "test": "tests/test_seviye.py: RtLevelUp, HilePaneliSeviye",
-      "pr": null,
+      "pr": "#40",
       "onay": null,
       "notlar": "Etkilenmiş eski kayıtlar düzeltilmez: XP'si eşiğe çekilmiş oyuncunun fazladan seviyesi kalır (geri almak kazanılmış seviyeyi silerdi). Sahibi isterse ayrı karar."
     }

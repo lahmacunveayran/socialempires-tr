@@ -8,8 +8,9 @@ Sahibi bundan sonra bulut oturumundan devam ediyor. Bu dosya yeni oturumun ilk o
 - **Sahibi:** `lahmacunveayran`. İngilizce bilmiyor: her mesaj kısa, sade Türkçe.
 - **Faz:** 1.4.07'ye tam geçiş (KAR-08, `docs/YOL_HARITASI_1407.md`). GEC-01, GEC-02 ve GEC-03 bitti.
 - **Açık PR'lar** (birleştirme sırası önemli, S-44):
-  1. **#38** `gec03-kalan`: GEC-03'ün sonu. Kontroller yeşil. İki inceleme konuşması düzeltildi (f1d0c1f) ama
-     kapatılmadı: kapatmak sahibinin onayını ister (S-55). Önce bu birleşir.
+  1. **#38** `gec03-kalan`: GEC-03'ün sonu. İlk iki inceleme konuşması düzeltildi (f1d0c1f) ve sahibinin
+     onayıyla kapatıldı. Üçüncü not (time_ff saldırı kayıtlarının zamanını kaydırıyordu) f633a1c ile düzeltildi;
+     o konuşmayı yanıtlamak ve kapatmak yine sahibinin onayını ister (S-55). Önce bu birleşir.
   2. **#39** `test-zayif`: TST-04 testleri (denge 24, SWF yaması 37, bot dünyası 50) ve yeniden ölçüm. #38'in
      dalı içine birleştirildi; #38 squash ile birleşince bu dala güncel `master` birleştirilir (çakışmada iki
      tarafın ağacı aynıysa `git checkout --ours`, ağaç eşitliği `git diff` ile denetlenir), sonra birleşir.
@@ -18,7 +19,7 @@ Sahibi bundan sonra bulut oturumundan devam ediyor. Bu dosya yeni oturumun ilk o
 
 ## Sıradaki işler (sırayla)
 
-1. #38'in iki konuşmasını kapatmak için sahibinden onay al; #38'i birleştir (squash, model adı yazmadan).
+1. #38'in üçüncü konuşmasını kapatmak için sahibinden onay al; #38'i birleştir (squash, model adı yazmadan).
 2. #39'a güncel master'ı birleştir, testler ve inceleme geçince birleştir.
 3. **OYN-14:** bot dünyası seviye eşiğini sunucunun geri kalanından bir kaydırarak okuyor. Önce istemcinin
    seviye eşiğini nasıl okuduğunu bayt kodundan bul (`araclar/abc_okur.py`); sonra `dunya._ekonomi`,
@@ -48,7 +49,7 @@ git checkout test-zayif) ya da oradan oku. Önce şunları oku: CLAUDE.md, docs/
 master'a doğrudan gönderilmez, testler gevşetilmez, yeni test koruduğu kod bozulunca düşmeli ve beklenen değerin
 kaynağı yazılır.
 
-Sıradaki işler DEVIR.md'deki sırayla: önce #38 (iki inceleme konuşmasını kapatmak için bana sor), sonra #39
+Sıradaki işler DEVIR.md'deki sırayla: önce #38 (açık inceleme konuşmasını kapatmak için bana sor), sonra #39
 (güncel master birleştirilir), sonra OYN-14 (bot seviye eşiği), sonra KAR-13 bağımsız denetim (başlamadan önce
 kullanım payımı hatırlat). Her adımın sonunda ne yaptığını ve sırada ne olduğunu bana kısaca söyle.
 ```

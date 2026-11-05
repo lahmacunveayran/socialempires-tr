@@ -1640,12 +1640,8 @@ def unit_collections_completed(save, a):
     cash_ekle(save, 1)
 
 
-@komut("add_collectable")
-def add_collectable(save, a):
-    """[koleksiyon, parca(1-5)] - privateState.collections[c] = [tamam, p1..p5]."""
-    c, parca = a.tam(0), a.tam(1)
-    if not (0 <= c < 1000 and 1 <= parca <= 5):
-        return
+def _koleksiyon(save, c):
+    """privateState.collections[c] = [tamamlandı, p1..p5]; liste c'ye kadar uzar, bozuk kayıt düzelir."""
     koleksiyonlar = save["privateState"].get("collections")
     if not isinstance(koleksiyonlar, list):
         koleksiyonlar = save["privateState"]["collections"] = []
@@ -1653,20 +1649,44 @@ def add_collectable(save, a):
         koleksiyonlar.append([0, 0, 0, 0, 0, 0])
     if not isinstance(koleksiyonlar[c], list) or len(koleksiyonlar[c]) < 6:
         koleksiyonlar[c] = [0, 0, 0, 0, 0, 0]
-    koleksiyonlar[c][parca] += 1
+    return koleksiyonlar[c]
+
+
+@komut("add_collectable")
+def add_collectable(save, a):
+    """[koleksiyon, parca(1-5)] - privateState.collections[c] = [tamam, p1..p5]."""
+    c, parca = a.tam(0), a.tam(1)
+    if not (0 <= c < 1000 and 1 <= parca <= 5):
+        return
+    _koleksiyon(save, c)[parca] += 1
+
+
+# Koleksiyon ödülleri: CollectableManager.arCollections[c][0] (1.4.07 istemcisi, sınıf kurucusu; c = 1..23,
+# arCollections[0] adlar listesidir). Değerler Constants.ID_* sabitleridir (ID_DECO_PYRAMID = 176 ...).
+KOLEKSIYON_ODULU = {
+    1: 176, 2: 177, 3: 178, 4: 179, 5: 180, 6: 551, 7: 546, 8: 544, 9: 552, 10: 553, 11: 206, 12: 207,
+    13: 208, 14: 209, 15: 124, 16: 561, 17: 562, 18: 563, 19: 564, 20: 565, 21: 875, 22: 853, 23: 1410,
+}
 
 
 @komut("finish_collection")
 def finish_collection(save, a):
-    """[koleksiyon, (cash_ile=1, cash)] - parçalarla ya da cash ile tamamlanır."""
+    """[koleksiyon, (cash_ile=1, cash)] - parçalarla (popupCollections/onExchange) ya da cash ile (onBuy).
+
+    İki yol da CollectableManager$/getReward'ı çağırır: ödül Base.storeItem(ref, false, false) ile depoya
+    konur (üçüncü argüman false: komut gönderilmez, KMT-05), arCollected[c][0] = true olur (yüklemede
+    collections[c][0] == 1'den kurulur, Base/processAttacks) ve sıfırdan büyük her parça bir azalır."""
     c = a.tam(0)
     if a.tam(1) == 1:
         cash_ekle(save, -a.tam(2))
-    else:
-        koleksiyonlar = save["privateState"].get("collections") or []
-        if 0 <= c < len(koleksiyonlar) and isinstance(koleksiyonlar[c], list):
-            for i in range(1, len(koleksiyonlar[c])):
-                koleksiyonlar[c][i] = max(0, koleksiyonlar[c][i] - 1)
+    odul = KOLEKSIYON_ODULU.get(c)
+    if odul is None:
+        return
+    parcalar = _koleksiyon(save, c)
+    parcalar[0] = 1
+    for i in range(1, 6):
+        parcalar[i] = max(0, parcalar[i] - 1)
+    depo_ekle(save, odul)
     listeye_ekle(save["privateState"], "collectionsCompleted", c)
 
 

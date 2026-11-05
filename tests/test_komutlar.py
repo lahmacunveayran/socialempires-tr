@@ -368,14 +368,55 @@ class KomsuKomutlari(KomutTesti):
         self.assertEqual(self.ps["collections"][2], [0, 0, 0, 2, 0, 1])
 
     def test_koleksiyonu_parcalarla_ve_nakitle_bitirme(self):
-        # CollectableManager$/getReward: her parça (1-5) sıfırdan büyükse bir azalır; popupCollections/onExchange
-        # [c], onBuy [c, 1, bedel] (bedel nakit düşer); ikisinde de collectionsCompleted'a c eklenir
-        self.ps["collections"] = [[0] * 6, [0, 2, 1, 0, 1, 1]]
+        # popupCollections/onExchange [c] ve onBuy [c, 1, bedel] (bedel nakit düşer) ikisi de
+        # CollectableManager$/getReward'ı çağırır: her parça (1-5) sıfırdan büyükse bir azalır,
+        # arCollected[c][0] = true (Base/processAttacks yüklemede bunu collections[c][0] == 1'den kurar);
+        # ikisinde de collectionsCompleted'a c eklenir
+        self.ps["collections"] = [[0] * 6, [0, 2, 1, 0, 1, 1], [0] * 6, [0] * 6, [0, 1, 0, 3, 1, 1]]
         self.komut("finish_collection", 1)
-        self.assertEqual(self.ps["collections"][1], [0, 1, 0, 0, 0, 0])
+        self.assertEqual(self.ps["collections"][1], [1, 1, 0, 0, 0, 0])
         self.komut("finish_collection", 4, 1, 12)
         self.assertEqual(self.cash, 88)
+        self.assertEqual(self.ps["collections"][4], [1, 0, 0, 2, 0, 0])  # nakitle de parçalar düşer
         self.assertEqual(self.ps["collectionsCompleted"], [1, 4])
+
+    # CollectableManager sınıf kurucusu: arCollections[c][0] (c = 1..23) ödülün Constants adı; sayısal değer
+    # Constants sınıfının derlenmiş sabiti (1.4.07, araclar/abc_okur.py Abc.sabitler("Constants")).
+    KOLEKSIYON_ODULLERI = [
+        ("ID_DECO_PYRAMID", 176), ("ID_DECO_TREASURE", 177), ("ID_DECO_GARDEN", 178),
+        ("ID_DECO_FOUNTAIN", 179), ("ID_DECO_MAMMOTH", 180), ("ID_UNIT_AXETHROWER_PLAYER", 551),
+        ("ID_UNIT_PENGUIN", 546), ("ID_UNIT_YETI", 544), ("ID_UNIT_WARTROLL_PLAYER", 552),
+        ("ID_UNIT_MERLIN_CASTLE3", 553), ("ID_DECO_FOSO", 206), ("ID_DECO_ARBOL_AVATAR", 207),
+        ("ID_DECO_GUILLOTINA", 208), ("ID_DECO_JAULA", 209), ("ID_DECO_STATUE_SOLDIER", 124),
+        ("ID_UNIT_PET_DOG", 561), ("ID_UNIT_PET_CAT", 562), ("ID_UNIT_SKELETON_PLAYER", 563),
+        ("ID_UNIT_RAVAGER_PLAYER", 564), ("ID_UNIT_HIGHELF_COLEC", 565), ("ID_UNIT_GOLDEN_BAHAMUT_DRAGON", 875),
+        ("ID_UNIT_RED_BAHAMUT_DRAGON", 853), ("ID_BUILDING_BAHAMUT_HEART", 1410),
+    ]
+
+    def test_koleksiyon_odulu_depoya(self):
+        # KMT-05: getReward ödülü Base.storeItem(ref, false, false) ile depoya koyar; üçüncü argüman false olunca
+        # storeItem hiçbir komut göndermez (Base/storeItem@149 iffalse → 308). Sunucu eklemezse yenilemede kaybolur.
+        for c, (ad, odul) in enumerate(self.KOLEKSIYON_ODULLERI, 1):
+            with self.subTest(koleksiyon=c, odul=ad):
+                self.ps["gifts"] = []
+                self.komut("finish_collection", c, *((1, 5) if c % 2 else ()))
+                self.assertEqual(self.ps["gifts"][odul], 1)
+                self.assertEqual(sum(self.ps["gifts"]), 1)
+
+    def test_koleksiyon_tekrar_bitirilince_odul_yine_verilir(self):
+        # arUniqueCollections = [21, 22] dışındakiler yeniden toplanabilir; getReward her seferinde ödül verir
+        self.ps["gifts"] = []
+        self.komut("finish_collection", 2)
+        self.komut("finish_collection", 2)
+        self.assertEqual(self.ps["gifts"][177], 2)
+        self.assertEqual(self.ps["collectionsCompleted"], [2])
+
+    def test_koleksiyon_disi_numara_odul_vermez(self):
+        # arCollections[0] adlar listesidir, NUM_COLLECTIONS = 23: 0 ve 24 koleksiyon değildir
+        self.ps["gifts"] = []
+        self.komut("finish_collection", 0)
+        self.komut("finish_collection", 24)
+        self.assertEqual(self.ps["gifts"], [])
 
 
 class PvpKomutlari(KomutTesti):

@@ -4,7 +4,7 @@
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
     "madde": "GEC-03",
-    "sonraki_adim": "GEC-03 sürüyor. Ada Ocağı ve test denetimi (TST-01) PR #35'te; testin gücünün ölçümü (TST-03) ve bulduğu üç hata (KMT-02..04) PR #36'da (#35'in üstünde, önce #35 birleşir). Sıradaki: koleksiyon ödülü (KMT-05); GEC-03'ün kalanı buy_powerups, buy_time_packet/time_ff, finish_si_recruitment, start_quest_new, reset_dragon. Testsiz eski komutlar TST-02'de açık. GEC-03 bitince bağımsız denetim (KAR-13)."
+    "sonraki_adim": "GEC-03 sürüyor. Test ölçümü (TST-03, #36) birleşti. Koleksiyon ödülü (KMT-05) ve nakitle bitirmede parçalar (KMT-06) PR #37'de. Sıradaki: GEC-03'ün kalanı buy_powerups, buy_time_packet/time_ff, finish_si_recruitment, start_quest_new, reset_dragon; denge ve dünya testleri (TST-04). Testsiz eski komutlar TST-02'de açık. GEC-03 bitince bağımsız denetim (KAR-13)."
   },
   "maddeler": [
     {
@@ -1403,13 +1403,26 @@
       "baslik": "Koleksiyon ödülü sayfa yenilenince kayboluyor",
       "sinif": "hata",
       "onem": "Orta",
-      "durum": "acik",
-      "isaret": "◐",
-      "kanit": "İstemci CollectableManager$/getReward ödülü (arCollections[c][0], bir ID_DECO_* binası) storeItem(..., false) ile komutsuz depoya koyar; sunucunun finish_collection'ı yalnızca parçaları düşürür, ödülü eklemez. Ödül tablosu istemcide sabit (CollectableManager, 23 koleksiyon).",
-      "test": null,
-      "pr": null,
+      "durum": "duzeltildi",
+      "isaret": "✔",
+      "kanit": "İstemci CollectableManager$/getReward ödülü (arCollections[c][0], bir ID_DECO_* binası) storeItem(..., false) ile komutsuz depoya koyar; sunucunun finish_collection'ı yalnızca parçaları düşürür, ödülü eklemez. Ödül tablosu istemcide sabit (CollectableManager, 23 koleksiyon). Doğrulandı (1.4.07 bayt kodu, 5.11.2026): Base/storeItem üçüncü argüman false olunca @149 iffalse ile bütün addCommand dallarını atlar; getReward (ref, false, false) ile çağırır. Ödül tablosu CollectableManager sınıf kurucusundaki arCollections[c][0], değerler Constants.ID_* sabitleri.",
+      "test": "tests/test_komutlar.py: test_koleksiyon_odulu_depoya, test_koleksiyon_tekrar_bitirilince_odul_yine_verilir, test_koleksiyon_disi_numara_odul_vermez, test_koleksiyonu_parcalarla_ve_nakitle_bitirme",
+      "pr": "#37",
       "onay": null,
-      "notlar": "Düzeltme: tablo bayt kodundan çıkarılıp finish_collection'da ödül depoya eklenir; collections[c][0] tamamlandı işareti de sunucuda kurulmuyor olabilir (?). Oyunda bir koleksiyon bitirilip yenilenerek doğrulanmalı."
+      "notlar": "Düzeltildi: KOLEKSIYON_ODULU (23 koleksiyon) finish_collection'da depoya eklenir; collections[c][0] = 1 kurulur (Base/processAttacks yüklemede arCollected[c][0]'ı bundan kurar). Bozma denemesi: altı bozmanın altısında da test düştü. Oyunda bir koleksiyon bitirilip yenilenerek denenmedi."
+    },
+    {
+      "id": "KMT-06",
+      "baslik": "Nakitle bitirilen koleksiyonun parçaları ve tamamlandı işareti kaydedilmiyordu",
+      "sinif": "hata",
+      "onem": "Düşük",
+      "durum": "duzeltildi",
+      "isaret": "✔",
+      "kanit": "popupCollections/onBuy de getReward'ı çağırır (@159): parçalar ve arCollected[c][0] nakit yolunda da değişir. Sunucu nakit yolunda yalnızca nakit düşüyordu, iki yolda da collections[c][0]'ı kurmuyordu; yenileyince parçalar geri geliyordu. KMT-05 incelenirken bayt kodundan bulundu.",
+      "test": "tests/test_komutlar.py: test_koleksiyonu_parcalarla_ve_nakitle_bitirme",
+      "pr": "#37",
+      "onay": null,
+      "notlar": "Eski testin beklenen değeri ([0, 1, 0, 0, 0, 0]) istemciye göre düzeltildi: [1, 1, 0, 0, 0, 0]."
     }
   ]
 }

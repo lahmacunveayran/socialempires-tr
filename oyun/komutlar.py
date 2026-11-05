@@ -739,6 +739,21 @@ def paket_bedeli(paket, adet):
     return tur, toplam
 
 
+@komut("buy_powerups")
+def buy_powerups(save, a):
+    """[sira] - Ruh Karıştırıcı güçlendirmesi; bedel SOUL_MIXER_POWERUPS_LEVELS[min(sira, son)].cash_cost nakit.
+
+    İstemci nakdi her tıklamada düşer (PopupSoulMixer/onBtnPowerUp@106, sıra min(seviye, son)); karıştırınca
+    her güçlendirme için bir komut gönderir (sendPowerUps@49-76: [0], [1], ...), ardından push_queue_unit gelir.
+    Güçlendirme kayda yazılmaz: istemci onu bellekte tutar (attrs.soulMixerItem, SoulMixerItem nesnesi)."""
+    seviyeler = globals_().get("SOUL_MIXER_POWERUPS_LEVELS") or []
+    sira = a.tam(0)
+    if not seviyeler or sira < 0:
+        print(" ! guclendirme yok:", sira)
+        return
+    cash_ekle(save, -int(seviyeler[min(sira, len(seviyeler) - 1)].get("cash_cost", 0) or 0))
+
+
 @komut("buy_unit_pack")
 def buy_unit_pack(save, a):
     """[paket_no, adet] - açık kasabanın altınıyla ya da nakitle."""
@@ -1160,9 +1175,12 @@ def _tur_deger_odulu(save, h, tur, deger):
 
 @komut("weekly_reward")
 def weekly_reward(save, a):
-    """[tur('u','g','c'...), deger] - pazartesi bonusu."""
+    """[tur('u','g','c'...), deger] - pazartesi bonusu.
+
+    İstemci alındığını privateState.timeStampMondayBonus'tan okur (Base/loadPlayerInfoSuccess@1730,
+    isSameDay(..., lastServerTimestamp)); başka adla yazılırsa yenileyince aynı gün yeniden sunulur (KMT-07)."""
     _tur_deger_odulu(save, save["maps"][0], a.metin(0), a.tam(1))
-    save["privateState"]["timestampLastMondayBonus"] = timestamp_now()
+    save["privateState"]["timeStampMondayBonus"] = timestamp_now()
 
 
 @komut("comeback_reward")

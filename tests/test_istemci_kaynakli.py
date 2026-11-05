@@ -104,5 +104,24 @@ class Turnuva(KomutTesti):
         self.assertEqual(self.cash, 93)
 
 
+class RuhKaristiriciGuclendirme(KomutTesti):
+    """PopupSoulMixer/onBtnPowerUp@31-106: i. tıklama POWERUPS[min(i, son)].cash_cost nakit düşer; POWERUPS =
+    globals.SOUL_MIXER_POWERUPS_LEVELS (config/patch/1-mega_patch.json: 1, 2, 4, 8, 15, 20). sendPowerUps@49-76
+    i. güçlendirme için [min(i, son)] gönderir. Kayıtta başka hiçbir şey değişmez (güçlendirme bellekte tutulur)."""
+
+    def test_her_guclendirme_kendi_bedeli(self):
+        once = json.dumps(self.ps, sort_keys=True)
+        for sira in range(3):
+            self.komut("buy_powerups", sira)
+        self.assertEqual(self.cash, 100 - (1 + 2 + 4))
+        self.assertEqual(json.dumps(self.ps, sort_keys=True), once)
+
+    def test_son_seviyeden_sonrasi_son_bedel(self):
+        self.komut("buy_powerups", 5)
+        self.assertEqual(self.cash, 100 - 20)
+        self.komut("buy_powerups", 9)
+        self.assertEqual(self.cash, 100 - 40)
+
+
 if __name__ == "__main__":
     unittest.main()

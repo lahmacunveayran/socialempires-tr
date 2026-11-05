@@ -754,7 +754,11 @@ def buy_powerups(save, a):
     if not seviyeler or sira < 0:
         print(" ! guclendirme yok:", sira)
         return
-    cash_ekle(save, -int(seviyeler[min(sira, len(seviyeler) - 1)].get("cash_cost", 0) or 0))
+    bedel = int(seviyeler[min(sira, len(seviyeler) - 1)].get("cash_cost", 0) or 0)
+    if int(save["playerInfo"].get("cash", 0)) < bedel:  # istemci canAfford'la sorar (onBtnPowerUp@77)
+        print(" ! guclendirme icin nakit yetmiyor")
+        return
+    cash_ekle(save, -bedel)
 
 
 @komut("buy_unit_pack")
@@ -1917,14 +1921,17 @@ def finish_si_recruitment(save, a):
     if odul is None or (isinstance(alinanlar, list) and odul_id in alinanlar):
         print(" ! asker toplama odulu yok ya da alinmis:", odul_id)
         return
+    esya = esya_bul(harita(save, a.tam(2)), a.tam(0), a.tam(1), a.tam(3))
+    ozellik = ozellikler(esya) if esya else {}
+    si = ozellik.get("si") if isinstance(ozellik.get("si"), list) else []
+    gerekli = int(odul.get("num_recruitments", 0))
+    if esya is None or len(si) < gerekli:  # istemci düğmeyi si.length >= num_recruitments ise açar (createFotos)
+        print(" ! asker toplama: bina yok ya da yardim yetmiyor")
+        return
     for parca in str(odul.get("units", "")).split(","):
         if parca.strip().isdigit():
             depo_ekle(save, int(parca))
-    esya = esya_bul(harita(save, a.tam(2)), a.tam(0), a.tam(1), a.tam(3))
-    if esya:
-        ozellik = ozellikler(esya)
-        si = ozellik.get("si") if isinstance(ozellik.get("si"), list) else []
-        ozellik["si"] = si[:min(len(si), 4) - int(odul.get("num_recruitments", 0))]
+    ozellik["si"] = si[:min(len(si), 4) - gerekli]
     listeye_ekle(ps, "recruitmentPrices", odul_id)
 
 

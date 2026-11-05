@@ -116,6 +116,12 @@ class RuhKaristiriciGuclendirme(KomutTesti):
         self.assertEqual(self.cash, 100 - (1 + 2 + 4))
         self.assertEqual(json.dumps(self.ps, sort_keys=True), once)
 
+    def test_nakit_yetmezse_guclendirme_yok(self):
+        # onBtnPowerUp@77: canAfford(cash_cost) değilse openPopupNoCash (@260), nakit düşmez (#38 incelemesi)
+        self.kayit["playerInfo"]["cash"] = 3
+        self.komut("buy_powerups", 5)  # 20
+        self.assertEqual(self.cash, 3)
+
     def test_son_seviyeden_sonrasi_son_bedel(self):
         self.komut("buy_powerups", 5)
         self.assertEqual(self.cash, 100 - 20)
@@ -204,6 +210,16 @@ class AskerToplama(KomutTesti):
         oz = self.bina(["a", "b", "c", "d", "e", "f"])
         self.komut("finish_si_recruitment", 30, 31, 0, 387, 1)
         self.assertEqual(oz["si"], ["a", "b", "c"])  # min(6, 4) - 1 = 3
+
+    def test_bina_yoksa_ya_da_yardim_yetmezse_odul_yok(self):
+        # createFotos: btnHire ancak si.length >= num_recruitments ise onOpenBuilding'e bağlanır (#38 incelemesi)
+        self.ps["gifts"] = []
+        self.komut("finish_si_recruitment", 30, 31, 0, 387, 4)  # bina yok
+        oz = self.bina(["a"])
+        self.komut("finish_si_recruitment", 30, 31, 0, 387, 4)  # 1 yardım < 2
+        self.assertEqual(self.ps["gifts"], [])
+        self.assertEqual(oz["si"], ["a"])
+        self.assertNotIn(4, self.ps.get("recruitmentPrices") or [])
 
     def test_alinmis_ya_da_olmayan_odul(self):
         self.bina(["a"])

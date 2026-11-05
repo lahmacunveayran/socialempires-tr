@@ -49,42 +49,49 @@ bulunmuştur (Schuler ve Zeller, "Covering and uncovering equivalent mutants", S
 
 1. `oyun/` altındaki **bütün** mutantlar üretilir; operatör ayıklanmaz (cosmic-ray'in hepsi).
 2. Tohumla (`20261105`) tekrarlanabilir **basit rastgele örneklem**: 2000 mutant.
-3. Hiçbir testin çalıştırmadığı satırdaki mutant koşulmaz, **kaldı** sayılır ("kapsam dışı"). Öldürülemeyeceği
-   kesindir; böylece kapsam eksiği de oranın içinde görünür.
+3. coverage.py'nin açıkça "çalışmadı" dediği deyimdeki mutant koşulmaz, **kaldı** sayılır ("kapsam dışı").
+   Öldürülemeyeceği kesindir; böylece kapsam eksiği de oranın içinde görünür. Kuşkulu durumda mutant koşulur
+   (kural `mutasyon_olc.kapsam_disi`, testi `tests/test_mutasyon_olc.py`).
 4. Test komutu `python -B -m unittest discover -s tests -f`, mutant başına 120 sn sınır. Zaman aşımı öldü sayılır.
 5. Aracın açamadığı mutant ("geçersiz") sayılmaz; ayrıca yazılır.
 6. Oranlar **Wilson %95 aralığıyla** verilir (küçük örneklemde normal yaklaşımdan güvenilir).
 
 ## 4. Temel ölçüm (önce)
 
-Kod: test düzeltmelerinden önceki hâl (`ada-ocagi`, d330208). Üretilen mutant 16 142; örneklem 2000; geçersiz 1.
+Kod: test düzeltmelerinden önceki hâl (`ada-ocagi`, d330208). Üretilen mutant 16 125; örneklem 2000; geçersiz 1.
 Satır kapsamı %72 (4172/5556 satır, 1127/1852 dal).
 
 | Modül | n | Öldü | Kaldı | Kapsam dışı | Öldürme oranı (%95) |
 |---|---:|---:|---:|---:|---|
-| komutlar | 482 | 246 | 113 | 123 | %51,0 [46,6; 55,5] |
-| dunya | 270 | 55 | 120 | 95 | %20,4 [16,0; 25,6] |
+| komutlar | 482 | 248 | 116 | 118 | %51,5 [47,0; 55,9] |
+| dunya | 270 | 66 | 151 | 53 | %24,4 [19,7; 29,9] |
 | swf_font | 248 | 58 | 38 | 152 | %23,4 [18,5; 29,0] |
 | swf_yama | 151 | 46 | 9 | 96 | %30,5 [23,7; 38,2] |
-| istemci | 88 | 56 | 19 | 13 | %63,6 [53,2; 72,9] |
+| istemci | 88 | 57 | 23 | 8 | %64,8 [54,4; 73,9] |
 | fx_yama | 73 | 50 | 17 | 6 | %68,5 [57,1; 78,0] |
-| pvp | 72 | 28 | 26 | 18 | %38,9 [28,5; 50,4] |
-| turnuva | 62 | 25 | 23 | 14 | %40,3 [29,0; 52,7] |
-| kayit | 56 | 33 | 15 | 8 | %58,9 [45,9; 70,8] |
+| pvp | 72 | 39 | 31 | 2 | %54,2 [42,7; 65,2] |
+| turnuva | 62 | 29 | 33 | 0 | %46,8 [34,9; 59,0] |
+| kayit | 56 | 34 | 15 | 7 | %60,7 [47,6; 72,4] |
 | elo | 43 | 28 | 15 | 0 | %65,1 [50,2; 77,6] |
-| diğer 24 modül | 454 | 226 | 132 | 96 | %49,8 |
-| **Toplam** | **1999** | **851** | **527** | **621** | **%42,6 [40,4; 44,8]** |
+| diğer 24 modül | 454 | 235 | 138 | 81 | %51,8 |
+| **Toplam** | **1999** | **890** | **586** | **523** | **%44,5 [42,4; 46,7]** |
 
-Yalnızca kapsanan satırlarda: 851/1378 = **%61,8 [59,2; 64,3]**.
+Yalnızca kapsanan satırlarda: 890/1476 = **%60,3 [57,8; 62,8]**.
+
+**Düzeltme (PR #36 incelemesi).** İlk raporda oran %42,6 [40,4; 44,8] yazılmıştı. Araç, çok satırlı bir deyimin
+devam satırındaki mutantı "kapsam dışı" sayıp koşmuyordu: coverage.py deyimi yalnızca ilk satırıyla yazar (küçük
+bir örnekle doğrulandı, testte yazılı). 621 kapsam dışı mutantın 98'i böyleydi; hepsi aynı commit'te gerçekten
+koşuldu, 39'u öldü. Yukarıdaki tablo düzeltilmiş hâlidir.
 
 ## 5. Eşdeğer mutant tahmini
 
-Kapsanan satırlarda kalan 527 mutanttan rastgele 40'ına elle bakıldı. **9'u eşdeğer** (biri "büyük olasılıkla",
+Kapsanan satırlarda kalan mutantlardan rastgele 40'ına elle bakıldı. **9'u eşdeğer** (biri "büyük olasılıkla",
 üçü config değerleriyle doğrulandı): 9/40 = %22,5 [12,3; 37,5]. Örnekler: hiç okunmayan bir varsayılan değer
 (`p.get("id", -1)` yerine `p.get("id", not 1)`), sonucu değiştirmeyen sınır (`<` / `<=` eşit olamayan değerlerde).
 
-Buna göre kalanların yaklaşık 119'u (65-198) eşdeğer. Düzeltilmiş oran:
-toplamda **%45 [44; 47]**, kapsanan satırlarda **%68 [65; 72]**. Bu bir tahmindir (◐); ham oran ölçümdür (✔).
+Bu oran 586 kalana uygulanırsa yaklaşık 132'si (72-220) eşdeğer. Düzeltilmiş oran: toplamda **%48 [46; 50]**,
+kapsanan satırlarda **%66 [63; 71]**. Bu bir tahmindir (◐); ham oran ölçümdür (✔). Örneklem, düzeltmeden önceki
+527 kalandan çekildi; sonradan koşulan 98'in kalanları örneklemde yok.
 
 ## 6. Kalan mutantlar ne söyledi
 
@@ -104,7 +111,7 @@ toplamda **%45 [44; 47]**, kapsanan satırlarda **%68 [65; 72]**. Bu bir tahmind
    depo listesi oyundaki en büyük eşya id'sini geçmez).
 4. **Sabitlenmemiş denge değerleri.** `denge`, `elo` ve `pvp`'deki sabitler (ör. `4 * 3600` yerine `4 ^ 3600`)
    hiçbir testte sınanmıyor. Bunların doğru değeri istemci ya da sahibinin kararıdır; teste yazılmadı (§8).
-5. **Bot dünyası (`dunya`).** En zayıf modül (%20). Benzetim çıktısının doğru değeri belgeli değil.
+5. **Bot dünyası (`dunya`).** En zayıf büyük modül (%24, sonra %23). Benzetim çıktısının doğru değeri belgeli değil.
 
 ## 7. Ölçümün bulduğu hatalar
 
@@ -127,7 +134,39 @@ toplamda **%45 [44; 47]**, kapsanan satırlarda **%68 [65; 72]**. Bu bir tahmind
 
 ## 9. Sonra
 
-<!-- SONRA_TABLOSU -->
+Kod: bu PR'ın düzeltmeleri ve yeni testleriyle (cdd3a55). Aynı araç, aynı tohum, aynı (düzeltilmiş) kapsam kuralı.
+Kod değiştiği için mutant listesi de değişti (16 125 → 16 142); örneklem bağımsızdır, karşılaştırma oran
+üzerinden yapılır. Satır kapsamı %76 (4398/5564 satır, 1212/1856 dal).
+
+| Modül | n | Öldü | Kaldı | Kapsam dışı | Öldürme oranı (%95) | Önce |
+|---|---:|---:|---:|---:|---|---|
+| komutlar | 532 | 332 | 179 | 21 | %62,4 [58,2; 66,4] | %51,5 |
+| dunya | 271 | 61 | 169 | 41 | %22,5 [17,9; 27,8] | %24,4 |
+| swf_font | 224 | 64 | 32 | 128 | %28,6 [23,1; 34,8] | %23,4 |
+| swf_yama | 156 | 37 | 12 | 107 | %23,7 [17,7; 31,0] | %30,5 |
+| istemci | 86 | 50 | 22 | 14 | %58,1 [47,6; 68,0] | %64,8 |
+| fx_yama | 92 | 61 | 24 | 7 | %66,3 [56,2; 75,1] | %68,5 |
+| pvp | 67 | 42 | 25 | 0 | %62,7 [50,7; 73,3] | %54,2 |
+| turnuva | 56 | 21 | 35 | 0 | %37,5 [26,0; 50,6] | %46,8 |
+| kayit | 49 | 30 | 16 | 3 | %61,2 [47,2; 73,6] | %60,7 |
+| elo | 41 | 28 | 12 | 1 | %68,3 [53,0; 80,4] | %65,1 |
+| diğer 24 modül | 426 | 230 | 121 | 75 | %54,0 | %51,8 |
+| **Toplam** | **2000** | **956** | **647** | **397** | **%47,8 [45,6; 50,0]** | **%44,5** |
+
+Yalnızca kapsanan satırlarda: 956/1603 = **%59,6 [57,2; 62,0]** (önce %60,3).
+
+Okuma:
+
+- **Toplam** 3,3 puan arttı. İki bağımsız örneklem için oran farkı sınaması: z ≈ 2,1, p ≈ 0,04. Anlamlı ama küçük.
+- **komutlar** 10,9 puan arttı (z ≈ 3,5, p < 0,001). Yeni testlerin hedefi buydu; kapsam dışı mutant 118 → 21.
+- Diğer modüllerdeki farklar aralıkların içinde: örneklem gürültüsünden ayırt edilemez. Bu modüllere test eklenmedi.
+- **Kapsanan satırlarda oran yerinde saydı.** Artışın çoğu, daha önce hiç çalışmayan kodun artık çalışmasından geliyor.
+  Yeni çalışan kodda kalan mutantlar (ör. komutlar'da kaldı 116 → 179) büyük ölçüde argüman sırası dışındaki
+  türler: varsayılan değerler, yazdırılan hata metinleri, sınır karşılaştırmaları. Her birinin gözlenebilir olup
+  olmadığı tek tek okunmadı.
+- Hedef sayı konmadı (Google da koymaz). Ölçüm, testin neyi denetlemediğini bulmak için kullanılır.
+
+Not: ikinci koşuda da 92 mutant eski kuralla atlanmış, düzeltmeden sonra koşuldu (aynı yöntem).
 
 ## 10. Yeniden ölçmek
 

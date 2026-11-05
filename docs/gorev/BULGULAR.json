@@ -1322,13 +1322,13 @@
     },
     {
       "id": "TST-03",
-      "baslik": "Testin gücü mutasyon testiyle ölçüldü: temel öldürme oranı %42,6",
+      "baslik": "Testin gücü mutasyon testiyle ölçüldü: öldürme oranı %44,5 → %47,8",
       "sinif": "ozellik",
       "onem": "Orta",
       "durum": "dogrulandi",
       "isaret": "✔",
-      "kanit": "cosmic-ray 8.7.0, oyun/ altındaki 16 142 mutanttan tohumlu (20261105) 2000'lik basit rastgele örneklem; d330208 üzerinde 851/1999 öldü = %42,6 [40,4; 44,8] (Wilson %95); kapsanan satırlarda %61,8 [59,2; 64,3]; 621 mutant hiçbir testin çalıştırmadığı satırda. Kalanlardan 40'ına elle bakıldı: 9'u eşdeğer (%22,5 [12,3; 37,5]); düzeltilmiş oran ~%45 (◐). Modül tablosu ve kaynaklar docs/TEST_OLCUMU.md.",
-      "test": "araclar/mutasyon_olc.py, tests/test_arguman_sirasi.py, tests/test_degismezler.py, tests/test_istemci_kaynakli.py",
+      "kanit": "cosmic-ray 8.7.0, oyun/ altındaki bütün mutantlardan (d330208'de 16 125, cdd3a55'te 16 142) tohumlu (20261105) 2000'lik basit rastgele örneklem, Wilson %95. Önce (d330208): 890/1999 = %44,5 [42,4; 46,7], kapsanan satırlarda %60,3. Sonra (cdd3a55): 956/2000 = %47,8 [45,6; 50,0] (fark z ≈ 2,1, p ≈ 0,04); komutlar %51,5 → %62,4 (p < 0,001); kapsanan satırlarda %59,6 (değişmedi: artış daha önce çalışmayan kodun çalışmasından). Kalanlardan 40'ına elle bakıldı: 9'u eşdeğer (%22,5 [12,3; 37,5]); düzeltilmiş oran ~%48 (◐). İlk raporda yazılan %42,6 ölçüm aracının kapsam hatasıyla düşük çıkmıştı (TST-05). Tablolar ve kaynaklar docs/TEST_OLCUMU.md.",
+      "test": "araclar/mutasyon_olc.py, tests/test_arguman_sirasi.py, tests/test_degismezler.py, tests/test_istemci_kaynakli.py, tests/test_mutasyon_olc.py",
       "pr": "#36",
       "onay": null,
       "notlar": "En kalabalık kalan tür argüman sırası (x = y ve tek kasabalı testler): istemci bayt kodundan üretilen 1407-komutlar.md'ye göre sözleşme testi eklendi. Değişmezler Hypothesis ile (CI'da komut başına 25 sabit tohumlu girdi). Kural CLAUDE.md'ye yazıldı. Düzeltme sonrası yeniden ölçüm sonucu TEST_OLCUMU.md §9."
@@ -1340,11 +1340,24 @@
       "onem": "Düşük",
       "durum": "acik",
       "isaret": "✔",
-      "kanit": "Mutasyon ölçümü (TST-03): denge.py 0/6, dunya.py %20,4 [16,0; 25,6]; pvp ve elo sabitlerindeki mutantlar kalıyor (ör. AYNI_HEDEF_SURESI = 4 * 3600 → 4 ^ 3600).",
+      "kanit": "Mutasyon ölçümü (TST-03): denge.py 0/6, dunya.py %24,4 [19,7; 29,9], sonra %22,5; pvp ve elo sabitlerindeki mutantlar kalıyor (ör. AYNI_HEDEF_SURESI = 4 * 3600 → 4 ^ 3600).",
       "test": null,
       "pr": null,
       "onay": null,
       "notlar": "Doğru değer istemcinin Config'i ya da sahibinin denge kararı olmadan teste yazılmaz; kodun kendi çıktısı beklenen değer yapılmaz. Config'ten gelenler istemciden okunup kaynağıyla sabitlenebilir."
+    },
+    {
+      "id": "TST-05",
+      "baslik": "Ölçüm aracı çok satırlı deyimin devam satırındaki mutantı koşmadan 'kapsam dışı' sayıyordu",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "duzeltildi",
+      "isaret": "✔",
+      "kanit": "PR #36'nın otomatik incelemesi buldu. coverage.py 7.17.2 çok satırlı deyimi yalnızca ilk satırıyla yazar; devam satırı ne executed_lines'ta ne missing_lines'ta olur (9 satırlık örnekle çalıştırılıp doğrulandı). Araç mutantın satırlarını executed_lines'la kesiştiriyordu: ilk ölçümde 621 kapsam dışının 98'i, ikincide 92'si yanlıştı. Kural: yalnızca başlangıç satırı missing_lines'ta olan ve çalışan satıra değmeyen mutant atlanır; atlananlar aynı commit'lerde koşuldu (önce 39'u, sonra 32'si öldü).",
+      "test": "tests/test_mutasyon_olc.py",
+      "pr": "#36",
+      "onay": null,
+      "notlar": "Oranı düşük gösteriyordu: %42,6 → düzeltilmiş %44,5. Düzeltme betiği ölçümde bir kez kullanıldı; araç artık doğru kuralla koşar."
     },
     {
       "id": "KMT-02",

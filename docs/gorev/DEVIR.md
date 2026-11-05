@@ -14,7 +14,7 @@ Sahibi bundan sonra bulut oturumundan devam ediyor. Bu dosya yeni oturumun ilk o
      dalı içine birleştirildi; #38 squash ile birleşince bu dala güncel `master` birleştirilir (çakışmada iki
      tarafın ağacı aynıysa `git checkout --ours`, ağaç eşitliği `git diff` ile denetlenir), sonra birleşir.
   3. Dependabot #32-#34: sahibinde.
-- **Testler:** 436 Python, 3 JS. `pip install -q --ignore-installed blinker -r requirements-test.txt` gerekir.
+- **Testler:** 437 Python, 3 JS. `pip install -q --ignore-installed blinker -r requirements-test.txt` gerekir.
 
 ## Sıradaki işler (sırayla)
 

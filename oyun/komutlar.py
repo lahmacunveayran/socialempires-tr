@@ -1693,10 +1693,12 @@ def buy_time_packet(save, a):
 # sunucudan yeniden yükler (PopupSelectTime/onUse@272 reloadMap). Hangi zamanların ilerleyeceğini oyunun kendi
 # metni söyler (0-language_en: "Advances the time of all you buildings, missions and PVP"; yardım: kaynaklar,
 # PvP, bölümler, görevler, günlük bonus, Ejderha Yuvası, Binici Akademisi). Kalkan ve ilk alım teklifi ilerlemez.
+# Saldırı kayıtlarının (attacksSent) zamanı kaydırılmaz: savaş geçmişinde tarih olarak gösterilir (gunluk.py);
+# PvP hakkı tsAttacksReset ile hızlanır (#38 incelemesi).
 ZAMAN_ALANLARI_OYUNCU = (
     "timestampLastBonus", "timeStampTakeCare", "timeStampTakeCareMonster", "riderTimeStamp",
     "timeStampHeavySiegePeriod", "timeStampHeavySiegeAttack", "timeStampDartsReset", "timeStampDartsNewFree",
-    "tsAttacksReset", "tsSpyingsReset", "kompuLastTimeStamp",
+    "kompuLastTimeStamp",
 )
 ZAMAN_ALANLARI_HARITA = ("timestampLastTreasure", "timestampLastTrade")
 GERCEK_ZAMAN = 1_000_000_000  # bundan küçük değer zaman değil işarettir (0, -1, 1): kaydırılmaz
@@ -1719,9 +1721,15 @@ def zamani_ilerlet(save, saniye):
     for oyun in (ps.get("collectGame") or {}).values():
         if isinstance(oyun, dict) and "timestamp" in oyun:
             oyun["timestamp"] = kaydir(oyun["timestamp"])
-    for saldiri in ps.get("attacksSent") or []:
-        if isinstance(saldiri, dict) and "time" in saldiri:
-            saldiri["time"] = kaydir(saldiri["time"])
+    # Saldırı hakkı (pvp.saldiri_hakki_var, istemci Base/processAttacks): tsAttacksReset'e kadarki saldırılar
+    # sayılmaz. `saniye` geçmiş olsaydı 6 saatlik pencereden çıkacak saldırılar artık sayılmaz.
+    simdi = timestamp_now()
+    sifirlama = min(simdi, simdi - pvp.SALDIRI_PERIYODU + saniye)
+    try:
+        eski = int(ps.get("tsAttacksReset") or 0)
+    except (TypeError, ValueError):
+        eski = 0
+    ps["tsAttacksReset"] = max(eski, sifirlama)
     for h in save.get("maps") or []:
         for k in ZAMAN_ALANLARI_HARITA:
             if k in h:

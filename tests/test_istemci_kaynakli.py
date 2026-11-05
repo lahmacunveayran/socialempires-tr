@@ -164,10 +164,21 @@ class ZamanMakinesi(KomutTesti):
         self.assertEqual(self.ps["timestampLastBonus"], simdi - 10 - 3600)
         self.assertEqual((self.ps["riderTimeStamp"], self.ps["timeStampTakeCare"]), (-1, 0))
         self.assertEqual(self.ps["barracksQueues"]["q1"]["ts"], simdi + 500 - 3600)
-        self.assertEqual(self.ps["attacksSent"][0]["time"], simdi - 60 - 3600)
+        # saldırı kaydının zamanı kalır (savaş geçmişinde tarih); hak penceresi tsAttacksReset'le 1 saat ilerler
+        self.assertEqual(self.ps["attacksSent"][0]["time"], simdi - 60)
+        self.assertAlmostEqual(self.ps["tsAttacksReset"], simdi - 6 * 3600 + 3600, delta=5)
         self.assertEqual(self.harita["items"][0][4], simdi - 5 - 3600)
         self.assertEqual(self.harita["items"][1][4], 0)
         self.assertEqual(self.ps["shield_until"], simdi + 999)  # kalkan ilerlemez (oyunun metninde yok)
+
+    def test_gunluk_paket_saldiri_hakkini_yeniler(self):
+        # 24 saatlik paket: 6 saatlik penceredeki üç saldırı artık sayılmaz (pvp.saldiri_hakki_var)
+        simdi = self.komutlar.timestamp_now()
+        self.ps["countTimePacket"] = [0, 0, 0, 0, 0, 1]
+        self.ps["attacksSent"] = [{"time": simdi - 60 * i, "victim_id": f"k{i}"} for i in (1, 2, 3)]
+        self.assertFalse(self.pvp.saldiri_hakki_var(self.kayit, simdi))
+        self.komut("time_ff", 5)
+        self.assertTrue(self.pvp.saldiri_hakki_var(self.kayit, simdi))
 
     def test_yarim_saatlik_paket(self):
         self.ps["countTimePacket"] = [1]

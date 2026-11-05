@@ -1256,6 +1256,19 @@
       "notlar": "Plan: 6 alan (sunucu ve komutlar; kayıt ve göç; ekonomi ve formüller; bot dünyası, PvP ve turnuva; Türkçe ve arayüz; Android, dağıtım ve güvenlik). Her denetçi salt okunur bir commit'i görür; BULGULAR.json, devlog ve PR'lar okuma yasağında. Ortak kurallar docs/denetim/BRIEF.md, raporlar docs/denetim/<alan>.md, sahibine özet docs/DENETIM.md; bulgular BULGULAR.json'a işlenir. Sınır: denetçiler aynı model ailesinden; insan denetçi kadar bağımsız değil. Başlamadan önce kullanım payı sahibine hatırlatılır."
     },
     {
+      "id": "KAR-14",
+      "baslik": "PR incelemesi Claude Code kullanım hakkıyla kalır; API'ye taşıma (#31) kapatıldı",
+      "sinif": "karar",
+      "onem": "Düşük",
+      "durum": "karar_verildi",
+      "isaret": "✔",
+      "kanit": "#31'in inceleme işi 1.11.2026'da API anahtarıyla geçti (koşu 41303662714), 5.11.2026'da \"Your credit balance is too low\" ile düştü (koşu 42012913103). Sahibine iki yol soruldu (kredi yüklemek ya da #31'i kapatıp tur sınırını yükseltmek); cevap: \"31'i kapat\".",
+      "test": null,
+      "pr": "#36",
+      "onay": "Sahibi, 5 Kasım 2026",
+      "notlar": "Bedeli: her inceleme sahibinin Claude kullanım hakkından düşer. Tur sınırı 25 → 40 (S-47). Dal pr-inceleme-api silinmedi; kredi yüklenirse #31 yeniden açılabilir."
+    },
+    {
       "id": "DAG-13",
       "baslik": "PR'lara otomatik kod incelemesi (hata, güvenlik, kalite; Türkçe yorum)",
       "sinif": "ozellik",

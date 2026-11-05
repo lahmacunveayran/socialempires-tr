@@ -77,7 +77,8 @@ jobs:
             - Bütün yorumlar Türkçe olsun.
           # Model, depo değişkeni INCELEME_MODELI'nden gelir (CLAUDE.md: depo dosyalarına model adı yazılmaz);
           # değişken yoksa --model hiç verilmez, Claude Code'un varsayılanı kullanılır. Tur sınırı kaçak kullanımı keser.
+          # 25 büyük PR'larda yetmedi (#35: 28 tur, #36 da aştı; S-47); 40 yapıldı.
           claude_args: |
             ${{ vars.INCELEME_MODELI && format('--model {0}', vars.INCELEME_MODELI) || '' }}
-            --max-turns 25
+            --max-turns 40
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/comments)"

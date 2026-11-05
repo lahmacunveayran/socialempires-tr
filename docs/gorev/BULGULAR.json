@@ -1,6 +1,6 @@
 {
   "surum": "0.08a",
-  "guncelleme": "2026-11-05",
+  "guncelleme": "2026-11-06",
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
     "madde": "GEC-03",
@@ -970,6 +970,58 @@
       "notlar": "Önce yeniden üretilecek."
     },
     {
+      "id": "OYN-14",
+      "baslik": "Bot dünyası seviye eşiğini sunucunun geri kalanından bir kaydırarak okuyor",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "acik",
+      "isaret": "✔",
+      "kanit": "oyun/dunya.py:535 _ekonomi levels[n].exp_required'ı n. seviyenin eşiği sayar; config.get_level_from_xp (kayit._seviyeyi_duzelt her yüklemede) levels[i]'yi i+1'in eşiği sayar (test_komutlar: 'eşikler 0, 29, 60: 29 xp ile 2. seviye'). Alt ajan iki yolu çalıştırarak gösterdi; kod okunarak doğrulandı.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "Etki: botlar bir seviye geç atlar, sunucu yeniden açılınca seviyeleri +1 sıçrar. rt_level_up, get_xp_from_level ve sunucu._xp_araligi de levels[n] = n okumasını kullanıyor: iki okuma karışık. Hangisinin istemciyle aynı olduğu istemciden okunup tek yola bağlanmalı. test_dunya bu yüzden yalnızca iki okumada da doğru olanı sınar."
+    },
+    {
+      "id": "OYN-15",
+      "baslik": "Turnuvada listede gösterilen ödül ile verilen ödül farklı olabilir",
+      "sinif": "hata",
+      "onem": "Düşük",
+      "durum": "acik",
+      "isaret": "◐",
+      "kanit": "İstemci listeyi tournament_reward_id[tür]'e göre gösterir; turnuva.bilgi orada hep 0 gönderir, katil ise reward_id'yi rastgele seçer (denge testlerini yazan alt ajan; bayt kodu yeniden okunmadı).",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "Doğrulanmadı; GEC-05 turnuva işinde istemciden okunacak."
+    },
+    {
+      "id": "OYN-16",
+      "baslik": "Liderlik heykelinin verdiği ek saldırı hakkı sunucuda sayılmıyor",
+      "sinif": "hata",
+      "onem": "Düşük",
+      "durum": "acik",
+      "isaret": "◐",
+      "kanit": "İstemci IsoEngine/getNumAttacks liderlik heykeli varsa +1 saldırı ekler; pvp.saldiri_hakki_var bunu bilmez, 4. saldırı ganimetsiz kalır (alt ajan; yeniden okunmadı).",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "GEC-05'te istemciden okunup düzeltilecek."
+    },
+    {
+      "id": "OYN-17",
+      "baslik": "Savunma ödülü geri kazanılan birimleri düşüyor olabilir",
+      "sinif": "hata",
+      "onem": "Düşük",
+      "durum": "acik",
+      "isaret": "◐",
+      "kanit": "İstemci Assault$/killed kurbana her ölen saldıran birim için öder; sunucu kalıcı kaybı (ölen − kurtarılan) sayıyor; attacker_units'in 4. alanının 'kurtarılan' olduğu doğrulanmadı (alt ajan).",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "GEC-05'te doğrulanacak."
+    },
+    {
       "id": "ONR-01",
       "baslik": "Hız seçici: oyun hızı (zaman_olcegi) sayfadan seçilir",
       "sinif": "ozellik",
@@ -1338,13 +1390,13 @@
       "baslik": "Denge sabitleri ve bot dünyası testlerle sabitlenmemiş",
       "sinif": "hata",
       "onem": "Düşük",
-      "durum": "acik",
+      "durum": "duzeltildi",
       "isaret": "✔",
       "kanit": "Mutasyon ölçümü (TST-03): denge.py 0/6, dunya.py %24,4 [19,7; 29,9], sonra %22,5; pvp ve elo sabitlerindeki mutantlar kalıyor (ör. AYNI_HEDEF_SURESI = 4 * 3600 → 4 ^ 3600).",
-      "test": null,
-      "pr": null,
+      "test": "tests/test_denge.py, tests/test_dunya.py, tests/test_swf_yama.py",
+      "pr": "#39",
       "onay": null,
-      "notlar": "Doğru değer istemcinin Config'i ya da sahibinin denge kararı olmadan teste yazılmaz; kodun kendi çıktısı beklenen değer yapılmaz. Config'ten gelenler istemciden okunup kaynağıyla sabitlenebilir."
+      "notlar": "Doğru değer istemcinin Config'i ya da sahibinin denge kararı olmadan teste yazılmaz; kodun kendi çıktısı beklenen değer yapılmaz. Config'ten gelenler istemciden okunup kaynağıyla sabitlenebilir. 6.11.2026 (PR #39): üç alt ajan, ayrı çalışma ağaçlarında, kaynaklı testler yazdı; her dosya okunup kaynakları (istemci Config: ATTACKS_MAX 3, ATTACKS_PERIOD_HOURS 6, ATTACKS_SAME_PLAYER_HOURS 4, MAX_GOLD_FROM_ASSAULT 200; game_config MAX_GOLD_ASSAULT 20000, TIME/tournament_type) yeniden okunarak doğrulandı. test_denge 24 test (32 bozmanın 28'i öldü; kalan 4'ü kaynağı olmayan sabit), test_swf_yama 37 test (el yapımı SWF'ler, 63 bozmanın 61'i; kalan 2'si eşdeğer), test_dunya 50 test (52 bozmanın 46'sı; 4'ü eşdeğer, 2'si kaynaksız sabit). Kaynağı olmadığı için sabitlenmeyen, sahibinin kararını bekleyenler: denge.GANIMET_ORANI 0,10, GANIMET_TAVANI 50000, YENI_OYUNCU_KALKANI 24 sa; pvp.GALIBIYET_ASGARI_ALTIN 25, XP_PAYI 150, onur tavanı 10 (game_config HONOR_POINT_PVP_WIN/LOSE 15/5 farklı); elo K 32/16, BASLANGIC 1500, HAFTALIK_MAC 3; turnuva TAKIM_BOYU 20 ve bot puan aralıkları; bot dünyasının güç, ekonomi, savaş ve hedef ağırlıkları; bot dünyasında aynı hedefe 6 sa (istemci oyuncu için 4 sa). Yeniden ölçüm sonucu docs/TEST_OLCUMU.md §12."
     },
     {
       "id": "TST-05",

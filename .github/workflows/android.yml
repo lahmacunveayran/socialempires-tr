@@ -47,7 +47,7 @@ jobs:
           python-version: "3.11"
       - name: Testler (uygulamanın Python sürümünde)
         run: |
-          pip install -r requirements.txt
+          pip install -r requirements-test.txt
           python -m unittest discover -s tests
       - uses: gradle/actions/setup-gradle@v6
         with:

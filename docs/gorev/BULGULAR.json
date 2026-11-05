@@ -1,10 +1,10 @@
 {
   "surum": "0.08a",
-  "guncelleme": "2026-11-01",
+  "guncelleme": "2026-11-05",
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
     "madde": "GEC-03",
-    "sonraki_adim": "GEC-03 sürüyor: eğitim kuyruğu (#26), birlik paketleri, mezarlık ve viral teklifler (#28) birleşti; Ada Ocağı ve test denetimi (TST-01) PR #35'te. Sıradaki: buy_powerups, buy_time_packet/time_ff, finish_si_recruitment, start_quest_new, reset_dragon. Test edilmemiş eski komutlar TST-02'de açık. GEC-03 bitince bağımsız denetim (KAR-13)."
+    "sonraki_adim": "GEC-03 sürüyor. Ada Ocağı ve test denetimi (TST-01) PR #35'te; testin gücünün ölçümü (TST-03) ve bulduğu üç hata (KMT-02..04) PR #36'da (#35'in üstünde, önce #35 birleşir). Sıradaki: koleksiyon ödülü (KMT-05); GEC-03'ün kalanı buy_powerups, buy_time_packet/time_ff, finish_si_recruitment, start_quest_new, reset_dragon. Testsiz eski komutlar TST-02'de açık. GEC-03 bitince bağımsız denetim (KAR-13)."
   },
   "maddeler": [
     {
@@ -1256,6 +1256,19 @@
       "notlar": "Plan: 6 alan (sunucu ve komutlar; kayıt ve göç; ekonomi ve formüller; bot dünyası, PvP ve turnuva; Türkçe ve arayüz; Android, dağıtım ve güvenlik). Her denetçi salt okunur bir commit'i görür; BULGULAR.json, devlog ve PR'lar okuma yasağında. Ortak kurallar docs/denetim/BRIEF.md, raporlar docs/denetim/<alan>.md, sahibine özet docs/DENETIM.md; bulgular BULGULAR.json'a işlenir. Sınır: denetçiler aynı model ailesinden; insan denetçi kadar bağımsız değil. Başlamadan önce kullanım payı sahibine hatırlatılır."
     },
     {
+      "id": "KAR-14",
+      "baslik": "PR incelemesi Claude Code kullanım hakkıyla kalır; API'ye taşıma (#31) kapatıldı",
+      "sinif": "karar",
+      "onem": "Düşük",
+      "durum": "karar_verildi",
+      "isaret": "✔",
+      "kanit": "#31'in inceleme işi 1.11.2026'da API anahtarıyla geçti (koşu 41303662714), 5.11.2026'da \"Your credit balance is too low\" ile düştü (koşu 42012913103). Sahibine iki yol soruldu (kredi yüklemek ya da #31'i kapatıp tur sınırını yükseltmek); cevap: \"31'i kapat\".",
+      "test": null,
+      "pr": "#36",
+      "onay": "Sahibi, 5 Kasım 2026",
+      "notlar": "Bedeli: her inceleme sahibinin Claude kullanım hakkından düşer. Tur sınırı 25 → 40 (S-47). Dal pr-inceleme-api silinmedi; kredi yüklenirse #31 yeniden açılabilir."
+    },
+    {
       "id": "DAG-13",
       "baslik": "PR'lara otomatik kod incelemesi (hata, güvenlik, kalite; Türkçe yorum)",
       "sinif": "ozellik",
@@ -1300,12 +1313,103 @@
       "sinif": "hata",
       "onem": "Orta",
       "durum": "acik",
-      "isaret": "◐",
-      "kanit": "Bağımsız denetçinin sayımı (5.11.2026): durum değiştiren 125 komuttan 65'inin testi yok; nakit ya da kaynak değiştirenler dahil (buy_cash, buy_attacks_pack, tournament_substract/refund_resources, next_temple_step, end_quest, apply_rewards_ranking, pop_sell, finish_collection, rt_level_up, kill). expand, exchange_cash_new ve graveyard_buy_potions'a TST-01'de test eklendi. Sayı ◐: denetçinin elle sayımı, araçla yeniden sayılmadı.",
+      "isaret": "✔",
+      "kanit": "Bağımsız denetçinin sayımı (5.11.2026): durum değiştiren 125 komuttan 65'inin testi yok; nakit ya da kaynak değiştirenler dahil (buy_cash, buy_attacks_pack, tournament_substract/refund_resources, next_temple_step, end_quest, apply_rewards_ranking, pop_sell, finish_collection, rt_level_up, kill). expand, exchange_cash_new ve graveyard_buy_potions'a TST-01'de test eklendi. Sayı ◐: denetçinin elle sayımı, araçla yeniden sayılmadı. Araçla yeniden sayım (5.11.2026, coverage.py 7.17.2): 128 komut işleyicisinin 60'ı hiçbir testte çalışmıyor (✔).",
+      "test": "tests/test_istemci_kaynakli.py, tests/test_degismezler.py",
+      "pr": null,
+      "onay": null,
+      "notlar": "Öneri: KAR-13'ün bağımsız denetiminde alan alan kapatılsın; her komut için elle hesaplanmış beklenen değer ve en az bir sınır durumu. TST-03'te 9 komuta istemcinin bayt kodundan beklenen değerli test eklendi (buy_cash, add_survival_vida_extra, buy_survival_map, reset_heavy_siege, buy_attacks_pack, buy_spyings_pack, apply_rewards_ranking, tournament_substract/refund_resources) ve finish_collection'a iki test; bütün komutlar ayrıca değişmez testinde koşuyor. Kalanlar açık."
+    },
+    {
+      "id": "TST-03",
+      "baslik": "Testin gücü mutasyon testiyle ölçüldü: öldürme oranı %44,5 → %47,8",
+      "sinif": "ozellik",
+      "onem": "Orta",
+      "durum": "dogrulandi",
+      "isaret": "✔",
+      "kanit": "cosmic-ray 8.7.0, oyun/ altındaki bütün mutantlardan (d330208'de 16 125, cdd3a55'te 16 142) tohumlu (20261105) 2000'lik basit rastgele örneklem, Wilson %95. Önce (d330208): 890/1999 = %44,5 [42,4; 46,7], kapsanan satırlarda %60,3. Sonra (cdd3a55): 956/2000 = %47,8 [45,6; 50,0] (fark z ≈ 2,1, p ≈ 0,04); komutlar %51,5 → %62,4 (p < 0,001); kapsanan satırlarda %59,6 (değişmedi: artış daha önce çalışmayan kodun çalışmasından). Kalanlardan 40'ına elle bakıldı: 9'u eşdeğer (%22,5 [12,3; 37,5]); düzeltilmiş oran ~%48 (◐). İlk raporda yazılan %42,6 ölçüm aracının kapsam hatasıyla düşük çıkmıştı (TST-05). Tablolar ve kaynaklar docs/TEST_OLCUMU.md.",
+      "test": "araclar/mutasyon_olc.py, tests/test_arguman_sirasi.py, tests/test_degismezler.py, tests/test_istemci_kaynakli.py, tests/test_mutasyon_olc.py",
+      "pr": "#36",
+      "onay": null,
+      "notlar": "En kalabalık kalan tür argüman sırası (x = y ve tek kasabalı testler): istemci bayt kodundan üretilen 1407-komutlar.md'ye göre sözleşme testi eklendi. Değişmezler Hypothesis ile (CI'da komut başına 25 sabit tohumlu girdi). Kural CLAUDE.md'ye yazıldı. Düzeltme sonrası yeniden ölçüm sonucu TEST_OLCUMU.md §9."
+    },
+    {
+      "id": "TST-04",
+      "baslik": "Denge sabitleri ve bot dünyası testlerle sabitlenmemiş",
+      "sinif": "hata",
+      "onem": "Düşük",
+      "durum": "acik",
+      "isaret": "✔",
+      "kanit": "Mutasyon ölçümü (TST-03): denge.py 0/6, dunya.py %24,4 [19,7; 29,9], sonra %22,5; pvp ve elo sabitlerindeki mutantlar kalıyor (ör. AYNI_HEDEF_SURESI = 4 * 3600 → 4 ^ 3600).",
       "test": null,
       "pr": null,
       "onay": null,
-      "notlar": "Öneri: KAR-13'ün bağımsız denetiminde alan alan kapatılsın; her komut için elle hesaplanmış beklenen değer ve en az bir sınır durumu."
+      "notlar": "Doğru değer istemcinin Config'i ya da sahibinin denge kararı olmadan teste yazılmaz; kodun kendi çıktısı beklenen değer yapılmaz. Config'ten gelenler istemciden okunup kaynağıyla sabitlenebilir."
+    },
+    {
+      "id": "TST-05",
+      "baslik": "Ölçüm aracı çok satırlı deyimin devam satırındaki mutantı koşmadan 'kapsam dışı' sayıyordu",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "duzeltildi",
+      "isaret": "✔",
+      "kanit": "PR #36'nın otomatik incelemesi buldu. coverage.py 7.17.2 çok satırlı deyimi yalnızca ilk satırıyla yazar; devam satırı ne executed_lines'ta ne missing_lines'ta olur (9 satırlık örnekle çalıştırılıp doğrulandı). Araç mutantın satırlarını executed_lines'la kesiştiriyordu: ilk ölçümde 621 kapsam dışının 98'i, ikincide 92'si yanlıştı. Kural: yalnızca başlangıç satırı missing_lines'ta olan ve çalışan satıra değmeyen mutant atlanır; atlananlar aynı commit'lerde koşuldu (önce 39'u, sonra 32'si öldü).",
+      "test": "tests/test_mutasyon_olc.py",
+      "pr": "#36",
+      "onay": null,
+      "notlar": "Oranı düşük gösteriyordu: %42,6 → düzeltilmiş %44,5. Düzeltme betiği ölçümde bir kez kullanıldı; araç artık doğru kuralla koşar."
+    },
+    {
+      "id": "KMT-02",
+      "baslik": "Hata veren komut kaydı yarım değiştirip bırakıyordu",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "duzeltildi",
+      "isaret": "✔",
+      "kanit": "tests/test_degismezler.py D4 eski kodda düştü: ör. add_items_store bozuk argümanla nakit düşürüp eşya vermeden hata veriyordu. command() artık her komuttan önce kaydın kopyasını alır, hata olursa geri yükler (76 KB kayıtta ~2 ms).",
+      "test": "tests/test_degismezler.py",
+      "pr": "#36",
+      "onay": null,
+      "notlar": "Komşu kayıtlarına yazılan değişiklik geri alınmaz (yorumda yazılı)."
+    },
+    {
+      "id": "KMT-03",
+      "baslik": "Depoya oyunda olmayan dev id girebiliyordu (id 10⁸ → 100 milyon elemanlı liste)",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "duzeltildi",
+      "isaret": "✔",
+      "kanit": "Değişmez D5 (len(gifts) ≤ en büyük eşya id'si + 1, config'te 50031) düştü. depo_ekle config'te olmayan id'yi reddeder.",
+      "test": "tests/test_degismezler.py",
+      "pr": "#36",
+      "onay": null,
+      "notlar": "Bozuk ya da kurcalanmış istek kaydı şişirip yavaşlatabilirdi."
+    },
+    {
+      "id": "KMT-04",
+      "baslik": "Sunak yokken nakitle alınan kahraman hem depoya hem haritaya konuyordu",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "duzeltildi",
+      "isaret": "◐",
+      "kanit": "İstemci PopupHeroes/onBuyItem (1.4.07 bayt kodu): kahraman sunağı (Constants.ID_BUILDING_HEROES_ALTAR = 150) yoksa kahramanı depoya koyar ve store_add_items gönderir, ardından buy_cash'i pencerenin x/y'siyle yine gönderir. Sunucu buy_cash'te kahramanı her durumda haritaya ekliyordu. Artık yalnızca sunak varsa.",
+      "test": "tests/test_istemci_kaynakli.py",
+      "pr": "#36",
+      "onay": null,
+      "notlar": "◐: bayt kodundan okundu, oyunda denenmedi."
+    },
+    {
+      "id": "KMT-05",
+      "baslik": "Koleksiyon ödülü sayfa yenilenince kayboluyor",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "acik",
+      "isaret": "◐",
+      "kanit": "İstemci CollectableManager$/getReward ödülü (arCollections[c][0], bir ID_DECO_* binası) storeItem(..., false) ile komutsuz depoya koyar; sunucunun finish_collection'ı yalnızca parçaları düşürür, ödülü eklemez. Ödül tablosu istemcide sabit (CollectableManager, 23 koleksiyon).",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "Düzeltme: tablo bayt kodundan çıkarılıp finish_collection'da ödül depoya eklenir; collections[c][0] tamamlandı işareti de sunucuda kurulmuyor olabilir (?). Oyunda bir koleksiyon bitirilip yenilenerek doğrulanmalı."
     }
   ]
 }

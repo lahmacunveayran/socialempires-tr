@@ -359,6 +359,24 @@ class KomsuKomutlari(KomutTesti):
         self.komut("add_collectable", 2, 3)
         self.assertEqual(self.ps["collections"][2], [0, 0, 0, 1, 0, 0])
 
+    def test_koleksiyon_parcasi_birikir(self):
+        # CollectableManager$/addCollectible: her çağrıda o parçanın sayısı bir artar (mutasyon ölçümünde kalan:
+        # tam uzunluktaki liste her seferinde sıfırlansa da önceki test geçiyordu)
+        self.komut("add_collectable", 2, 3)
+        self.komut("add_collectable", 2, 3)
+        self.komut("add_collectable", 2, 5)
+        self.assertEqual(self.ps["collections"][2], [0, 0, 0, 2, 0, 1])
+
+    def test_koleksiyonu_parcalarla_ve_nakitle_bitirme(self):
+        # CollectableManager$/getReward: her parça (1-5) sıfırdan büyükse bir azalır; popupCollections/onExchange
+        # [c], onBuy [c, 1, bedel] (bedel nakit düşer); ikisinde de collectionsCompleted'a c eklenir
+        self.ps["collections"] = [[0] * 6, [0, 2, 1, 0, 1, 1]]
+        self.komut("finish_collection", 1)
+        self.assertEqual(self.ps["collections"][1], [0, 1, 0, 0, 0, 0])
+        self.komut("finish_collection", 4, 1, 12)
+        self.assertEqual(self.cash, 88)
+        self.assertEqual(self.ps["collectionsCompleted"], [1, 4])
+
 
 class PvpKomutlari(KomutTesti):
     """end_attack: istemcinin Assault.sendAssaultResults biçimi."""

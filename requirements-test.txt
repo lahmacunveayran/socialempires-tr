@@ -1,0 +1,3 @@
+# Testler için (oyuna ve paketlere girmez): python -m pip install -r requirements-test.txt
+-r requirements.txt
+hypothesis==6.170.14

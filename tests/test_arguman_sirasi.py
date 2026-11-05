@@ -42,6 +42,7 @@ GEREKMEZ = {
 GECERLI_DEGER = {
     "buy_magic": {0: 2},  # this.spell.id: oyundaki ilk büyü
     "buy_offer_pack": {1: 2},  # paket id'si (yerel1): oyundaki 2. paket
+    "finish_si_recruitment": {4: 1},  # yerel3.id: recruitment_prices'taki ilk ödül
 }
 
 

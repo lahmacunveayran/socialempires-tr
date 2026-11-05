@@ -229,6 +229,8 @@ class GorevVeBonusKomutlari(KomutTesti):
     def test_pazartesi_ve_geri_donus(self):
         self.komut("weekly_reward", "g", 2500)
         self.assertEqual(self.harita["coins"], 52500)
+        # Base/loadPlayerInfoSuccess@1730: istemci alındığını privateState.timeStampMondayBonus'tan okur (KMT-07)
+        self.assertAlmostEqual(self.ps["timeStampMondayBonus"], self.komutlar.timestamp_now(), delta=5)
         self.komut("comeback_reward", "u", 512, 3)
         self.assertEqual(self.ps["gifts"][512], 1)
         self.assertEqual(self.ps["comebackBonusCollected"], [3])

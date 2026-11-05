@@ -3,8 +3,8 @@
   "guncelleme": "2026-11-06",
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
-    "madde": "GEC-03",
-    "sonraki_adim": "GEC-03 sürüyor. Test ölçümü (TST-03, #36) birleşti. Koleksiyon ödülü (KMT-05) ve nakitle bitirmede parçalar (KMT-06) PR #37'de. Sıradaki: GEC-03'ün kalanı buy_powerups, buy_time_packet/time_ff, finish_si_recruitment, start_quest_new, reset_dragon; denge ve dünya testleri (TST-04). Testsiz eski komutlar TST-02'de açık. GEC-03 bitince bağımsız denetim (KAR-13)."
+    "madde": "KAR-13",
+    "sonraki_adim": "GEC-03 bitti (#38). Test gücü için TST-04 (denge, turnuva, SWF yaması, bot dünyası testleri) test-zayif dalında/PR'da; birleşince yeniden ölçüm. Sıradaki: KAR-13 bağımsız denetim (başlamadan önce sahibine kullanım payı hatırlatılır), sonra GEC-04'ün kalanı (geri dönüş testi) ve GEC-05 (PvP, kalkan, KYT-03). Sahibinden kararlar: KMT-08, KMT-09, denge sabitleri (TST-04 notları), ONR-01..04, v0.1.0 (GEC-09)."
   },
   "maddeler": [
     {
@@ -844,13 +844,13 @@
       "baslik": "1.4.07'nin yeni komutları: kuyruk, teklif ve satın alma, collect_game, diğerleri; formül defteri",
       "sinif": "ozellik",
       "onem": "Yüksek",
-      "durum": "acik",
+      "durum": "dogrulandi",
       "isaret": "◐",
-      "kanit": "Plan: docs/YOL_HARITASI_1407.md §3; kabul kapısı orada yazılı. Başlangıç ölçümleri KYN-05 ve bu PR'da.",
+      "kanit": "Plan: docs/YOL_HARITASI_1407.md §3; kabul kapısı orada yazılı. Başlangıç ölçümleri KYN-05 ve bu PR'da. Kapı: tests/test_komut_imzalari.py EKSIK_1407 yalnızca GEC-05 komutları (8).",
       "test": "tests/test_komutlar.py",
-      "pr": null,
+      "pr": "#38",
       "onay": null,
-      "notlar": "KAR-08 kararıyla açıldı (30.10.2026). 31.10.2026: eğitim kuyruğunun dört komutu (push_queue_unit, pop_queue_unit, unqueue_unit, speed_up_queue) PR #26'da bayt kodundaki formüllerle yazıldı; formüller docs/inceleme/1407-formuller.md, 9 test (EgitimKuyrugu). Eksik komut 29 → 25 (docs/inceleme/1407-komutlar.md). Hızlandırma bedeli upstream'den ayrı: istemci bekleyen birimleri de ücretlendirir. İstemcide görsel denetim yapılmadı (S-35). Kalan: Ada Ocağı (collect_game_*), mezarlık, viral teklifler, birim paketleri ve diğerleri. 31.10.2026: birlik paketleri (KAR-12): buy_unit_pack ve get_up_data.php yazıldı, formül docs/inceleme/1407-formuller.md; 5 test. Eksik komut 25 → 24. 31.10.2026: mezarlık (buy_graveyard_capacity, reset_potions_received) ve viral teklifler (buy_viral_offer_friend, buy_viral_offer_all, reward_viral_offer) PR #28'de yazıldı (birleşti; birlik paketleri de onunla girdi); 4 test. Viral teklifler 1.4.07'nin config'inde kapalı (starts_at ve duration 0, düğme görünmez); açılması ayrı karar. Eksik komut 24 → 19 (8'i GEC-05'in PvP, kalkan ve turnuva komutları). 5.11.2026: Ada Ocağı (collect_game_add_item, collect_game_update_timestamp, collect_game_speed_up, collect_game_buy_all, collect_game_reward_given) bayt kodundaki formüllerle yazıldı (CollectGameManager); formül docs/inceleme/1407-formuller.md, 6 test (AdaOcagi). Boru (malzeme 5) sayaç tutmaz, viral teklif 2'nin yardımcı sayısıdır; hepsini al bedeli istemcinin packCost'u. Ada 1.4.07'nin config'inde kapalı (collect_game starts_at ve duration 0); açılması ayrı karar. Upstream'in bu komutlar için kodu elimizdeki kopyada yok, yalnızca istemciden okundu. Eksik komut 19 → 14 (8'i GEC-05)."
+      "notlar": "KAR-08 kararıyla açıldı (30.10.2026). 31.10.2026: eğitim kuyruğunun dört komutu (push_queue_unit, pop_queue_unit, unqueue_unit, speed_up_queue) PR #26'da bayt kodundaki formüllerle yazıldı; formüller docs/inceleme/1407-formuller.md, 9 test (EgitimKuyrugu). Eksik komut 29 → 25 (docs/inceleme/1407-komutlar.md). Hızlandırma bedeli upstream'den ayrı: istemci bekleyen birimleri de ücretlendirir. İstemcide görsel denetim yapılmadı (S-35). Kalan: Ada Ocağı (collect_game_*), mezarlık, viral teklifler, birim paketleri ve diğerleri. 31.10.2026: birlik paketleri (KAR-12): buy_unit_pack ve get_up_data.php yazıldı, formül docs/inceleme/1407-formuller.md; 5 test. Eksik komut 25 → 24. 31.10.2026: mezarlık (buy_graveyard_capacity, reset_potions_received) ve viral teklifler (buy_viral_offer_friend, buy_viral_offer_all, reward_viral_offer) PR #28'de yazıldı (birleşti; birlik paketleri de onunla girdi); 4 test. Viral teklifler 1.4.07'nin config'inde kapalı (starts_at ve duration 0, düğme görünmez); açılması ayrı karar. Eksik komut 24 → 19 (8'i GEC-05'in PvP, kalkan ve turnuva komutları). 5.11.2026: Ada Ocağı (collect_game_add_item, collect_game_update_timestamp, collect_game_speed_up, collect_game_buy_all, collect_game_reward_given) bayt kodundaki formüllerle yazıldı (CollectGameManager); formül docs/inceleme/1407-formuller.md, 6 test (AdaOcagi). Boru (malzeme 5) sayaç tutmaz, viral teklif 2'nin yardımcı sayısıdır; hepsini al bedeli istemcinin packCost'u. Ada 1.4.07'nin config'inde kapalı (collect_game starts_at ve duration 0); açılması ayrı karar. Upstream'in bu komutlar için kodu elimizdeki kopyada yok, yalnızca istemciden okundu. Eksik komut 19 → 14 (8'i GEC-05). 5-6.11.2026 (PR #37, #38): koleksiyon ödülü (KMT-05/06), Ruh Karıştırıcı güçlendirmesi (buy_powerups), zaman makinesi (buy_time_packet, time_ff), Asker Toplama ödülü (finish_si_recruitment), start_quest_new ve reset_dragon (kayıtsız) bayt kodundan yazıldı; formüller docs/inceleme/1407-formuller.md. Eksik komut 14 → 8, kalan 8'i GEC-05'in PvP/kalkan/turnuva komutları: kabul kapısı (|G ∖ H| = 0, PvP hariç; imza uyumsuzluğu 0) sağlandı. time_ff'in hangi zamanları ilerlettiği istemcide yok (sunucu mantığı), oyunun kendi metninden seçildi (◐). Oyunda görsel denetim yapılmadı."
     },
     {
       "id": "GEC-04",
@@ -1475,6 +1475,45 @@
       "pr": "#37",
       "onay": null,
       "notlar": "Eski testin beklenen değeri ([0, 1, 0, 0, 0, 0]) istemciye göre düzeltildi: [1, 1, 0, 0, 0, 0]."
+    },
+    {
+      "id": "KMT-07",
+      "baslik": "Pazartesi bonusu yanlış alana yazılıyordu: aynı gün yeniden sunuluyordu",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "duzeltildi",
+      "isaret": "✔",
+      "kanit": "İstemci Base/loadPlayerInfoSuccess@1730 privateState.timeStampMondayBonus'u isSameDay ile okur; weekly_reward timestampLastMondayBonus yazıyordu. Alt ajan bayt kodundan buldu, yeniden okunarak doğrulandı.",
+      "test": "tests/test_komutlar.py: test_pazartesi_ve_geri_donus",
+      "pr": "#38",
+      "onay": null,
+      "notlar": "Eski kayıtlardaki timestampLastMondayBonus alanı zararsız, silinmedi."
+    },
+    {
+      "id": "KMT-08",
+      "baslik": "Görev sınırı (6 saatte 3, Odin heykeliyle 4) uygulanmıyor",
+      "sinif": "karar",
+      "onem": "Düşük",
+      "durum": "onay_bekliyor",
+      "isaret": "✔",
+      "kanit": "Quest$/getNumQuestsAvailable map.lastQuestTimes'tan sayar (DELAY_ALLOWED = 6 sa, MAX_QUESTS_ON_TIME = 4, getMaxnumOfQuests); istemci lastQuestTimes'a hiç yazmaz, sunucu da yazmıyor: görev sayısı sınırsız.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "Denge kararı sahibinde. Uygulanacaksa start_quest (kasabayı taşır) lastQuestTimes'a şimdiyi ekler, 6 saatten eskileri atar; start_quest_new'de değil (iki kez sayılır)."
+    },
+    {
+      "id": "KMT-09",
+      "baslik": "Asker Toplama ödülü çevrimdışı oyunda alınamıyor",
+      "sinif": "karar",
+      "onem": "Düşük",
+      "durum": "onay_bekliyor",
+      "isaret": "✔",
+      "kanit": "PopupRecruitment: işe al düğmesi si.length >= num_recruitments ise açılır; si yalnızca onFindFriend → ExternalInterface showPopupSEHelpSocialItem ile dolar, templates/js/oyun.js'te yok; btBuy hep gizli (createFotos@474).",
+      "test": "tests/test_istemci_kaynakli.py: AskerToplama",
+      "pr": "#38",
+      "onay": null,
+      "notlar": "Sunucu komutu yazıldı. Açmak arkadaş daveti gerektirir (tek kişilik kural); bot yardımcılarıyla açılması ayrı karar."
     }
   ]
 }

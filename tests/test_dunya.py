@@ -264,8 +264,7 @@ class EkonomiTestleri(DunyaTesti):
     def test_seviye_atlama_esik_altinda_yok_tavanda_son_seviye(self):
         """XP config eşiğinin altındaysa köy seviye atlamaz; tüm eşikleri aşan köy son seviyeye çıkar (1.4.07'de
         100 seviye: test_komutlar.test_seviye_siniri_asilirsa_son_seviye). Her atlama bir 'seviye' haberidir.
-        Tam eşik bilerek sabitlenmez: config.get_level_from_xp levels[i]'yi (i+1). seviyenin eşiği sayar
-        ('29 xp ile 2. seviye', test_komutlar), _ekonomi ise i. seviyenin; açık hata, rapora yazıldı."""
+        Tam eşik bir sonraki testte (OYN-14 düzeltildi; istemcinin okuması)."""
         esik = [int(s["exp_required"]) for s in get_game_config()["levels"]]
         son = len(esik) - 1
         self.assertEqual(son, 99)
@@ -279,6 +278,16 @@ class EkonomiTestleri(DunyaTesti):
         self.assertEqual(seviye, {"a": 10, "e": son, "t": son, "u": son})
         haberler = [o["metin"] for o in d.olaylar if o["tur"] == "seviye"]
         self.assertEqual(sorted(haberler), [f"Köy e seviye {son} oldu", f"Köy t seviye {son} oldu"])
+
+    def test_bot_istemcinin_esiginde_seviye_atlar(self):
+        """Bot da oyuncu gibi atlar (OYN-14). İstemci PlayerStatus/checkForLevelUp: iExperience >=
+        arLevelList[iLevel].exp_required ise iLevel + 1; config eşikleri 0, 29, 60, 100 (levels[0..3]).
+        29 XP'li 1. seviye köy 2 olur; 59 XP'li 2. seviye köy kalır; 100 XP'li 1. seviye köy 4'e çıkar."""
+        d = self.kur(a=koy("a", seviye=1, xp=29), b=koy("b", seviye=2, xp=59), c=koy("c", seviye=1, xp=100))
+        d.ekonomi_carpan = 0
+        for u in "abc":
+            self.ekonomi(d, u, [0.5] * 4 + [0.99])
+        self.assertEqual({u: self.kayitlar[u]["maps"][0]["level"] for u in "abc"}, {"a": 2, "b": 2, "c": 4})
 
     def test_ekonomi_carpani_uretimi_yonlendirir(self):
         """Dünya olayı metinleri: bereket 'uretim artti', kriz 'uretim azaldi' (ekonomi_carpan). Aynı zarla

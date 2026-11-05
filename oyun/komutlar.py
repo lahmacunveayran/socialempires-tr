@@ -16,8 +16,8 @@ import os
 import traceback
 
 from oyun import pvp
-from oyun.config import (get_game_config, get_item_from_id, get_item_from_subcat_functional,
-                         get_level_from_xp)
+from oyun.config import (en_yuksek_seviye, get_game_config, get_item_from_id, get_item_from_subcat_functional,
+                         get_level_from_xp, get_xp_from_level)
 from oyun.ekonomi import apply_collect, apply_collect_xp, apply_cost, timestamp_now
 from oyun.kayit import all_saves_userid, neighbor_session, save_session, session
 from oyun.oyuncu import acik_kasaba
@@ -1059,12 +1059,12 @@ def complete_tutorial(save, a):
 @komut("rt_level_up")
 def rt_level_up(save, a):
     """[seviye]"""
-    seviyeler = get_game_config()["levels"]
-    seviye = max(0, min(a.tam(0), len(seviyeler) - 1))
+    seviye = max(1, min(a.tam(0), en_yuksek_seviye()))
     h = save["maps"][0]
     h["level"] = seviye
-    asgari = int(seviyeler[seviye]["exp_required"])
-    h["xp"] = max(asgari, min(int(h.get("xp", 0)), int(seviyeler[-1]["exp_required"])))
+    # XP en az seviyenin alt eşiği (OYN-14: eskiden bir sonraki seviyenin eşiğiydi, yeniden açılışta +1 seviye)
+    tavan = int(get_game_config()["levels"][-1]["exp_required"])
+    h["xp"] = max(get_xp_from_level(seviye), min(int(h.get("xp", 0)), tavan))
 
 
 @komut("rt_publish_score")

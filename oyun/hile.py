@@ -5,7 +5,7 @@ Yalnızca bu bilgisayardan (127.0.0.1) ve aynı kökenden çağrılabilir.
 
 from flask import redirect, render_template, request, session
 
-from oyun.config import get_game_config
+from oyun.config import en_yuksek_seviye, get_xp_from_level
 from oyun.ekonomi import timestamp_now
 from oyun.kayit import (all_saves_userid, backup_session, save_info, save_lock, save_session,
                         session as kayit_oturumu)
@@ -81,17 +81,15 @@ def cheat_uygula():
                     return ({"hata": "gecersiz kaynak"}, 400)
 
             elif islem == "seviye":
-                seviyeler = get_game_config()["levels"]
                 yeni = int(veri.get("delta", 1)) + int(harita["level"])
-                yeni = max(0, min(yeni, len(seviyeler) - 1))
+                yeni = max(1, min(yeni, en_yuksek_seviye()))
                 harita["level"] = yeni
-                harita["xp"] = int(seviyeler[yeni]["exp_required"])
+                harita["xp"] = get_xp_from_level(yeni)
 
             elif islem == "max_seviye":
-                seviyeler = get_game_config()["levels"]
-                yeni = len(seviyeler) - 1
+                yeni = en_yuksek_seviye()
                 harita["level"] = yeni
-                harita["xp"] = int(seviyeler[yeni]["exp_required"])
+                harita["xp"] = get_xp_from_level(yeni)
 
             elif islem == "egitim":
                 kayit["playerInfo"]["completed_tutorial"] = 1

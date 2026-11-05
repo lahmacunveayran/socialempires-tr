@@ -219,8 +219,29 @@ def game_config() -> dict:
 # PLAYER #
 ##########
 
+# Seviye eşiklerinin tek okuması (OYN-14). İstemci (1.4.07) `levels[i].exp_required`'ı (i+1). seviyenin eşiği
+# sayar: PlayerStatus/checkForLevelUp `iExperience >= arLevelList[iLevel].exp_required` ise iLevel'ı bir artırır;
+# PlayerStatus/Init XP çubuğunu `arLevelList[iLevel - 1]` ile `arLevelList[iLevel]` arasında çizer ve
+# `iLevel >= arLevelList.length` ise `length - 1`'e indirir. Seviyeyle XP arasında çeviri yapan her yer bu dört
+# işlevi kullanır; `levels[...]` doğrudan okunmaz.
+
+def en_yuksek_seviye() -> int:
+    """İstemcinin kabul ettiği en yüksek seviye (PlayerStatus/Init: length - 1)."""
+    return max(1, len(__game_config["levels"]) - 1)
+
+def _seviye_sinirla(level) -> int:
+    return max(1, min(int(level), en_yuksek_seviye()))
+
 def get_xp_from_level(level: int) -> int:
-    return __game_config["levels"][int(level)]["exp_required"]
+    """Seviyenin alt eşiği: o seviyede olmak için gereken en az XP (`levels[seviye - 1]`)."""
+    return int(__game_config["levels"][_seviye_sinirla(level) - 1]["exp_required"])
+
+def seviye_araligi(level: int) -> tuple:
+    """İstemcinin XP çubuğu (uiExpMin, uiExpMax): (`levels[seviye - 1]`, `levels[seviye]`)."""
+    seviyeler = __game_config["levels"]
+    sv = _seviye_sinirla(level)
+    bas = int(seviyeler[sv - 1]["exp_required"])
+    return bas, int(seviyeler[sv]["exp_required"]) if sv < len(seviyeler) else bas
 
 def get_level_from_xp(xp: int) -> int:
     seviyeler = __game_config["levels"]

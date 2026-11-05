@@ -15,8 +15,8 @@ Kullanım:
 Ne yapar:
 1. Testleri coverage.py ile koşar; hangi satırın hiç çalışmadığını bulur.
 2. `cosmic-ray init` ile oyun/ altındaki bütün mutantları üretir (operatör seçimi yok: aracın hepsi).
-3. Tohumla tekrarlanabilir basit rastgele örneklem seçer. Hiçbir testin çalıştırmadığı satırdaki mutant koşulmaz,
-   "kaldı" sayılır (öldürülemez). Diğerleri paralel koşar; her işçi kendi git worktree'sinde, bayt kodu yazmadan.
+3. Tohumla tekrarlanabilir basit rastgele örneklem seçer. Hiçbir testin çalıştırmadığı deyimdeki mutant koşulmaz,
+   "kaldı" sayılır (öldürülemez; kural `kapsam_disi`). Diğerleri paralel koşar; her işçi kendi git worktree'sinde, bayt kodu yazmadan.
 4. Modül modül öldürme oranını Wilson %95 aralığıyla yazar; kalan mutantları farklarıyla dosyaya döker.
 
 Dikkat: işlenmemiş değişiklikler ölçülmez; worktree'ler HEAD'den kurulur.
@@ -55,7 +55,19 @@ def kapsam_olc(dizin, cikti):
     subprocess.run([sys.executable, "-m", "coverage", "json", f"--data-file={veri}", "-q", "-o", str(cikti)],
                    cwd=KOK, check=True)
     dosyalar = json.load(open(cikti, encoding="utf-8"))["files"]
-    return {k.replace("\\", "/"): set(v["executed_lines"]) for k, v in dosyalar.items()}
+    return {k.replace("\\", "/"): (set(v["executed_lines"]), set(v["missing_lines"])) for k, v in dosyalar.items()}
+
+
+def kapsam_disi(mutasyon, kapsam):
+    """Mutant yalnızca coverage'ın açıkça "çalışmadı" dediği bir deyimdeyse kapsam dışıdır.
+
+    coverage.py çok satırlı bir deyimi yalnızca ilk satırıyla yazar (devam satırları ne executed_lines'ta ne
+    missing_lines'ta olur). Mutantın satırları executed_lines'la kesiştirilirse devam satırındaki mutant yanlışlıkla
+    kapsam dışı sayılır (PR #36 incelemesi; ilk ölçümde 621'in 98'i). Kuşkulu mutant koşulur: koşmak her zaman doğru
+    sonuç verir, atlamak yalnızca kesin olunca."""
+    calisan, eksik = kapsam.get(str(mutasyon.module_path).replace("\\", "/"), (set(), set()))
+    satirlar = set(range(mutasyon.start_pos[0], mutasyon.end_pos[0] + 1))
+    return mutasyon.start_pos[0] in eksik and not satirlar & calisan
 
 
 def worktree_kur(dizin, sayi):
@@ -90,10 +102,7 @@ def kos(oturum, calisan, ornek, tohum, isci_sayisi, dizin):
                                 WorkResult(worker_outcome=WorkerOutcome.SKIPPED, output="örneklem dışı"))
         kosulacak, kapsamsiz = [], []
         for w in secilen:
-            m = w.mutations[0]
-            satirlar = set(range(m.start_pos[0], m.end_pos[0] + 1))
-            (kosulacak if satirlar & calisan.get(str(m.module_path).replace("\\", "/"), set())
-             else kapsamsiz).append(w)
+            (kapsamsiz if kapsam_disi(w.mutations[0], calisan) else kosulacak).append(w)
         db.set_multiple_results([w.job_id for w in kapsamsiz], WorkResult(
             worker_outcome=WorkerOutcome.NORMAL, test_outcome=TestOutcome.SURVIVED,
             output="kapsam dışı: hiçbir test bu satırı çalıştırmıyor"))

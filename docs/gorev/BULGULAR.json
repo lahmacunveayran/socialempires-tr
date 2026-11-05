@@ -4,7 +4,7 @@
   "devam_noktasi": {
     "faz": "1.4.07'ye tam geçiş (KAR-08)",
     "madde": "GEC-03",
-    "sonraki_adim": "GEC-03 sürüyor: eğitim kuyruğu (#26), birlik paketleri, mezarlık ve viral teklifler (#28) birleşti; Ada Ocağı (collect_game_*, 5 komut) PR'da. Sıradaki: buy_powerups, buy_time_packet/time_ff, finish_si_recruitment, start_quest_new, reset_dragon. GEC-03 bitince bağımsız denetim (KAR-13)."
+    "sonraki_adim": "GEC-03 sürüyor: eğitim kuyruğu (#26), birlik paketleri, mezarlık ve viral teklifler (#28) birleşti; Ada Ocağı ve test denetimi (TST-01) PR #35'te. Sıradaki: buy_powerups, buy_time_packet/time_ff, finish_si_recruitment, start_quest_new, reset_dragon. Test edilmemiş eski komutlar TST-02'de açık. GEC-03 bitince bağımsız denetim (KAR-13)."
   },
   "maddeler": [
     {
@@ -1280,6 +1280,32 @@
       "pr": "#30",
       "onay": null,
       "notlar": "Ayrıntı ve token'ın satırlara bölünüp yarım kaydedilmesi: SORUN_COZUM.md S-45."
+    },
+    {
+      "id": "TST-01",
+      "baslik": "Testlerin bir kısmı yalnızca geçmek için yazılmış gibiydi: gevşek beklentiler, kodun dalına girmeyen girdiler",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "duzeltildi",
+      "isaret": "✔",
+      "kanit": "İki denetim (sahibinin isteği, 5.11.2026). 1) Bu oturum: GEC-03 komutlarında 25 mutasyon, 20'si yakalandı; kaçanlar demirci indiriminde ceil/floor (bedeller 10'un katı), Ada Ocağı'nda son bedel (config'te cost = last_cost), required sınırı (test nakit yetmediği için kaza eseri geçiyordu), mezarlık tavanı (beklenen kodun formülüyle hesaplanıyordu), nakdin eksiye düşmemesi. 2) Bağımsız denetçi (ayrı çalışma ağacı, önceki notları okumadan): 55 mutasyon, eşdeğer 2'si hariç 26/53 yakalandı (%49). Yeni sistemlerin testleri büyük ölçüde gerçek; eski ekonominin testleri '> 0', '>= 1' gibi gevşek beklentiler, dala girmeyen girdiler (bozuk komut testi hiç hata üretmiyordu, toplama testi 'altın madeni' sanılan ağaçta yalnızca damgaya bakıyordu) ve test edilmemiş kayıt göçü ve yedek kuralları. Testi atlayan, sınanan işlevi taklit eden ya da hatayı yutan test yok.",
+      "test": "tests/test_komutlar.py, tests/test_sistemler.py, tests/test_http.py, tests/test_tasima.py",
+      "pr": "#35",
+      "onay": null,
+      "notlar": "Düzeltme: toplama, teklif paketi, günlük bonus, yardım arabası, depodan satış, Ev I xp'si kesin değerlerle; bozuk komut testi gerçekten hata veren komutla; sınır durumları (nakit tam yetince, seviye eşiğinde tam xp, 67,5 → 68 indirim, pazar sayacı tavanı); arazi, nakit→altın, iksir, komşu yardımında 5 bina sınırı; 0.01a → 0.05a göçünün eklediği her alan, var olan değerin ezilmemesi; göç öncesi yedeğin üzerine yazılmaması, en çok 10 yedek, Social Wars kaydının reddi; command.php'nin 400/404 yolları; taşımada kaydın bütünü. Kodun kendi formülüyle hesaplanan beklentiler sabit sayılara çevrildi. Sonuç: bağımsız denetçinin 55 mutasyonundan 53'ü yakalanıyor; kalan ikisi gözlenemez (config'te olmayan 'exp' ödülü, fsync). Bu oturumun 25 mutasyonu da yakalanıyor. Test sayısı 276 → 288."
+    },
+    {
+      "id": "TST-02",
+      "baslik": "Durum değiştiren eski komutların yaklaşık yarısının testi yok",
+      "sinif": "hata",
+      "onem": "Orta",
+      "durum": "acik",
+      "isaret": "◐",
+      "kanit": "Bağımsız denetçinin sayımı (5.11.2026): durum değiştiren 125 komuttan 65'inin testi yok; nakit ya da kaynak değiştirenler dahil (buy_cash, buy_attacks_pack, tournament_substract/refund_resources, next_temple_step, end_quest, apply_rewards_ranking, pop_sell, finish_collection, rt_level_up, kill). expand, exchange_cash_new ve graveyard_buy_potions'a TST-01'de test eklendi. Sayı ◐: denetçinin elle sayımı, araçla yeniden sayılmadı.",
+      "test": null,
+      "pr": null,
+      "onay": null,
+      "notlar": "Öneri: KAR-13'ün bağımsız denetiminde alan alan kapatılsın; her komut için elle hesaplanmış beklenen değer ve en az bir sınır durumu."
     }
   ]
 }

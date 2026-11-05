@@ -264,6 +264,71 @@ class KayitTestleri(unittest.TestCase):
         self.assertTrue(migrate_loaded_save(k))
         self.assertEqual(k["maps"][0]["resourcesTraded"], {})
 
+    def test_surumsuz_kayit_bastan_goc_eder(self):
+        # 0.01a → 0.05a adımlarının eklediği alanlar silinip sürümsüz kayıt baştan göç ettirilir
+        from oyun.surum import migrate_loaded_save, version_code
+        k = bos_kayit()
+        del k["version"]
+        ps, m = k["privateState"], k["maps"][0]
+        for alan in ("arrayAnimals", "strategy", "survivalVidaTimeStamp", "survivalVidasExtra", "survivalMaps",
+                     "lastUpgrades", "marketTimestamp", "dartsRandomSeed"):
+            ps.pop(alan, None)
+        for alan in ("universAttackWin", "questTimes", "lastQuestTimes", "resourcesTraded"):
+            m.pop(alan, None)
+        k["playerInfo"].pop("pic", None)
+        simdi = int(time.time())
+        self.assertTrue(migrate_loaded_save(k))
+        self.assertEqual(k["version"], version_code)
+        self.assertEqual((ps["arrayAnimals"], ps["strategy"]), ({}, 8))
+        self.assertEqual((m["universAttackWin"], m["questTimes"], m["lastQuestTimes"]), ([], [], []))
+        self.assertEqual(k["playerInfo"]["pic"], "")
+        self.assertEqual((ps["survivalVidaTimeStamp"], ps["survivalVidasExtra"]), ([], 0))
+        self.assertEqual(ps["survivalMaps"], {str(n): {"ts": 0, "tp": 0} for n in (100000035, 100000036, 100000037)})
+        self.assertEqual((ps["lastUpgrades"], ps["marketTimestamp"], m["resourcesTraded"]), ([], 0, {}))
+        self.assertTrue(0 <= ps["dartsRandomSeed"] <= 2 ** 16 - 1)
+        self.assertGreaterEqual(m["timestamp"], simdi)
+
+    def test_goc_adimi_var_olan_degeri_ezmez(self):
+        from oyun.surum import migrate_loaded_save
+        k = bos_kayit()
+        k["version"] = "0.02a"
+        k["privateState"]["strategy"] = 3
+        k["maps"][0]["questTimes"] = [5]
+        migrate_loaded_save(k)
+        self.assertEqual((k["privateState"]["strategy"], k["maps"][0]["questTimes"]), (3, [5]))
+
+    def test_goc_oncesi_yedegin_ustune_yazilmaz(self):
+        k = bos_kayit("yedekli")
+        ilk = self.kayit.goc_oncesi_yedek(k)
+        k["playerInfo"]["name"] = "Sonradan"
+        self.assertEqual(self.kayit.goc_oncesi_yedek(k), ilk)
+        with open(ilk, encoding="utf-8") as f:
+            self.assertEqual(json.load(f)["playerInfo"]["name"], "Test")
+
+    def test_en_fazla_on_zaman_damgali_yedek(self):
+        os.makedirs(self.kayit.BACKUP_DIR)
+        def yaz(ad, zaman):
+            yol = os.path.join(self.kayit.BACKUP_DIR, ad)
+            with open(yol, "w") as f:
+                f.write("{}")
+            os.utime(yol, (zaman, zaman))
+        for i in range(12):
+            yaz(f"oyuncu-{1000 + i}.save.json", 1000 + i)
+        yaz("oyuncu.goc-0.05a.save.json", 1)  # göç öncesi yedek sayılmaz, silinmez
+        yaz("baska-5.save.json", 1)  # başka oyuncunun yedeği
+        self.kayit._eski_yedekleri_temizle("oyuncu")
+        kalan = sorted(os.listdir(self.kayit.BACKUP_DIR))
+        self.assertEqual(kalan, sorted(["baska-5.save.json", "oyuncu.goc-0.05a.save.json"]
+                                       + [f"oyuncu-{1000 + i}.save.json" for i in range(2, 12)]))
+
+    def test_social_wars_kaydi_gecersiz(self):
+        self.assertTrue(self.kayit.is_valid_village(bos_kayit()))
+        sw = bos_kayit()
+        sw["maps"][0]["oil"] = 10
+        eksik = bos_kayit()
+        del eksik["maps"][0]["food"]
+        self.assertEqual([self.kayit.is_valid_village(k) for k in (sw, eksik, {"maps": []})], [False, False, False])
+
     def test_bozuk_xp_seviyesi_duzeltilir(self):
         k = bos_kayit()
         k["maps"][0].update(xp=2016089205, level=0)

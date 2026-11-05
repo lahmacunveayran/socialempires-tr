@@ -123,7 +123,7 @@ Uygulama: `oyun/komutlar.py`; testler: `tests/test_komutlar.py` (`AdaOcagi`). Co
 
 | Komut | Kaynak | Sunucu |
 |---|---|---|
-| `collect_game_add_item [no, ödendi]` | `addItem`, `buyItem` | Miktar `required`'dan küçükse 1 artar. Ödendiyse `currentCost` nakit: sıradaki son birimse `last_cost`, değilse `cost`. Ödenmediyse `timestamp = şimdi`. Boruda artış viral teklif 2'ye bir yardımcı (istemcinin ayrıca gönderdiği `buy_viral_offer_friend [2]`'nin bedeli yok, bir şey yapmaz) |
+| `collect_game_add_item [no, ödendi]` | `addItem`, `buyItem` | Miktar `required`'dan küçükse 1 artar. Ödendiyse `currentCost` nakit: sıradaki son birimse `last_cost`, değilse `cost`. `packCost`'tan farklı olarak 0'da `speedup_cost`'a düşmez (`CollectGameItem/get currentCost`): çekiç (6) ödenerek de 0 nakit. Ödenmediyse `timestamp = şimdi`. Boruda artış viral teklif 2'ye bir yardımcı (istemcinin ayrıca gönderdiği `buy_viral_offer_friend [2]`'nin bedeli yok, bir şey yapmaz) |
 | `collect_game_update_timestamp [no]` | `collectItem` | `timestamp = şimdi` |
 | `collect_game_speed_up [no]` | `buySpeedup` | `speedup_cost` nakit, `timestamp = şimdi − cooldown` |
 | `collect_game_buy_all [1]` | `buyAll` | Hepsini al bedeli nakit; bütün malzemeler `required`'a, boruda viral teklif 2'nin yardımcıları `required`'a |

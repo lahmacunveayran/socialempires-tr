@@ -17,7 +17,7 @@ class EsyaKomutlari(KomutTesti):
         self.komut("buy", 1, 30, 31, 1, 0, 0, 1, "b")
         self.assertEqual(self.harita["wood"], 1000 - 30)
         self.assertEqual(self.harita["items"][-1][:4], [1, 30, 31, 1])
-        self.assertGreater(self.harita["xp"], 0)
+        self.assertEqual(self.harita["xp"], 3)  # Ev I'in xp'si
 
     def test_buy_indirim_carpani_uygulanir(self):
         self.komut("buy", 1, 30, 31, 0, 0, 0, "0.9", "u")
@@ -64,10 +64,16 @@ class EsyaKomutlari(KomutTesti):
         self.komut("end_survival", 1, 30, json.dumps({"523": -1, "-2": 1}))
         self.assertEqual(self.ps["gifts"], [])
 
+    def test_depoda_sifir_olan_esya_satilmaz(self):
+        self.ps["gifts"] = [0, 0, 3]  # Ev I (1) sıfır, arkasında başka eşya var
+        self.komut("sell_stored_item", 1, 0)
+        self.assertEqual((self.ps["gifts"], self.harita["wood"]), ([0, 0, 3], 1000))
+
     def test_depodaki_esyayi_sat(self):
         self.ps["gifts"] = [0, 2]
         self.komut("sell_stored_item", 1, 0)
         self.assertEqual(self.ps["gifts"], [0, 1])
+        self.assertEqual(self.harita["wood"], 1000 + 1)  # Ev I: 30 odunun %5'i, aşağı yuvarlanır
 
     def test_depoya_cash_ile_esya(self):
         # [kasaba, id, cash]
@@ -89,6 +95,20 @@ class EsyaKomutlari(KomutTesti):
         self.assertEqual(self.ps["unlockedSkins"], {"3": True})
         self.assertEqual(self.harita["skin"], 3)
 
+    def test_arazi_genisletme_sirali_fiyat(self):
+        # ilk açılan arazi 4000 altın, ikincisi 40.000 altın ya da 25 cash
+        self.komut("expand", 14, "gold", 0)
+        self.komut("expand", 14, "gold", 0)  # aynı arazi: yeniden alınmaz
+        self.assertEqual(self.harita["coins"], 50000 - 4000)
+        self.komut("expand", 15, "cash", 0)
+        self.assertEqual((self.cash, self.harita["expansions"]), (100 - 25, [13, 14, 15]))
+
+    def test_nakit_altina_ve_iksire(self):
+        self.komut("exchange_cash_new", 0)  # 5 cash -> 2500 altın
+        self.assertEqual((self.cash, self.harita["coins"]), (95, 52500))
+        self.komut("graveyard_buy_potions")  # 5 cash -> 25 iksir (boş kayıtta 1 vardı)
+        self.assertEqual((self.cash, self.ps["potion"]), (90, 1 + 25))
+
     def test_ikinci_kasaba_acilir(self):
         self.kayit["playerInfo"]["cash"] = 50
         self.komut("buy_map", 1, 1, "t", 0)
@@ -99,17 +119,36 @@ class EsyaKomutlari(KomutTesti):
         self.assertEqual(len(self.kayit["playerInfo"]["map_names"]), 2)
 
 
+class Kaynaklar(KomutTesti):
+    def test_kaynak_ve_nakit_eksiye_dusmez(self):
+        self.kayit["playerInfo"]["cash"] = 5
+        self.komutlar.cash_ekle(self.kayit, -8)
+        self.komutlar.kaynak_ekle(self.kayit, self.harita, "w", -5000)
+        self.ps["mana"] = 2
+        self.komutlar.kaynak_ekle(self.kayit, self.harita, "m", -3)
+        self.assertEqual((self.cash, self.harita["wood"], self.ps["mana"]), (0, 0, 0))
+        self.komutlar.kaynak_ekle(self.kayit, self.harita, "c", 7)
+        self.assertEqual(self.cash, 7)
+
+
 class UretimKomutlari(KomutTesti):
     def test_collect_kaynak_ve_sayac(self):
-        # [x, y, kasaba, id, birimler, carpan, cash] - 19: altın madeni
+        # [x, y, kasaba, id, birimler, carpan, cash] - 19: ağaç, 20 odun, 1 xp
+        simdi = self.komutlar.timestamp_now()
         self.komut("collect_new", 20, 20, 0, 19, 1, 1, 0)
-        self.assertGreater(self.harita["items"][1][4], 0)
+        self.assertEqual((self.harita["wood"], self.harita["xp"]), (1000 + 20, 1))
+        self.assertGreaterEqual(self.harita["items"][1][4], simdi)
+
+    def test_collect_carpan_ve_cash(self):
+        # çarpan 3: 60 odun; hızlandırma için 2 cash
+        self.komut("collect_new", 20, 20, 0, 19, 1, 3, 2)
+        self.assertEqual((self.harita["wood"], self.cash), (1000 + 60, 98))
+        self.komut("collect_new", 20, 20, 0, 19, 1, 50, 0)  # çarpan en çok 10
+        self.assertEqual(self.harita["wood"], 1000 + 60 + 200)
 
     def test_collect_kisa_bicim(self):
-        once = self.harita["xp"]
         self.komut("collect_new", 20, 20, 0, 19)
-        self.assertGreaterEqual(self.harita["xp"], once)
-        self.assertGreater(self.harita["items"][1][4], 0)
+        self.assertEqual((self.harita["wood"], self.harita["xp"]), (1000 + 20, 1))
 
     def test_pazar_alim_istemci_formulu(self):
         # [kasaba, kaynak, satis, miktar]: odun tabanı 100 -> 100 odun = 100 altın
@@ -120,6 +159,13 @@ class UretimKomutlari(KomutTesti):
         # İkinci alım %2 pahalı
         self.komut("trade_resource_b", 0, "w", 0, 100)
         self.assertEqual(self.harita["coins"], 50000 - 100 - 102)
+
+    def test_pazar_sayaci_sinirda_kalir(self):
+        # MARKET_MAX_INCREMENTS 200, MARKET_MAX_DECREMENTS 25
+        self.harita["resourcesTraded"] = {"w": 200, "s": -25}
+        self.komut("trade_resource_b", 0, "w", 0, 100)
+        self.komut("trade_resource_b", 0, "s", 1, 100)
+        self.assertEqual(self.harita["resourcesTraded"], {"w": 200, "s": -25})
 
     def test_pazar_satis(self):
         self.komut("trade_resource_b", 0, "w", 1, 100)
@@ -174,8 +220,8 @@ class GorevVeBonusKomutlari(KomutTesti):
 
     def test_gunluk_bonus_istemcinin_odulu(self):
         # [altin, kasaba, kahraman, gun, cash]
-        self.komut("win_bonus", 250, 0, 0, 1, 0)
-        self.assertEqual(self.harita["coins"], 50250)
+        self.komut("win_bonus", 250, 0, 0, 1, 3)
+        self.assertEqual((self.harita["coins"], self.cash), (50250, 103))
         self.assertEqual(self.ps["bonusNextId"], 2)
         self.komut("win_bonus", 0, 0, 555, 2, 0)
         self.assertEqual(self.ps["gifts"][555], 1)
@@ -195,9 +241,11 @@ class GorevVeBonusKomutlari(KomutTesti):
 
     def test_teklif_paketi(self):
         self.kayit["playerInfo"]["cash"] = 100
-        self.komut("buy_offer_pack", 0, 66)
+        self.komut("buy_offer_pack", 0, 66)  # 40 cash; her kaynaktan 10.000, 500 xp, 9101-9103 birer
         self.assertEqual(self.cash, 60)
-        self.assertGreaterEqual(self.ps["gifts"][9101], 1)
+        h = self.harita
+        self.assertEqual((h["coins"], h["wood"], h["stone"], h["food"], h["xp"]), (60000, 11000, 11000, 11000, 500))
+        self.assertEqual(self.ps["gifts"][9101:9104], [1, 1, 1])
 
     def test_birim_koleksiyonu_bir_kez(self):
         self.komut("unit_collections_completed", 4)
@@ -222,8 +270,13 @@ class SeviyeKomutlari(KomutTesti):
         self.assertEqual(self.harita["xp"], 0)
 
     def test_seviye_siniri_asilirsa_son_seviye(self):
-        from oyun.config import get_game_config, get_level_from_xp
-        self.assertEqual(get_level_from_xp(10 ** 12), len(get_game_config()["levels"]) - 1)
+        from oyun.config import get_level_from_xp
+        self.assertEqual(get_level_from_xp(10 ** 12), 99)  # 1.4.07'de 100 seviye
+
+    def test_seviye_esigi_tam_xp(self):
+        from oyun.config import get_level_from_xp
+        # eşikler 0, 29, 60, ...: 29 xp ile 2. seviye
+        self.assertEqual([get_level_from_xp(x) for x in (0, 28, 29, 59, 60)], [1, 1, 2, 2, 3])
 
 
 class BuyuVeMezarlik(KomutTesti):
@@ -254,14 +307,18 @@ class BuyuVeMezarlik(KomutTesti):
 class GenelDavranis(KomutTesti):
     def test_bozuk_komut_digerlerini_dusurmez(self):
         veri = {"commands": [
-            {"cmd": "move", "args": ["bozuk"]},
+            {"cmd": "name_map", "args": [99, "x"]},  # gerçekten hata verir (IndexError)
             {"cmd": "complete_mission", "args": [2, 0]},
         ]}
+        with self.assertRaises(IndexError):
+            self.komut("name_map", 99, "x")
         self.komutlar.command("test", veri)
         self.assertEqual(self.ps["completedMissions"], [2])
 
     def test_bilinmeyen_komut_hata_vermez(self):
+        once = json.dumps(self.kayit, sort_keys=True)
         self.komut("boyle_bir_komut_yok", 1, 2)
+        self.assertEqual(json.dumps(self.kayit, sort_keys=True), once)
 
 
 class KomsuKomutlari(KomutTesti):
@@ -269,6 +326,12 @@ class KomsuKomutlari(KomutTesti):
         super().setUp()
         self.komsu = bos_kayit("komsu")
         self.kayitlar["komsu"] = self.komsu
+
+    def test_komsuya_yardim_en_cok_bes_bina(self):
+        binalar = [[i, i, 1] for i in range(7)]
+        self.komut("assist_neighbor_new", "komsu", 0, json.dumps(binalar))
+        self.assertEqual((self.harita["coins"], self.harita["xp"]), (50000 + 5 * 10, 5 * 3))
+        self.assertEqual(self.komsu["maps"][0]["receivedAssists"], {"utest": binalar[:5]})
 
     def test_komsuya_yardim(self):
         self.komut("assist_neighbor_new", "komsu", 0, json.dumps([[5, 5, 1], [6, 6, 19]]))
@@ -280,7 +343,7 @@ class KomsuKomutlari(KomutTesti):
     def test_yardim_arabasi_ve_temizleme(self):
         self.harita["receivedAssists"] = {"ukomsu": [[5, 5, 19]]}
         self.komut("assist_receive", 0, 19)
-        self.assertEqual(self.harita["xp"], 10)
+        self.assertEqual((self.harita["xp"], self.harita["wood"]), (10, 1000 + 20 // 4))
         self.komut("clean_received_assists", "komsu", 0)
         self.assertEqual(self.harita["receivedAssists"], {})
 
@@ -331,7 +394,7 @@ class PvpKomutlari(KomutTesti):
         # 2 birim yıkıldı, kurban seviye 5: en çok 200*2 + 500 + 25 = 925
         self.saldir(resources={"g": 999999, "x": 999999})
         self.assertEqual(self.harita["coins"], 50000 + 925)
-        self.assertEqual(self.harita["xp"], math.ceil(0.05 * 925) + 2 + 150)
+        self.assertEqual(self.harita["xp"], 47 + 2 + 150)  # ganimetin %5'i yukarı yuvarlanır: 46,25 → 47
 
     def test_belediye_binasi_yoksa_ganimet_yok(self):
         self.saldir(True)
@@ -417,6 +480,8 @@ class IlkAlimTeklifi(KomutTesti):
     def test_alim_bedel_ve_odul_bir_kez(self):
         odul = self.g["POPUP_FIRST_PURCHASE_OFFER_REWARD"]
         bedel = self.g["POPUP_FIRST_PURCHASE_OFFER_COST"]
+        # beklenen değerler config'ten okunuyor; config'in 1.4.07 değerleri de sabitlenir
+        self.assertEqual((bedel, odul), (28, {"units": [2245, 2248, 2242], "g": 20000, "f": 40000}))
         self.komut("set_first_purchase_timestamp")
         altin, yemek = self.harita["coins"], self.harita["food"]
         self.komut("buy_first_purchase")
@@ -501,6 +566,9 @@ class EgitimKuyrugu(KomutTesti):
         self.assertEqual(self.harita["food"], 1000 - 540)
         self.it(self.KOC, 2, 1)
         self.assertEqual(self.harita["coins"], 50000 - 270 - 90)
+        # Hafif Şövalye (512) 75 altın: 75 × 0,9 = 67,5 yukarı yuvarlanır → 68; yemek 136
+        self.it(512, 3, 1)
+        self.assertEqual((self.harita["coins"], self.harita["food"]), (50000 - 270 - 90 - 68, 1000 - 540 - 180 - 136))
 
     def test_ruh_karistiricida_bedel_yok(self):
         self.harita["items"].append([1529, 40, 40, 0, 0, 0])
@@ -545,13 +613,13 @@ class EgitimKuyrugu(KomutTesti):
         self.assertNotIn("4", self.ps["barracksQueues"])
 
     def test_hizlandirma_kalan_her_saat_bir_nakit(self):
-        self.kayit["playerInfo"]["cash"] = 10
+        self.kayit["playerInfo"]["cash"] = 2  # tam yetiyor
         self.it(self.MIZRAKCI, 7, 1)
         self.it(self.MIZRAKCI, 7, 1)
         q = self.ps["barracksQueues"]["7"]
         with mock.patch.object(self.komutlar, "egitim_suresi", return_value=3000):
             self.komut("speed_up_queue", 7)  # kalan 3000 + 3000 sn: 2 saat
-        self.assertEqual(self.cash, 8)
+        self.assertEqual(self.cash, 0)
         self.assertLessEqual(q["ts"] + 2 * 3000, self.komutlar.timestamp_now())  # ikisi de bitmiş görünür
         self.kayit["playerInfo"]["cash"] = 0
         self.it(self.MIZRAKCI, 8, 1)
@@ -575,6 +643,11 @@ class BirlikPaketleri(KomutTesti):
         self.assertEqual(self.ps["unitPacks"], {"1": 1})
         self.komut("buy_unit_pack", 1, 1)
         self.assertEqual(self.harita["coins"], 50000 - 50)
+
+    def test_nakit_tam_yetince_alinir(self):
+        self.kayit["playerInfo"]["cash"] = 11
+        self.komut("buy_unit_pack", 3, 2)  # 11 nakit
+        self.assertEqual((self.cash, self.ps["unitPacks"]), (0, {"3": 2}))
 
     def test_nakitle_toplu_alim_indirimi(self):
         self.kayit["playerInfo"]["cash"] = 1000
@@ -612,7 +685,9 @@ class MezarlikVeViralTeklifler(KomutTesti):
         self.komut("buy_graveyard_capacity")
         self.komut("buy_graveyard_capacity")
         self.assertEqual(self.cash, 0)
-        self.assertEqual(self.ps["graveyardCapacity"], min(2 * artis, g["GRAVEYARD_MAX_CAPACITY"]))
+        # 1.4.07: artış 10.000, tavan 10.000; ikinci alım tavanı geçmez
+        self.assertEqual((bedel, artis, g["GRAVEYARD_MAX_CAPACITY"]), (10000, 10000, 10000))
+        self.assertEqual(self.ps["graveyardCapacity"], 10000)
 
     def test_gelen_iksir_bildirimi_sifirlanir(self):
         self.ps["potionsReceived"] = 4
@@ -647,16 +722,29 @@ class AdaOcagi(KomutTesti):
 
     def test_odenen_malzeme_bedeli_ve_sinir(self):
         # bakır (1): 15 gerekli, tek bedel 8, son bedel 8
-        self.kayit["playerInfo"]["cash"] = 20
+        self.kayit["playerInfo"]["cash"] = 100
         self.ps["collectGame"] = {"1": {"id": 1, "counter": 13, "timestamp": 7}}
         self.komut("collect_game_add_item", 1, 1)
         self.komut("collect_game_add_item", 1, 1)
-        self.komut("collect_game_add_item", 1, 1)  # dolu: bedel alınmaz
-        self.assertEqual(self.cash, 4)
+        self.komut("collect_game_add_item", 1, 1)  # dolu: nakit yetse de bedel alınmaz, sayaç artmaz
+        self.assertEqual(self.cash, 84)
         self.assertEqual(self.ps["collectGame"]["1"], {"id": 1, "counter": 15, "timestamp": 7})
+        self.kayit["playerInfo"]["cash"] = 4
         self.komut("collect_game_add_item", 2, 1)  # diş: 5 nakit, 4 kaldı
         self.komut("collect_game_add_item", 99, 0)
         self.assertEqual((self.cash, self.ps["collectGame"]["2"]["counter"]), (4, 0))
+        # çekiç (6): cost ve last_cost 0; istemcinin currentCost'u speedup_cost'a (3) düşmez, bedel 0
+        self.komut("collect_game_add_item", 6, 1)
+        self.assertEqual((self.cash, self.ps["collectGame"]["6"]["counter"]), (4, 1))
+
+    def test_son_birim_son_bedelle(self):
+        # 1.4.07'de her malzemede cost == last_cost; ayrımı denemek için ikisi farklı bir malzeme
+        malzeme = {"9": {"id": 9, "required": 3, "cost": 4, "last_cost": 10, "speedup_cost": 1, "cooldown": 0}}
+        self.kayit["playerInfo"]["cash"] = 100
+        with mock.patch.object(self.komutlar, "_ada_malzemeleri", return_value=malzeme):
+            for _ in range(4):  # 4, 4, 10; dördüncüsü dolu
+                self.komut("collect_game_add_item", 9, 1)
+        self.assertEqual((self.cash, self.ps["collectGame"]["9"]["counter"]), (100 - 4 - 4 - 10, 3))
 
     def test_toplama_ani_ve_hizlandirma(self):
         simdi = self.komutlar.timestamp_now()

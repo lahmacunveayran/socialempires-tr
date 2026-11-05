@@ -15,6 +15,10 @@ if not os.environ.get("SE_KAYIT_DIZINI"):
     os.environ["SE_KAYIT_DIZINI"] = tempfile.mkdtemp(prefix="se-test-")
     atexit.register(shutil.rmtree, os.environ["SE_KAYIT_DIZINI"], True)
 
+# Sunucu oyun.sunucu'dan başlar; yol modülleri (diyar, gunluk, profil...) ona döngüsel bağlı. Bir test modülü
+# önce oyun.diyar'ı içe aktarırsa döngü yarım kalır (S-46); tam takımda başka bir modülün sırası bunu gizliyordu.
+import oyun.sunucu  # noqa: E402,F401
+
 
 def bos_kayit(pid="test"):
     return {

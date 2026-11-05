@@ -880,6 +880,7 @@ def collect_game_add_item(save, a):
     if miktar >= gerekli:
         return
     if odendi:
+        # currentCost'ta packCost'taki gibi speedup_cost'a düşme yok: çekicin (6) bedeli 0, istemci de 0 düşer
         bedel = int(tanim.get("last_cost", 0) if miktar == gerekli - 1 else tanim.get("cost", 0))
         if int(save["playerInfo"].get("cash", 0)) < bedel:
             print(" ! ada malzemesi icin nakit yetmiyor")

@@ -37,6 +37,7 @@ Sahibinin 30 Ekim 2026 kararları:
 | GEC-03 birlik paketlerinden sonra H, eksik, imza uyumsuzluğu | ✔ 135, 24, 0; `buy_unit_pack` ve `get_up_data.php` (KAR-12) | GEC-03, `docs/inceleme/1407-komutlar.md` |
 | GEC-03 mezarlık ve viral tekliflerden sonra H, eksik, imza uyumsuzluğu | ✔ 140, 19, 0 (8'i GEC-05) | GEC-03, `docs/inceleme/1407-komutlar.md` |
 | GEC-03 Ada Ocağından sonra H, eksik, imza uyumsuzluğu | ✔ 145, 14, 0 (8'i GEC-05); `collect_game_*` beş komut | GEC-03, `docs/inceleme/1407-komutlar.md` |
+| GEC-03'ün sonu (6.11.2026): H, eksik, imza uyumsuzluğu | ✔ 151, 8, 0 (8'in hepsi GEC-05); `buy_powerups`, `buy_time_packet`, `time_ff`, `finish_si_recruitment`, `start_quest_new`, `reset_dragon`. **GEC-03'ün kapısı sağlandı** | GEC-03, KMT-07 … KMT-09, #38 |
 | Türkçe SWF yamasının 1.4.07'de eşlediği alan | ✔ 521 alan (sözlük anahtarlarının 404/455'i) | KYN-01 |
 | Upstream varlık ağacı `54df29e` ile `f642e0b` | ✔ 4.825 / 4.479 dosya | bu oturum, `git ls-tree` |
 | Ortak 4.478 dosyanın içerik farkı | ✔ **0** (git blob kimlikleri birebir aynı) | bu oturum |

@@ -67,11 +67,14 @@ class Tasima(unittest.TestCase):
                 tasima._ev_agi_adresi(kotu)
 
     def test_alinan_kayit_ayni_ve_oturum_acilir(self):
-        once = kayit.session(self.uid)["playerInfo"]["pid"]
+        kayit.session(self.uid)["playerInfo"]["name"] = "Gökbörü"  # Türkçe harf de bozulmadan gelmeli
+        kayit.save_session(self.uid)  # gönderen diskteki kaydı verir
+        once = json.loads(json.dumps(kayit.session(self.uid)))
         yanit = self.istemci.post("/tasima/al", data={"adres": "192.168.1.20", "kod": KOD, "uid": self.uid})
         self.assertEqual(yanit.status_code, 200, yanit.get_json())
         self.assertEqual(yanit.get_json()["imparatorluk"]["userid"], self.uid)
-        self.assertEqual(kayit.session(self.uid)["playerInfo"]["pid"], once)
+        # aynı sunucuda gönderen ve alan aynı kaydı görür; alma yolu kaydın hiçbir alanını değiştirmemeli
+        self.assertEqual(kayit.session(self.uid), once)
         with self.istemci.session_transaction() as oturum:
             self.assertEqual(oturum["USERID"], self.uid)
 

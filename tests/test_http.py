@@ -154,6 +154,17 @@ class HttpDumanTestleri(unittest.TestCase):
         self.assertEqual(len(ps["kompuCompleted"]), 1)
         ps.update(kompuSpells=0, kompuSteps=[], kompuCompleted=[])
 
+    def test_komut_paketi_bicimi(self):
+        yol = f"{BASE}/command.php"
+        imza = "0" * 64
+        def gonder(uid, paket):
+            return self.istemci.post(yol, data={"USERID": uid, "data": paket}).status_code
+        self.assertEqual(gonder(UID, "kisa"), 400)  # imza;veri biçimi yok
+        self.assertEqual(gonder(UID, "x" * 64 + ":" + "{}"), 400)  # ayraç ';' değil
+        self.assertEqual(gonder(UID, imza + ";{bozuk"), 400)  # JSON çözülmüyor
+        self.assertEqual(gonder("boyle-biri-yok", imza + ';{"commands": []}'), 404)
+        self.assertEqual(gonder(UID, imza + ';{"commands": []}'), 200)
+
     def test_birlik_paketi_rastgele_sayilari(self):
         cevap = self._servis("get_up_data.php", {"n": 3})
         self.assertEqual(cevap["result"], "success")

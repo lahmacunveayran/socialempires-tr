@@ -150,6 +150,19 @@ class OlayKaydiTestleri(unittest.TestCase):
         self.assertEqual([o["id"] for o in d.olaylar_sonra()], list(range(1, 11)))
         self.assertEqual([o["id"] for o in d.olaylar_sonra(0, en_cok=4)], [7, 8, 9, 10])
         self.assertEqual([o["id"] for o in d.olaylar_sonra(8, en_cok=4)], [9, 10])
+        self.assertEqual(d.olaylar_sonra(10), [])  # son numara: yeni olay yok
+        # Yorum: 'sunucu yeniden başladı: istemcinin numarası geçersiz' -> baştan verilir.
+        self.assertEqual([o["id"] for o in d.olaylar_sonra(999)], list(range(1, 11)))
+
+    def test_turkce_ad(self):
+        """Belge dizesi: 'Eşyanın Türkçe adı'; çevirisi yoksa config adı, o da yoksa kimliği."""
+        ceviri = dunya._ceviriler().get(f"item:{SOVALYE}")
+        self.assertTrue(ceviri)
+        self.assertNotEqual(ceviri, "Light Knight")
+        self.assertEqual(dunya.turkce_ad(SOVALYE), ceviri)
+        with mock.patch.object(dunya, "_ceviriler", return_value={}):
+            self.assertEqual(dunya.turkce_ad(SOVALYE), "Light Knight")
+            self.assertEqual(dunya.turkce_ad(-999), "-999")
 
 
 class DunyaOlayiTestleri(DunyaTesti):
@@ -183,6 +196,17 @@ class DunyaOlayiTestleri(DunyaTesti):
                 d._dunya_olayi(SIMDI)
             self.assertEqual(d.aktif_olay["tur"], tur)
             self.assertTrue(kosul(d.ekonomi_carpan, d.savas_carpan), (tur, d.ekonomi_carpan, d.savas_carpan))
+
+    def test_savas_olayi_botlari_ofkelendirir_oyuncuyu_degil(self):
+        """Savaş olayı metni 'botlar daha saldirgan': her botun öfkesi artar; oyuncunun hafızasına dokunulmaz."""
+        d = self.kur(a=koy("a"), b=koy("b"), c=koy("c"), p=koy("p", bot=False))
+        d.tick = 8
+        with mock.patch.object(dunya.random, "choice", side_effect=lambda s: "savas" if "savas" in s else s[0]):
+            d._dunya_olayi(SIMDI)
+        for u in "abc":
+            ofke = self.kayitlar[u]["privateState"]["bot_hafiza"]["ofke"]
+            self.assertGreater(sum(ofke.values()), 0, u)
+        self.assertNotIn("bot_hafiza", self.kayitlar["p"]["privateState"])
 
     def test_olay_yokken_carpanlar_notr(self):
         """_olay_guncelle: olay sürerken çarpan korunur, bitince ve olay yokken 1'e döner."""
@@ -237,19 +261,59 @@ class EkonomiTestleri(DunyaTesti):
         self.ekonomi(d, "c", [0.5] * 4 + [0.99], secim=SOVALYE)  # zar tutmadı: alım yok
         self.assertEqual(birim(self.kayitlar["c"]), 0)
 
-    def test_seviye_config_esiklerine_gore(self):
-        """config levels[n].exp_required: bu XP'ye ulaşan köy en az n. seviyededir, ulaşmayan atlamaz."""
+    def test_seviye_atlama_esik_altinda_yok_tavanda_son_seviye(self):
+        """XP config eşiğinin altındaysa köy seviye atlamaz; tüm eşikleri aşan köy son seviyeye çıkar (1.4.07'de
+        100 seviye: test_komutlar.test_seviye_siniri_asilirsa_son_seviye). Her atlama bir 'seviye' haberidir.
+        Tam eşik bilerek sabitlenmez: config.get_level_from_xp levels[i]'yi (i+1). seviyenin eşiği sayar
+        ('29 xp ile 2. seviye', test_komutlar), _ekonomi ise i. seviyenin; açık hata, rapora yazıldı."""
         esik = [int(s["exp_required"]) for s in get_game_config()["levels"]]
-        d = self.kur(a=koy("a", seviye=10, xp=esik[11]), b=koy("b", seviye=10, xp=esik[11] - 1),
-                     c=koy("c", seviye=10, xp=esik[13]), e=koy("e", seviye=len(esik) - 2, xp=esik[-1] + 1))
+        son = len(esik) - 1
+        self.assertEqual(son, 99)
+        # 'a': iki kuralda da eşiğin altında. 'e', 't': tek ve çift başlangıç seviyesinden tavana.
+        d = self.kur(a=koy("a", seviye=10, xp=esik[10] - 1), e=koy("e", seviye=son - 1, xp=esik[-1] + 1),
+                     t=koy("t", seviye=son - 4, xp=10 ** 12), u=koy("u", seviye=son, xp=10 ** 12))
         d.ekonomi_carpan = 0
-        for u in "abce":
+        for u in "aetu":
             self.ekonomi(d, u, [0.5] * 4 + [0.99])
-        seviye = {u: self.kayitlar[u]["maps"][0]["level"] for u in "abce"}
-        self.assertEqual(seviye, {"a": 11, "b": 10, "c": 13, "e": len(esik) - 1})
+        seviye = {u: self.kayitlar[u]["maps"][0]["level"] for u in "aetu"}
+        self.assertEqual(seviye, {"a": 10, "e": son, "t": son, "u": son})
         haberler = [o["metin"] for o in d.olaylar if o["tur"] == "seviye"]
-        self.assertEqual(len(haberler), 3)
-        self.assertIn("Köy a seviye 11 oldu", haberler)
+        self.assertEqual(sorted(haberler), [f"Köy e seviye {son} oldu", f"Köy t seviye {son} oldu"])
+
+    def test_ekonomi_carpani_uretimi_yonlendirir(self):
+        """Dünya olayı metinleri: bereket 'uretim artti', kriz 'uretim azaldi' (ekonomi_carpan). Aynı zarla
+        büyük çarpan daha çok, küçük çarpan daha az üretir; zaman ölçeği (oyun hızı, zaman.py) de üretimi artırır."""
+        uretim = {}
+        for anahtar, carpan, olcek in (("kriz", 0.8, 1.0), ("notr", 1.0, 1.0), ("bereket", 1.25, 1.0),
+                                       ("hizli", 1.0, 3.0)):
+            d = self.kur(a=koy("a", seviye=10, coins=0, wood=0, stone=0, food=0))
+            d.ekonomi_carpan = carpan
+            with mock.patch.object(dunya, "zaman_olcegi", lambda: olcek):
+                self.ekonomi(d, "a", [0.5] * 4 + [0.99])
+            uretim[anahtar] = [self.kayitlar["a"]["maps"][0][k] for k in KAYNAKLAR]
+        for k in range(4):
+            self.assertLess(uretim["kriz"][k], uretim["notr"][k], uretim)
+            self.assertLess(uretim["notr"][k], uretim["bereket"][k], uretim)
+            self.assertLess(uretim["notr"][k], uretim["hizli"][k], uretim)
+
+    def test_alinan_birim_gercek_birim_ve_bedeli_odenir(self):
+        """Haber 'ordusuna bir X kattı': alınan eşya config'te birimdir (tür 'u', yoksa ordu sayılmaz) ve
+        altından tam bedeli düşer (config cost). Seçim yamalanmaz: botun gerçek birim listesi denenir."""
+        d = self.kur(a=koy("a", coins=10 ** 6))
+        d.ekonomi_carpan = 0
+        harita = self.kayitlar["a"]["maps"][0]
+        random.seed(7)
+        for _ in range(60):
+            once_altin, once_esya = harita["coins"], len(harita["items"])
+            self.ekonomi(d, "a", [0.5] * 4 + [0.0])
+            yeni = harita["items"][once_esya:]
+            self.assertEqual(len(yeni), 1)
+            item = dunya._item(yeni[0][0])
+            self.assertEqual(item.get("type"), "u", yeni[0][0])
+            self.assertEqual(once_altin - harita["coins"], int(item["cost"]))
+        self.assertEqual(birim(self.kayitlar["a"]), 60)
+        self.assertEqual(len(d._ekonomi_haberleri), 60)
+        self.assertTrue(all("ordusuna bir" in h for h in d._ekonomi_haberleri))
 
 
 class HafizaTestleri(DunyaTesti):
@@ -332,6 +396,37 @@ class SavasTestleri(DunyaTesti):
             self.assertGreater(a_birim - birim(a) + v_birim - birim(v), 0)
             self.assertEqual(d._ofke(v, "a"), 1)
             self.assertEqual(d._ofke(a, "v"), 0 if kazanir else 1)
+
+    def test_ordusuz_saldiran_kazanamaz(self):
+        """Değişmez: hiç birimi olmayan saldıran, savunmasız köye bile kazanamaz, ganimet alamaz."""
+        d = self.kur(a=koy("a", ittifak=0), v=koy("v", ittifak=1, coins=1000))
+        d._savas("a", self.kayitlar["a"], "v", self.kayitlar["v"], SIMDI)
+        self.assertFalse(d._son_sonuc["kazandi"])
+        self.assertEqual((self.kayitlar["v"]["maps"][0]["coins"], d._son_sonuc["ganimet"]), (1000, 0))
+
+    def test_intikam_yalniz_yenilen_botun_baska_ittifakina(self):
+        """Yorum (_savas): 'Yenilen botun ittifakı (başka ittifaksa) intikam seferi ilan edebilir'.
+        Akın püskürtülürse, kurban oyuncuysa ya da iki bot aynı ittifaktansa sefer yok; olasılık 0 ise de yok."""
+        for durum, v_birim, v_bot, v_ittifak, olasilik, sefer in (
+                ("yenildi", 0, True, 1, 1.0, [(1, "a")]), ("puskurttu", 40, True, 1, 1.0, []),
+                ("oyuncu", 0, False, None, 1.0, []), ("ayni", 0, True, 0, 1.0, []),
+                ("olasilik0", 0, True, 1, 0.0, [])):
+            d = self.kur(a=koy("a", birim=10, ittifak=0), v=koy("v", birim=v_birim, bot=v_bot, ittifak=v_ittifak))
+            d.ayar["intikam_olasiligi"] = olasilik
+            d._savas("a", self.kayitlar["a"], "v", self.kayitlar["v"], SIMDI, oyuncuya=not v_bot)
+            self.assertEqual(d._son_sonuc["kazandi"], durum != "puskurttu", durum)
+            self.assertEqual([(s["ittifak"], s["hedef"]) for s in d.seferler], sefer, durum)
+
+    def test_oyuncu_saldirinca_intikam_olasiligi(self):
+        """VARSAYILAN_AYAR oyuncuya_intikam: 'oyuncu bir bota saldırınca' kurbanın ittifakı sefer ilan eder;
+        olasılık 0 ise etmez. Sefer kurbanın ittifakından, hedefi oyuncu."""
+        d = self.kur(v=koy("v", ittifak=2), p=koy("p", bot=False))
+        self.assertIsNone(d.oyuncu_saldirdi("p", "Oyuncu", "v", self.kayitlar["v"]))
+        self.assertEqual(d.seferler, [])
+        d.ayar["oyuncuya_intikam"] = 1.0
+        s = d.oyuncu_saldirdi("p", "Oyuncu", "v", self.kayitlar["v"])
+        self.assertEqual((s["ittifak"], s["hedef"], s["oyuncu"]), (2, "p", True))
+        self.assertIn("Köy v için senin köyüne", d.olaylar[-1]["metin"])
 
     def test_kule_savunani_guclendirir(self):
         """kule_gucu: savunma binalarının ek gücü. Aynı saldırı kulesiz köyü yener, çok kuleli köye yenilir."""
@@ -435,6 +530,61 @@ class TurTestleri(DunyaTesti):
         d.durdur()
         self.assertEqual((self.yazilan, d._bekleyen_botlar), (["b"], set()))
 
+    def test_oyuncu_kaydi_akin_turunda_yazilir(self):
+        """Yorum (tek_tick): 'Oyuncunun kaydı hemen yazılır'; saldıran botun ganimeti de yazılmak üzere bekler."""
+        d = self.kur(a=koy("a", birim=10, ittifak=0), p=koy("p", bot=False))
+        d.ayar.update(saldiri_olasiligi=1.0, oyuncuya_saldiri=1.0)
+        d.tek_tick()
+        self.assertEqual(d.tick, 1)
+        self.assertEqual(self.gonderilen()["a"], 1)
+        self.assertEqual(self.yazilan, ["p"])  # 1. tur: bot kayıtları henüz yazılmaz
+        self.assertIn("a", d._bekleyen_botlar)
+
+    def test_turda_tek_ekonomi_haberi(self):
+        """Yorum (tek_tick): 'turda yalnızca biri haber olur'; biriken haberler tur sonunda boşaltılır."""
+        d = self.kur(**{f"b{i}": koy(f"b{i}", coins=10 ** 6) for i in range(5)})
+        with mock.patch.object(dunya.random, "random", return_value=0.0):  # her bot birim alır
+            d.tek_tick()
+        self.assertEqual(sum(1 for o in d.olaylar if o["tur"] == "ekonomi"), 1)
+        self.assertEqual(sum(birim(k) for k in self.kayitlar.values()), 5)
+        self.assertEqual(d._ekonomi_haberleri, [])
+
+    def test_panel_verisi_tur_sonrasi_yenilenir(self):
+        """Panel önbelleği turu gizlemez: tek_tick'ten sonra veri() yeni turu gösterir."""
+        d = self.kur(a=koy("a"))
+        once = d.veri()
+        d.tek_tick()
+        sonra = d.veri()
+        self.assertIsNot(sonra, once)
+        self.assertEqual((once["tick"], sonra["tick"]), (0, 1))
+
+    def test_dongu_hatada_durmaz_tick_saniye_bekler(self):
+        """Yorum (dongu): 'dünya döngüsü sunucuyu düşürmesin'; modül belgesi: tick_saniye aralığıyla çalışır."""
+        d = self.kur(a=koy("a"))
+        beklenen = []
+        cagri = []
+
+        def tur():
+            cagri.append(1)
+            if len(cagri) == 1:
+                raise RuntimeError("bozuk kayıt")
+            d._duruyor = True
+        with mock.patch.object(dunya.time, "sleep", beklenen.append), mock.patch.object(d, "tek_tick", tur):
+            d.dongu()
+        self.assertEqual(len(cagri), 2)
+        self.assertEqual(beklenen, [60, 60])
+
+    def test_baslat_arka_planda_is_parcacigi(self):
+        """Modül belgesi: 'arka planda tick_saniye aralığıyla çalışır' -> daemon iş parçacığı dongu'yu çalıştırır."""
+        d = self.kur(a=koy("a"))
+        eski = dunya.etkin
+        self.addCleanup(setattr, dunya, "etkin", eski)
+        with mock.patch.object(dunya.threading, "Thread") as thread:
+            d.baslat()
+        self.assertIs(dunya.etkin, d)
+        thread.assert_called_once_with(target=d.dongu, name="dunya", daemon=True)
+        thread.return_value.start.assert_called_once_with()
+
     def test_gecmis_dunya_toplamlari(self):
         """Panel eğrisi: turdaki dünya toplamı = kayıtlardaki dört kaynağın ve birimlerin toplamı."""
         d = self.kur(a=koy("a", birim=4), p=koy("p", birim=2, bot=False))
@@ -457,17 +607,17 @@ class TurTestleri(DunyaTesti):
 
 class SeferTestleri(DunyaTesti):
     def test_ilan_kurallari(self):
-        """OYN-01: sefer 12 turda en çok 3 akın; aynı ittifak aynı hedefe iki sefer açmaz, başka ittifak açabilir;
-        aynı anda en çok EN_COK_SEFER sefer."""
+        """OYN-01: sefer 12 turda en çok 3 akın; aynı ittifak aynı hedefe iki sefer açmaz, başka ittifak ya da
+        başka hedef açabilir; aynı anda en çok EN_COK_SEFER sefer."""
         d = self.kur(x=koy("x"), z=koy("z"), w=koy("w"))
         d.tick = 20
         s = d._sefer_ilan(1, "x", "X", "Y")
         self.assertEqual((s["kalan"], s["bitis"] - d.tick, s["zafer"], s["yenilgi"]), (3, 12, 0, 0))
         self.assertIsNone(d._sefer_ilan(1, "x", "X", "Y"))
         self.assertIsNotNone(d._sefer_ilan(0, "x", "X", "Y"))
-        self.assertIsNotNone(d._sefer_ilan(2, "z", "Z", "Y"))
+        self.assertIsNotNone(d._sefer_ilan(1, "w", "W", "Y"))  # aynı ittifak, başka hedef
         self.assertEqual(len(d.seferler), dunya.EN_COK_SEFER)
-        self.assertIsNone(d._sefer_ilan(0, "w", "W", "Y"))
+        self.assertIsNone(d._sefer_ilan(2, "z", "Z", "Y"))
         # Ilan edilen sefer, süresi içinde (uygun üye yokken bile) dağılmaz.
         d.tick = 21
         d._seferleri_yurut([], SIMDI)
@@ -490,6 +640,22 @@ class SeferTestleri(DunyaTesti):
         kayip = once - sum(b2["maps"][0][k] for k in KAYNAKLAR)
         self.assertGreater(kayip, 0)
         self.assertIn(f"Köy b2 3 akında {kayip} kaynak kaybetti", d.olaylar[-1]["metin"])
+
+    def test_sure_sinirinda_surer_sonra_dagilir_hedef_yoksa_biter(self):
+        """SEFER_SURESI yorumu: 'tur; bu sürede bitmeyen sefer dağılır' (OYN-01: 12 turda en çok 3 akın).
+        İlandan 12 tur sonra hâlâ akın edilir, 13. turda sefer kalkar. Hedef köy yoksa sefer biter."""
+        d = self.kur(b0=koy("b0", birim=20, ittifak=0), b2=koy("b2", ittifak=1))
+        sefer = d._sefer_ilan(0, "b2", "Köy b2", "Köy b1")
+        d.tick += dunya.SEFER_SURESI
+        d._seferleri_yurut(d._botlar(), SIMDI)
+        self.assertEqual(sefer["kalan"], dunya.SEFER_SALDIRI - 1)
+        d.tick += 1
+        d._seferleri_yurut(d._botlar(), SIMDI + denge.SALDIRI_PERIYODU + 1)
+        self.assertEqual((d.seferler, sefer["kalan"]), ([], dunya.SEFER_SALDIRI - 1))
+        sefer = d._sefer_ilan(0, "yok", "Kayıp", "Köy b1")
+        d._seferleri_yurut(d._botlar(), SIMDI)
+        self.assertEqual(d.seferler, [])
+        self.assertIn("Kayıp seferi dağıldı", d.olaylar[-1]["metin"])
 
     def test_bitis_haberleri(self):
         d = self.kur(a=koy("a"))
@@ -528,6 +694,32 @@ class SeferTestleri(DunyaTesti):
             d._seferleri_yurut(d._botlar(), SIMDI)
             self.assertEqual(3 - sefer["kalan"], akin, (son, seviye))
             self.assertEqual(len(self.kayitlar["p"]["privateState"].get("attacksReceived") or []), akin)
+
+
+class IttifakDegisimiTestleri(DunyaTesti):
+    """OYN-01: '15 turda bir bot kalabalık ittifaktan en küçüğüne geçebiliyor (haber)'. Belge dizesi:
+    'kalabalık ittifakından ayrılıp en küçük ittifaka geçer'. (Geçişin kendisi test_sistemler'de.)"""
+
+    def degisim(self, d, tick):
+        d.tick = tick
+        with mock.patch.object(dunya.random, "random", return_value=0.0):
+            return d._ittifak_degisimi()
+
+    def test_en_kalabaliktan_en_kucuge(self):
+        d = self.kur(**{f"b{i}": koy(f"b{i}", ittifak=t) for i, t in enumerate((0, 0, 0, 1, 1, 2))})
+        (uid,) = self.degisim(d, dunya.ITTIFAK_DEGISIMI)
+        self.assertIn(uid, ("b0", "b1", "b2"))
+        self.assertEqual(d._ittifak(uid, self.kayitlar[uid]), 2)
+        self.assertEqual(d.olaylar[-1]["metin"], f"Köy {uid}, Kızıl Birlik'ten ayrılıp Yeşil Birlik'e katıldı")
+
+    def test_aralik_disi_dengeli_ya_da_az_botta_degisim_yok(self):
+        d = self.kur(**{f"b{i}": koy(f"b{i}", ittifak=t) for i, t in enumerate((0, 0, 0, 1, 1, 2))})
+        self.assertEqual(self.degisim(d, dunya.ITTIFAK_DEGISIMI - 1), set())
+        d = self.kur(**{f"b{i}": koy(f"b{i}", ittifak=i) for i in range(3)})  # her ittifakta bir: zaten dengeli
+        self.assertEqual(self.degisim(d, dunya.ITTIFAK_DEGISIMI), set())
+        d = self.kur(b0=koy("b0", ittifak=0), b1=koy("b1", ittifak=0))
+        self.assertEqual(self.degisim(d, dunya.ITTIFAK_DEGISIMI), set())
+        self.assertEqual(d.olaylar, [])
 
 
 class LoncaVeriTestleri(DunyaTesti):

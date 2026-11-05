@@ -108,11 +108,16 @@ Resim olarak çizilmiş yazılar ("BUILD", "ADD ALLY", "Add Cash") bu yolla
 ## Testler
 
 ```bat
+python -m pip install -r requirements-test.txt
 python -m unittest discover -s tests
 ```
 
 `tests/ortak.py`, `SE_KAYIT_DIZINI` ortam değişkeniyle testlerin geçici bir
-kayıt klasörü kullanmasını sağlar.
+kayıt klasörü kullanmasını sağlar. `requirements-test.txt` yalnızca testlere
+gerekenleri (Hypothesis) ekler; oyuna ve paketlere girmez.
+
+Testlerin hata yakalama gücü ölçülür, tahmin edilmez: yöntem, kaynaklar ve son
+ölçüm `docs/TEST_OLCUMU.md`'de; ölçüm aracı `araclar/mutasyon_olc.py`.
 
 ## Servis istekleri ve imza
 

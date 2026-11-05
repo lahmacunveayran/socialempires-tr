@@ -28,7 +28,9 @@ Gerekirse en fazla **oyunun kendi görselleri** kullanılır: oyun varlıkları
 - Testler: `python -m unittest discover -s tests`
 - Tarayıcı JS testleri: `node --test tests/js/*.test.js`
 - Ayrıntılar: `docs/GELISTIRME.md`, yol haritası durumu: `docs/YOL_HARITASI_DURUM.md`
-- Yeni konteynerde testlerden önce: `pip install -q --ignore-installed blinker -r requirements.txt`
+- Yeni konteynerde testlerden önce: `pip install -q --ignore-installed blinker -r requirements-test.txt`
+- Testin gücü ölçülür (`docs/TEST_OLCUMU.md`): yeni test, koruduğu kod bozulunca düşmeli; beklenen değerin
+  kaynağı (istemci bayt kodu, belge, değişmez) yazılır, uygulamanın kendi çıktısı beklenen değer yapılmaz.
 
 ## Görev kitabı ve devir notu
 

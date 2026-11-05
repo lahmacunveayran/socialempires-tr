@@ -9,6 +9,7 @@ Argüman sıraları istemci bytecode'undan çıkarılmıştır (her işleyicinin
 belge dizesinde `[...]` olarak yazılı). Kaynaklar eksiye düşmez.
 """
 
+import copy
 import json
 import math
 import os
@@ -135,7 +136,9 @@ def kaynak_ekle(save, h, tur, miktar):
 
 
 def depo_ekle(save, esya_id, adet=1):
-    if esya_id < 0 or adet <= 0:
+    """Depo `gifts[id]` sayacıdır: liste id'ye kadar uzar. Oyunda olmayan id eklenmez; yoksa bozuk bir
+    id (ör. 10⁸) kaydı yüz milyonlarca sıfırla şişirir."""
+    if esya_id < 0 or adet <= 0 or get_item_from_id(esya_id) is None:
         return
     gifts = save["privateState"].setdefault("gifts", [])
     if len(gifts) <= esya_id:
@@ -180,16 +183,22 @@ def globals_():
 
 def command(USERID, data):
     gunluk = []
+    save = session(USERID)
     for komut_verisi in data.get("commands", []):
         cmd = komut_verisi.get("cmd")
         args = komut_verisi.get("args", [])
         gunluk.append((cmd, args))
+        once = copy.deepcopy(save) if isinstance(save, dict) else None
         try:
             do_command(USERID, cmd, args)
         except Exception:
-            # Bozuk tek bir komut aynı paketteki diğerlerini düşürmesin.
+            # Bozuk tek bir komut aynı paketteki diğerlerini düşürmesin; yarım bıraktığı değişiklik de kalmasın
+            # (ör. nakit düşüp eşya verilmeden hata). Komşu kayıtlarına yazılan geri alınmaz.
             print(f" ! KOMUT HATASI: {cmd} args={args}")
             traceback.print_exc()
+            if once is not None:
+                save.clear()
+                save.update(once)
     _gunluge_yaz(USERID, gunluk)
     save_session(USERID)
 
@@ -987,15 +996,23 @@ def admin_add_animal(save, a):
     print("Hayvan eklendi:", (get_item_from_subcat_functional(alt) or {}).get("name"))
 
 
+KAHRAMAN_SUNAGI = 150  # Constants.ID_BUILDING_HEROES_ALTAR
+
+
 @komut("buy_cash")
 def buy_cash(save, a):
-    """[birim_id, x, y, yon, kasaba] - cash ile birim (cost_unit_cash)."""
+    """[birim_id, x, y, yon, kasaba] - cash ile kahraman (cost_unit_cash), PopupHeroes/onBuyItem.
+
+    İstemci bedeli ve xp'yi her durumda uygular. Kasabada sunak varsa kahramanı yanına koyar; yoksa depoya koyar,
+    bunu ayrıca store_add_items ile bildirir ve buy_cash'i yine gönderir (koordinatı pencerenin konumu). Bu yüzden
+    sunak yoksa haritaya eklenmez: eklenirse kahraman hem depoda hem haritada olur."""
     birim_id = a.tam(0)
     birim = get_item_from_id(birim_id) or {}
     h = harita(save, a.tam(4))
     cash_ekle(save, -int(birim.get("cost_unit_cash", 0) or 0))
     h["xp"] = int(h.get("xp", 0)) + int(birim.get("xp", 0) or 0)
-    esya_ekle(h, birim_id, a.tam(1), a.tam(2), a.tam(3))
+    if any(e[0] == KAHRAMAN_SUNAGI for e in h["items"]):
+        esya_ekle(h, birim_id, a.tam(1), a.tam(2), a.tam(3))
 
 
 @komut("increase_population")
